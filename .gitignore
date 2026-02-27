@@ -14,3 +14,7 @@ Thumbs.db
 
 # Environment
 .env
+
+# Uploads
+assets/uploads/*
+!assets/uploads/.gitkeep

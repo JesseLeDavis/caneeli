@@ -1,0 +1,196 @@
+HOW THE DATABASE SETUP WORKS
+=============================
+
+
+THE BIG PICTURE
+---------------
+When someone visits your site, this is what happens behind the scenes:
+
+    Browser → PHP → PDO → MySQL → back up the chain as HTML
+
+Each piece has one job. Here's what each one does:
+
+
+THE FILES
+---------
+
+.env
+    A plain text file that stores sensitive values like your database
+    password. It lives on your computer (or server) but never gets
+    uploaded to GitHub because it's listed in .gitignore.
+
+    When you eventually deploy to a real server, you create a fresh
+    .env there with the production credentials. Every environment
+    (your laptop, your live server) has its own .env with its own values.
+
+    Example:
+        DB_HOST=localhost
+        DB_NAME=caneeli
+        DB_USER=root
+        DB_PASS=yourpassword
+
+
+config/config.php
+    This file runs on every single page load because header.php includes
+    it at the very top. Its job is to read the .env file and turn those
+    values into PHP constants.
+
+    parse_ini_file() reads the .env and returns an array.
+    define() turns each value into a constant that's available
+    everywhere in your app for the rest of that page load.
+
+    So DB_PASS in your .env becomes the constant DB_PASS in PHP,
+    which you can use in any file without passing it around.
+
+
+includes/db.php
+    This is where the actual connection to MySQL is made. It uses
+    PHP's built-in PDO library to talk to MySQL.
+
+    PDO = PHP Data Objects. Think of it as a universal translator
+    between PHP and the database. You write PHP, it handles the
+    communication with MySQL.
+
+    The function getDB() is what your pages call when they need
+    the database. The first time it's called, it creates a connection.
+    After that, it reuses the same connection (that's what the
+    "static $pdo = null" trick does — it remembers the connection
+    between calls so you don't reconnect on every query).
+
+    The connection is made using the constants set in config.php:
+        DB_HOST — where MySQL is running (localhost = your own machine)
+        DB_NAME — which database to use (caneeli)
+        DB_USER — the MySQL username (root)
+        DB_PASS — the password you set during installation
+
+
+MYSQL ITSELF
+------------
+MySQL is a separate program running in the background on your Mac.
+You installed it with Homebrew and started it with:
+
+    brew services start mysql
+
+It will automatically start every time your Mac boots up.
+You can stop it anytime with:
+
+    brew services stop mysql
+
+MySQL holds your data in tables, just like spreadsheets:
+- The "products" table holds all your products
+- The "orders" table holds all your orders
+- The "order_items" table holds the individual items in each order
+
+You talk to MySQL using SQL (Structured Query Language).
+SQL is how you ask for data, save data, update data, or delete data.
+
+    Examples:
+        SELECT * FROM products              -- get all products
+        SELECT * FROM products WHERE active = 1   -- get only active ones
+        INSERT INTO products (name, price) VALUES ('Chair', 299.99)
+        UPDATE products SET active = 0 WHERE id = 5
+        DELETE FROM products WHERE id = 5
+
+
+HOW A PAGE USES THE DATABASE
+-----------------------------
+Here's the full flow for the shop page loading products:
+
+    1. Browser requests: localhost:8000/pages/shop/index.php
+
+    2. PHP starts executing shop/index.php
+
+    3. shop/index.php includes header.php
+       header.php runs config.php
+       config.php reads .env and defines DB_HOST, DB_NAME, DB_USER, DB_PASS
+
+    4. shop/index.php calls getDB()
+       getDB() uses PDO to connect to MySQL with those constants
+       A connection is established
+
+    5. shop/index.php runs a query:
+       SELECT * FROM products WHERE active = 1 ORDER BY price ASC
+
+    6. MySQL finds the matching rows and returns them to PHP
+
+    7. PHP loops through the results and builds the HTML
+       (product name, price, image, etc.)
+
+    8. The finished HTML is sent back to the browser
+
+    9. Browser displays the page
+
+
+PDO AND PREPARED STATEMENTS
+----------------------------
+When you run queries that include user input (like a search term or
+a product ID from the URL), you should NEVER put that input directly
+into your SQL string. This is called SQL injection and it's a major
+security vulnerability.
+
+    BAD (never do this):
+        $id = $_GET['id'];
+        $result = $pdo->query("SELECT * FROM products WHERE id = $id");
+        (someone could pass id=1; DROP TABLE products and wipe your database)
+
+    GOOD (use prepared statements):
+        $id = $_GET['id'];
+        $stmt = $pdo->prepare("SELECT * FROM products WHERE id = ?");
+        $stmt->execute([$id]);
+        $product = $stmt->fetch();
+
+    PDO handles the sanitization for you when you use ? placeholders.
+    Always use prepared statements when user input is involved.
+
+
+THE DATABASE TABLES
+-------------------
+
+products
+    Stores everything about a product:
+    - id: unique number auto-assigned to each product
+    - name: the product name
+    - description: the full description
+    - price: stored as DECIMAL(10,2) — never use FLOAT for money
+      because floats have rounding errors (e.g. 29.99 becomes 29.989999)
+    - stock_qty: how many are available (defaults to 1 for one-of-a-kind)
+    - category: used for filtering on the shop page
+    - image_path: the file path to the uploaded image
+    - stripe_product_id: the ID Stripe gives the product when created
+    - stripe_price_id: the ID Stripe gives the price — this is what
+      gets passed to Stripe Checkout when someone buys
+    - active: 1 = visible in shop, 0 = hidden (for sold-out items)
+    - created_at / updated_at: timestamps handled automatically by MySQL
+
+orders
+    Created when a customer completes a Stripe payment:
+    - stripe_session_id: Stripe's unique ID for the checkout session
+    - customer_name / customer_email: pulled from Stripe after payment
+    - status: pending → paid → fulfilled → cancelled
+    - total: the total amount charged
+
+order_items
+    One row per product in an order. Linked to orders by order_id.
+    Stores a snapshot of the product name and price at the time of
+    purchase so your order history stays accurate even if you later
+    change the product's price or delete it.
+
+
+COMMON THINGS YOU'LL DO
+------------------------
+
+Check if MySQL is running:
+    brew services list
+
+Log into MySQL:
+    mysql -u root -p
+
+See your tables:
+    USE caneeli;
+    SHOW TABLES;
+
+See the structure of a table:
+    DESCRIBE products;
+
+See all products:
+    SELECT * FROM products;

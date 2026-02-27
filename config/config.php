@@ -3,11 +3,18 @@
 define('SITE_NAME', 'Caneeli');
 define('SITE_URL', 'http://localhost:8000'); // Update this for production
 
-// Database Configuration (for future use)ç
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'caneeli');
-define('DB_USER', 'root');
-define('DB_PASS', '');
+// Load .env
+$env = parse_ini_file(__DIR__ . '/../.env');
+
+// Database Configuration
+define('DB_HOST', $env['DB_HOST']);
+define('DB_NAME', $env['DB_NAME']);
+define('DB_USER', $env['DB_USER']);
+define('DB_PASS', $env['DB_PASS']);
+
+// Admin Credentials
+define('ADMIN_USER', $env['ADMIN_USER']);
+define('ADMIN_PASS', $env['ADMIN_PASS']);
 
 // Error reporting (disable in production)
 error_reporting(E_ALL);

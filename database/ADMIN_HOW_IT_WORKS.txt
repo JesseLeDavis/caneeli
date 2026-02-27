@@ -1,0 +1,190 @@
+HOW THE ADMIN PANEL WORKS
+==========================
+
+
+OVERVIEW
+--------
+The admin panel lives at /admin/ and is completely separate from the
+public-facing site. It's a password-protected area where you can add,
+edit, and delete products. Visitors to your site never see it — it's
+just for you.
+
+Access it at: http://localhost:8000/admin
+
+
+THE FILES
+---------
+
+admin/index.php
+    The login page. When you submit the form, it checks your username
+    and password against the values in your .env file (ADMIN_USER and
+    ADMIN_PASS). If they match, it creates a "session" that keeps you
+    logged in as you move between pages.
+
+    Uses hash_equals() instead of === for the comparison. This prevents
+    a type of attack called a timing attack where someone could guess
+    your password character by character by measuring how long the
+    comparison takes.
+
+admin/auth.php
+    A small file that every admin page includes at the top. Its only
+    job is to check that you're logged in. If you're not, it sends you
+    straight back to the login page. This means you can never access
+    dashboard.php, add-product.php, etc. directly without logging in first.
+
+admin/dashboard.php
+    The main page after logging in. Pulls all products from the database
+    and displays them in a table with edit and delete buttons. The delete
+    button uses a POST form (not a link) so that products can't be
+    accidentally deleted by just visiting a URL.
+
+admin/add-product.php
+    A form to add a new product. Handles:
+    - Validating that required fields are filled in
+    - Checking the uploaded image is actually an image (checks the real
+      file type, not just the extension — someone can't rename a .php
+      file to .jpg to get around it)
+    - Generating a unique filename for the image so uploads never
+      overwrite each other
+    - Moving the image to assets/uploads/
+    - Inserting the product into the database using a prepared statement
+
+admin/edit-product.php
+    Same as add-product but pre-filled with the existing product data.
+    If you upload a new image, it deletes the old one from the server
+    and replaces it. If you leave the image field empty, it keeps the
+    existing image.
+
+admin/delete-product.php
+    Handles the delete action. Only accepts POST requests (not GET) so
+    it can't be triggered by visiting a URL directly. Before deleting
+    the database row it also deletes the product's image file from
+    assets/uploads/ so you don't end up with orphaned files on the server.
+
+admin/logout.php
+    Destroys your session and sends you back to the login page.
+
+admin/admin.css
+    Styling for the admin panel. Uses the same fonts (Urbanist + Syne)
+    and color palette as the main site so it feels consistent.
+
+
+HOW SESSIONS WORK
+-----------------
+A session is how PHP remembers who you are between page loads.
+HTTP (the web) is "stateless" — every request is independent and the
+server has no memory of previous requests by default.
+
+When you log in:
+1. PHP creates a session file on the server
+2. PHP sends your browser a cookie with a session ID (a long random string)
+3. On every subsequent request your browser sends that cookie automatically
+4. PHP reads the cookie, finds your session file, and knows you're logged in
+
+When you log out:
+    session_destroy() deletes the session file on the server.
+    Even if someone has your session cookie, it's now useless.
+
+Sessions expire automatically when you close the browser, or after a
+period of inactivity set by the server.
+
+
+HOW IMAGE UPLOADS WORK
+-----------------------
+When you submit the add/edit product form with an image:
+
+1. PHP receives the file in the $_FILES superglobal
+2. It checks the real MIME type using mime_content_type() — this reads
+   the actual file contents, not just the filename extension
+3. Only jpeg, png, webp, and gif are allowed
+4. A unique filename is generated using uniqid() so two products can
+   have images with the same original name without conflict
+5. move_uploaded_file() moves it from PHP's temp folder to assets/uploads/
+6. The path (/assets/uploads/filename.jpg) is stored in the database
+
+Images are stored in assets/uploads/ which is excluded from git
+(.gitignore has assets/uploads/*). This means images live only on
+whichever machine is running the site — your laptop in dev, your
+hosting server in production. When you deploy, you'd either transfer
+your uploads folder manually or set up cloud storage (like S3) later.
+
+
+HOW THE DATABASE QUERIES WORK
+------------------------------
+Every database interaction uses prepared statements. Here's why that matters:
+
+    BAD — vulnerable to SQL injection:
+        $name = $_POST['name'];
+        $pdo->query("INSERT INTO products (name) VALUES ('$name')");
+
+        If someone types:  '); DROP TABLE products; --
+        Your query becomes: INSERT INTO products (name) VALUES (''); DROP TABLE products; --
+        That wipes your entire products table.
+
+    GOOD — prepared statement:
+        $stmt = $pdo->prepare("INSERT INTO products (name) VALUES (?)");
+        $stmt->execute([$name]);
+
+        The ? is a placeholder. PDO sends the query and the data
+        separately to MySQL, so the data can never be interpreted
+        as SQL code. No matter what someone types in the form,
+        it's always treated as plain data.
+
+All queries in this admin panel use prepared statements with ? placeholders.
+
+
+THE .ENV AND ADMIN CREDENTIALS
+-------------------------------
+Your admin username and password are stored in .env:
+
+    ADMIN_USER=admin
+    ADMIN_PASS=yourpassword
+
+Because .env is in .gitignore, these never go to GitHub.
+
+To change your admin password:
+    1. Open .env
+    2. Update ADMIN_PASS to your new password
+    3. Save the file — takes effect immediately, no restart needed
+
+On your hosting server you'll create a separate .env with a different
+(stronger) password for the live site.
+
+
+ADDING A NEW CATEGORY
+---------------------
+Categories are defined as a PHP array at the top of add-product.php
+and edit-product.php:
+
+    $categories = ['Chairs', 'Tables', 'Shelves', 'Wall Decor', 'Lighting', 'Other'];
+
+To add a new category, just add it to both arrays. The dropdown in
+the form will update automatically.
+
+
+WHAT HAPPENS WHEN YOU ADD A PRODUCT
+-------------------------------------
+1. You fill in the form and hit "Add Product"
+2. PHP validates the inputs (name, price, category required)
+3. If an image was uploaded, it's validated and moved to assets/uploads/
+4. A prepared statement inserts a row into the products table:
+       id, name, description, price, stock_qty, category,
+       image_path, active, created_at (auto), updated_at (auto)
+5. The stripe_product_id and stripe_price_id columns are left empty
+   for now — these will be filled in when Stripe integration is added
+6. The product immediately appears in your shop if active = 1
+
+
+WHAT'S COMING NEXT
+-------------------
+- Stripe integration: when you add a product, it will also automatically
+  create a matching product in your Stripe account and store the
+  stripe_price_id. That ID is what gets passed to Stripe Checkout
+  when a customer buys something.
+
+- Shop page: currently shows hardcoded products. Next step is to wire
+  it up to pull from the products table with category filtering and
+  price sorting.
+
+- Webhook handler: a PHP file that Stripe calls after a successful
+  payment to update stock and save the order to your database.
