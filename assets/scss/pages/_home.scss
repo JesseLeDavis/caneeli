@@ -1,0 +1,17 @@
+@use '../base/variables' as *;
+
+.hero {
+  background-color: $neutral;
+  min-height: 100vh;
+
+  .button-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  p {
+    padding: 20px 0;
+  }
+}

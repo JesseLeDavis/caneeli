@@ -1,0 +1,45 @@
+@use 'variables' as *;
+
+footer{
+  background-color: $neutral;
+  padding: 20px;
+  .container{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-top: 2px solid $rust;
+
+    .socials-container{
+      padding: 20px 0 10px;
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .bottom-nav{
+      padding: 8px 0 10px;
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      gap: 12px;
+      font-family: $font-body;
+      font-weight: 500;
+      color: $rust;
+    }
+
+    .info-container{
+      display: flex;
+      flex-direction: row;
+      font-family: $font-body;
+      font-size: 12px;
+      color: $rust;
+      align-items: end;
+      justify-content: space-between;
+      .tos-container{
+        display: flex;
+        flex-direction: column;
+      }
+    }
+  }
+}

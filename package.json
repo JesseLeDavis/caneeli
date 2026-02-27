@@ -1,0 +1,11 @@
+{
+  "name": "caneeli",
+  "version": "1.0.0",
+  "scripts": {
+    "sass": "sass --watch assets/scss/main.scss:assets/css/style.css",
+    "build": "sass assets/scss/main.scss:assets/css/style.css --style=compressed"
+  },
+  "devDependencies": {
+    "sass": "^1.69.0"
+  }
+}

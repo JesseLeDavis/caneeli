@@ -1,0 +1,28 @@
+@use 'variables' as *;
+
+.btn {
+  color: $neutral;
+  white-space: nowrap;
+  padding: $button-padding;
+  border-radius: 30px;
+  transition: ease-in-out 300ms;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+}
+
+.red-button {
+  background-color: $rust;
+  filter: drop-shadow($blue-200 4px 4px);
+}
+
+.blue-button {
+  background-color: $blue-400;
+  filter: drop-shadow($dark 4px 4px);
+}
+
+.yellow-button {
+  background-color: $mustard;
+  filter: drop-shadow($rust 4px 4px);
+}

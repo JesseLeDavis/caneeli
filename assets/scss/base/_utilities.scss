@@ -1,0 +1,15 @@
+@use 'variables' as *;
+
+.large_title {
+  font-family: $font-heading;
+  font-size: 40px;
+  font-weight: 800;
+}
+
+.hover-grow {
+  transition: ease-in-out 300ms;
+
+  &:hover {
+    transform: scale(1.05) translateY(-5px);
+  }
+}
