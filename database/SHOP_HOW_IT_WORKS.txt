@@ -1,0 +1,169 @@
+HOW THE SHOP PAGE WORKS
+========================
+
+
+OVERVIEW
+--------
+The shop page lives at /pages/shop/index.php. It pulls products from
+the database, displays them in a responsive grid of cards, and supports
+filtering by category and paginating through results.
+
+Access it at: http://localhost:8000/pages/shop/
+
+
+THE FILES
+---------
+
+pages/shop/index.php
+    The main shop page. Handles all the logic and HTML in one file:
+    - Reads filter/page parameters from the URL
+    - Queries the database
+    - Renders the filter bar, product grid, and pagination
+
+assets/scss/pages/_shop.scss
+    All the styles for the shop page — filter bar, product cards,
+    grid layout, and pagination.
+
+
+HOW THE DATABASE QUERY WORKS
+------------------------------
+The page builds a SQL query dynamically based on what filters are active:
+
+    Base query:
+        SELECT * FROM products WHERE active = 1 ORDER BY created_at DESC
+
+    With a category filter:
+        SELECT * FROM products WHERE active = 1 AND category = ? ORDER BY created_at DESC
+
+The ? is a prepared statement placeholder — the actual category value
+is passed separately so it's safe from SQL injection.
+
+Only products with active = 1 show up. When you hide a product in
+the admin panel, it disappears from the shop immediately.
+
+
+URL PARAMETERS
+--------------
+The shop page reads these from the URL:
+
+    ?category=Chairs        Filter to a specific category
+    ?page=2                 Jump to page 2
+    ?category=Chairs&page=2 Both at once
+
+These are passed as GET parameters. The PHP reads them with $_GET[].
+All values are validated before being used in queries:
+- category must be in the allowed categories list
+- page is cast to an integer and clamped between 1 and total pages
+
+
+CATEGORY FILTERING
+------------------
+Categories are defined as a PHP array at the top of the file:
+
+    $categories = ['Chairs', 'Tables', 'Shelves', 'Wall Decor', 'Lighting', 'Other'];
+
+The filter bar renders a button for each category. The active category
+button uses the red-button class (rust color). Inactive ones use
+filter-btn (dark outline).
+
+Clicking a filter reloads the page with the ?category= parameter set.
+The page resets to 1 when a new category is selected.
+
+To add or rename a category: update this array in index.php AND
+update the matching array in admin/add-product.php and admin/edit-product.php.
+
+
+PAGINATION
+----------
+Shows 8 products per page ($per_page = 8).
+
+How it works:
+1. First query counts total matching products
+2. Divides by $per_page to get total pages
+3. Second query fetches just the current page using LIMIT and OFFSET
+
+    LIMIT 8 OFFSET 0   = page 1 (products 1-8)
+    LIMIT 8 OFFSET 8   = page 2 (products 9-16)
+    LIMIT 8 OFFSET 16  = page 3 (products 17-24)
+
+The pagination UI only shows when there's more than one page.
+The ← and → arrows appear only when there's a previous/next page.
+The current page number is highlighted in rust.
+
+Pagination preserves the active category filter — clicking page 2
+while filtering by Chairs keeps ?category=Chairs in the URL.
+
+
+PRODUCT CARDS
+-------------
+Each card is a full <a> tag that links to the product detail page
+(/pages/shop/product.php?id=X). The whole card is clickable.
+
+Card structure:
+    <a class="product-card">
+        <img class="product-card__bg">       ← fills the full card
+        <div class="product-card__overlay">  ← dark gradient from top
+            name
+            short description
+            price
+        </div>
+    </a>
+
+The image is position: absolute and covers the entire card using
+object-fit: cover (crops to fill without stretching).
+
+The overlay is a CSS gradient going from dark at the top (where the
+text is) to transparent at the bottom, so the text is always readable
+over whatever image is uploaded.
+
+If a product has no image, a plain neutral-colored placeholder fills
+the card instead.
+
+
+CARD BORDER COLORS
+------------------
+Cards cycle through the three brand colors using CSS nth-child:
+
+    1st, 4th, 7th... card → blue ($blue-400)
+    2nd, 5th, 8th... card → mustard ($mustard)
+    3rd, 6th, 9th... card → rust ($rust)
+
+This is purely visual — it has nothing to do with the product's
+category or any data, it just keeps the grid looking lively.
+
+
+ACTIVE NAV HIGHLIGHTING
+------------------------
+The nav uses isActivePage() from includes/functions.php to check
+whether the current URL contains the page's path. If it does, the
+'active' CSS class is added to that nav link, turning it rust.
+
+    On /pages/shop/ → "Shop" link is rust
+    On /pages/about.php → "About Me" link is rust
+    On /pages/contact.php → "Contact me" link is rust
+
+
+RESPONSIVE GRID
+---------------
+The product grid is mobile-first:
+
+    Default (mobile):  1 column
+    600px and up:      2 columns
+    1000px and up:     4 columns
+
+
+WHAT'S STILL TO BUILD
+----------------------
+- Price range slider: a min/max price filter so customers can browse
+  by budget. Will add a ?min_price= and ?max_price= URL parameter,
+  a range slider UI on the page, and a BETWEEN clause to the SQL query.
+
+- Individual product page (/pages/shop/product.php): the page that
+  opens when you click a card. Will show the full product image,
+  description, price, and a "Buy Now" button that triggers Stripe Checkout.
+
+- Stripe Checkout: wiring up the Buy Now button to create a Stripe
+  Checkout Session and redirect the customer to Stripe's payment page.
+
+- Sold out handling: when stock_qty reaches 0, show a "Sold Out"
+  badge on the card and disable the buy button on the product page.

@@ -17,9 +17,8 @@ function redirect($url) {
 /**
  * Check if current page matches the given page name
  */
-function isActivePage($page) {
-    $currentPage = basename($_SERVER['PHP_SELF']);
-    return $currentPage === $page ? 'active' : '';
+function isActivePage($path) {
+    return strpos($_SERVER['REQUEST_URI'], $path) !== false ? 'active' : '';
 }
 
 /**

@@ -1,4 +1,5 @@
 @use '../base/variables' as *;
+@use 'sass:color';
 
 // Contact page styles
 .contact {
@@ -40,7 +41,7 @@ background-color: $neutral;
       width: 100%;
 
       &::placeholder {
-        color: lighten($dark, 40%);
+        color: color.adjust($dark, $lightness: 40%);
       }
     }
 

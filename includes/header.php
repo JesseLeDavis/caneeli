@@ -27,9 +27,9 @@ require_once __DIR__ . '/functions.php';
             <nav class="nav">
                 <a href="<?php echo SITE_URL; ?>" class="nav-logo"><img src="<?php echo SITE_URL; ?>/assets/images/logoni.svg" alt="Caneeli Designs"></a>
                 <ul>
-                    <li><a class="nav_title" href="<?php echo SITE_URL; ?>/pages/shop/">Shop</a></li>
-                    <li><a class="nav_title" href="<?php echo SITE_URL; ?>/pages/about.php">About Me</a></li>
-                    <li><a class="nav_title" href="<?php echo SITE_URL; ?>/pages/contact.php">Contact me</a></li>
+                    <li><a class="nav_title <?php echo isActivePage('/pages/shop'); ?>" href="<?php echo SITE_URL; ?>/pages/shop/">Shop</a></li>
+                    <li><a class="nav_title <?php echo isActivePage('/pages/about'); ?>" href="<?php echo SITE_URL; ?>/pages/about.php">About Me</a></li>
+                    <li><a class="nav_title <?php echo isActivePage('/pages/contact'); ?>" href="<?php echo SITE_URL; ?>/pages/contact.php">Contact me</a></li>
                 </ul>
             </nav>
         </div>

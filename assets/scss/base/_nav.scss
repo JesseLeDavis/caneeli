@@ -133,6 +133,17 @@ body.menu-open {
         justify-content: space-between;
     }
 
+    .nav_title {
+        font-family: $font-body;
+        font-size: 18px;
+        font-weight: 600;
+        color: $dark;
+
+        &.active {
+            color: $rust;
+        }
+    }
+
     .logo img {
         height: 55px;
     }
@@ -147,7 +158,8 @@ body.menu-open {
 
     .nav {
         position: absolute;
-        top: auto;
+        top: 50%;
+        transform: translateY(-50%);
         left: auto;
         right: 20px;
         bottom: auto;
@@ -160,6 +172,9 @@ body.menu-open {
         ul {
             flex: none;
             flex-direction: row;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 2rem;
             font-family: $font-body;
             font-size: 20px;
             font-weight: 600;
