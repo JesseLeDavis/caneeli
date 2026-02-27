@@ -20,4 +20,28 @@ document.addEventListener('DOMContentLoaded', function() {
             document.body.classList.remove('menu-open');
         }
     });
+
+    // Quantity steppers
+    document.querySelectorAll('.qty-stepper').forEach(function(stepper) {
+        const input = stepper.querySelector('.qty-stepper__input');
+        const btns  = stepper.querySelectorAll('.qty-stepper__btn');
+
+        btns.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const dir  = parseInt(btn.dataset.dir);
+                const min  = parseInt(input.min) || 0;
+                const max  = parseInt(input.max) || 99;
+                const next = parseInt(input.value) + dir;
+
+                if (next < min || next > max) return;
+                input.value = next;
+
+                // Auto-submit cart update forms
+                const form = stepper.closest('form');
+                if (form && form.classList.contains('cart__qty-form')) {
+                    form.submit();
+                }
+            });
+        });
+    });
 });

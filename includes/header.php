@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/functions.php';
+if (session_status() === PHP_SESSION_NONE) session_start();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -30,6 +31,7 @@ require_once __DIR__ . '/functions.php';
                     <li><a class="nav_title <?php echo isActivePage('/pages/shop'); ?>" href="<?php echo SITE_URL; ?>/pages/shop/">Shop</a></li>
                     <li><a class="nav_title <?php echo isActivePage('/pages/about'); ?>" href="<?php echo SITE_URL; ?>/pages/about.php">About Me</a></li>
                     <li><a class="nav_title <?php echo isActivePage('/pages/contact'); ?>" href="<?php echo SITE_URL; ?>/pages/contact.php">Contact me</a></li>
+                    <li><a class="nav_title <?php echo isActivePage('/cart'); ?>" href="<?php echo SITE_URL; ?>/cart.php">Cart <?php if (!empty($_SESSION['cart'])): ?>(<?php echo array_sum($_SESSION['cart']); ?>)<?php endif; ?></a></li>
                 </ul>
             </nav>
         </div>

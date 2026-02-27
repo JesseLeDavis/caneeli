@@ -1,0 +1,221 @@
+HOW THE CART AND CHECKOUT WORKS
+================================
+
+
+OVERVIEW
+--------
+The cart is session-based — it lives in PHP's $_SESSION superglobal,
+which means it's stored on the server and tied to the user's browser
+via a cookie. No database involved until the customer actually pays.
+
+The full flow:
+    Product page → Add to Cart → Cart page → Checkout → Stripe → Success
+
+
+THE FILES
+---------
+
+pages/shop/product.php
+    The individual product page. Pulled from the database by ?id=.
+    Shows the image, name, category, price, description, and an
+    Add to Cart form. If stock_qty is 0 it shows "Sold Out" instead.
+
+cart.php
+    Handles both the cart display AND all cart actions (add, update,
+    remove) in one file. Actions come in as POST requests and redirect
+    back to cart.php when done (Post-Redirect-Get pattern — prevents
+    duplicate submissions if the user refreshes).
+
+checkout.php
+    Creates a Stripe Checkout Session and immediately redirects the
+    customer to Stripe's hosted payment page. No payment UI is built
+    here — Stripe handles all of that.
+
+success.php
+    The page Stripe redirects to after a successful payment. Verifies
+    the payment with Stripe, saves the order to the database, decrements
+    stock, auto-hides sold-out items, then clears the cart.
+
+webhook.php
+    A backup handler that Stripe calls directly (server-to-server) after
+    payment. Register this URL in your Stripe dashboard. It handles the
+    same order-saving logic as success.php but is triggered by Stripe,
+    not the browser — more reliable since it fires even if the customer
+    closes the tab before success.php loads.
+
+
+HOW THE SESSION CART WORKS
+---------------------------
+$_SESSION['cart'] is a simple associative array:
+
+    [
+        product_id => quantity,
+        product_id => quantity,
+        ...
+    ]
+
+    Example:
+        $_SESSION['cart'] = [
+            3 => 1,   // product ID 3, qty 1
+            7 => 2,   // product ID 7, qty 2
+        ]
+
+Only product IDs and quantities are stored — no prices, names, or
+images. Those are always pulled fresh from the database so the cart
+reflects current data (if you change a price, the cart updates too).
+
+The session starts in header.php with session_start(). The cart count
+in the nav reads array_sum($_SESSION['cart']) to show the total number
+of items.
+
+
+CART ACTIONS (all POST to cart.php)
+-------------------------------------
+
+add
+    Adds a product to the cart. Verifies the product exists and is
+    active before adding. Caps quantity at the product's stock_qty
+    so you can't add more than is available.
+
+    Form fields: action=add, product_id, quantity
+
+update
+    Changes the quantity of an item already in the cart. If quantity
+    is set to 0, the item is removed. Triggered automatically when
+    the quantity input changes (onchange="this.form.submit()").
+
+    Form fields: action=update, product_id, quantity
+
+remove
+    Removes an item from the cart entirely.
+
+    Form fields: action=remove, product_id
+
+
+HOW STRIPE CHECKOUT WORKS
+--------------------------
+When the customer clicks Checkout:
+
+1. checkout.php loads the cart from the session
+2. Fetches the products from the database (fresh prices)
+3. Builds a "line_items" array for Stripe — one entry per product:
+       price_data:
+           currency: usd
+           unit_amount: price in CENTS (Stripe always uses cents)
+           product_data: name, description, image URL
+       quantity: how many
+
+4. Creates a Stripe Checkout Session via the Stripe API
+5. Redirects the customer to session->url (Stripe's hosted page)
+
+Stripe handles:
+    - Card input and validation
+    - Payment processing
+    - 3D Secure authentication
+    - Receipts
+    - Fraud detection
+
+You never touch card data at all.
+
+
+SUCCESS PAGE FLOW
+-----------------
+After payment, Stripe redirects to:
+    /success.php?session_id=cs_xxx
+
+The success page:
+1. Retrieves the session from Stripe using the session_id to verify
+   the payment actually went through (status === 'paid')
+2. Checks the orders table to prevent duplicate processing
+   (in case the customer refreshes the success page)
+3. Saves the order to the orders table
+4. Saves each cart item to order_items (with a snapshot of the price
+   at the time of purchase)
+5. Decrements stock_qty for each product
+6. Auto-sets active = 0 for any product that reaches stock_qty = 0
+   (so sold-out items disappear from the shop automatically)
+7. Clears $_SESSION['cart']
+
+
+WEBHOOK — WHY IT EXISTS
+------------------------
+The success page works fine in most cases, but there's an edge case:
+what if the customer pays and then immediately closes the tab before
+the success page loads? Stripe still took their money but your database
+never got the order.
+
+The webhook solves this. Stripe calls your webhook URL directly
+(server-to-server) right after payment, independent of what the
+customer's browser does. It's a backup that makes sure every
+successful payment gets recorded.
+
+Both success.php and webhook.php check for duplicate orders before
+saving, so if both fire (the normal case), only one order gets saved.
+
+To set up the webhook:
+1. Go to dashboard.stripe.com → Developers → Webhooks
+2. Click "Add endpoint"
+3. URL: https://yourdomain.com/webhook.php
+4. Select event: checkout.session.completed
+5. Copy the signing secret (whsec_...) and add it to your .env
+   as STRIPE_WEBHOOK_SECRET
+
+For local testing, use the Stripe CLI:
+    stripe listen --forward-to localhost:8000/webhook.php
+
+
+STRIPE KEYS
+-----------
+There are three keys, all stored in .env:
+
+STRIPE_PUBLIC_KEY (pk_test_... / pk_live_...)
+    Used in the browser-side JavaScript if needed (not currently used
+    since we're using Stripe Checkout which handles everything).
+
+STRIPE_SECRET_KEY (sk_test_... / sk_live_...)
+    Used server-side to create Checkout Sessions and retrieve payment
+    data. Never expose this in the browser or commit it to git.
+
+STRIPE_WEBHOOK_SECRET (whsec_...)
+    Used to verify that webhook requests actually came from Stripe and
+    not from someone spoofing your webhook URL.
+
+Use test keys (pk_test_ / sk_test_) while building. Stripe's test mode
+lets you make payments with fake card numbers without charging anyone.
+
+    Test card number: 4242 4242 4242 4242
+    Expiry: any future date
+    CVC: any 3 digits
+    ZIP: any 5 digits
+
+
+STOCK MANAGEMENT
+----------------
+Stock is decremented when a successful payment is confirmed (in
+success.php). It is NOT decremented when a product is added to the
+cart — only on actual payment.
+
+This means two customers could theoretically both add the last item
+to their carts and try to check out. Whoever pays first gets it.
+For a small handmade shop this is an acceptable trade-off and avoids
+holding stock for abandoned carts.
+
+If a product reaches stock_qty = 0 after an order:
+    - active is set to 0 automatically
+    - The product disappears from the shop
+    - The product page shows "Sold Out"
+    - You can re-activate it in the admin panel if more stock arrives
+
+
+WHAT'S STILL TO BUILD
+----------------------
+- Order management in the admin panel: a page to view all orders,
+  mark them as fulfilled, and see what was ordered.
+
+- Email confirmation: Stripe sends a receipt automatically if you
+  enable it in your Stripe dashboard settings. For a custom
+  confirmation email, you'd add a mailer (PHPMailer) to success.php.
+
+- Shipping rates: currently shows "calculated at checkout" — you can
+  add real shipping rates directly in the Stripe Checkout Session
+  using shipping_options.
