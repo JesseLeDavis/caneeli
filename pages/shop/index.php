@@ -52,8 +52,17 @@ function shop_url($overrides = []) {
 }
 ?>
 
-<section class="hero">
+<section class="hero shop-page">
     <div class="container">
+
+        <!-- Page header -->
+        <div class="shop-header">
+            <h1 class="large_title">Shop</h1>
+            <p class="shop-count"><?php echo $total; ?> piece<?php echo $total !== 1 ? 's' : ''; ?></p>
+        </div>
+
+        <!-- Filters -->
+        <div class="shop-filters">
 
         <!-- Category filters -->
         <div class="filter-bar">
@@ -96,9 +105,11 @@ function shop_url($overrides = []) {
             </div>
         </form>
 
+        </div><!-- /.shop-filters -->
+
         <!-- Product grid -->
         <?php if (empty($products)): ?>
-            <p class="shop-empty">No products found in this range.</p>
+            <p class="shop-empty">Nothing here — try widening your filters.</p>
         <?php else: ?>
             <div class="product-grid">
                 <?php foreach ($products as $product): ?>

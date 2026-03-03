@@ -38,6 +38,7 @@ $products = $pdo->query("SELECT * FROM products ORDER BY created_at DESC")->fetc
                 <th>Price</th>
                 <th>Stock</th>
                 <th>Status</th>
+                <th>Featured</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -61,6 +62,14 @@ $products = $pdo->query("SELECT * FROM products ORDER BY created_at DESC")->fetc
                     <?php else: ?>
                         <span class="badge-inactive">Hidden</span>
                     <?php endif; ?>
+                </td>
+                <td>
+                    <form method="POST" action="/admin/toggle-featured.php" style="display:inline">
+                        <input type="hidden" name="id" value="<?php echo $product['id']; ?>">
+                        <button type="submit" class="btn-star <?php echo $product['featured'] ? 'btn-star--on' : ''; ?>" title="<?php echo $product['featured'] ? 'Remove from Hot Off the Shelf' : 'Add to Hot Off the Shelf'; ?>">
+                            <?php echo $product['featured'] ? '★' : '☆'; ?>
+                        </button>
+                    </form>
                 </td>
                 <td>
                     <a href="/admin/edit-product.php?id=<?php echo $product['id']; ?>" class="btn btn-secondary">Edit</a>

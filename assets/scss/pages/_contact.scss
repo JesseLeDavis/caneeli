@@ -1,48 +1,73 @@
 @use '../base/variables' as *;
 @use 'sass:color';
 
-// Contact page styles
 .contact {
-background-color: $neutral;
+  background-color: $neutral;
+  padding-top: 60px;
+  padding-bottom: 80px;
 
-  .large_title{
-    color: $blue-400;
-    font-size: 30px;
+  // Mobile: stacked, Desktop: side-by-side
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 80px;
+    padding-top: 80px;
+    padding-bottom: 100px;
   }
-  h2{
-    padding: 20px 0;
-    color: $blue-400;
-    span{
-      color: $rust;
+
+  .content {
+    flex: 1;
+
+    .large_title {
+      color: $blue-400;
+      font-size: 26px;
+      line-height: 1.2;
+
+      @media (min-width: 768px) {
+        font-size: 36px;
       }
     }
 
-  .content p {
-    font-family: $font-body;
-    color: $dark;
-    font-size: 16px;
-    line-height: 1.5;
+    h2 {
+      padding: 16px 0 20px;
+      color: $blue-400;
+
+      span { color: $rust; }
+    }
+
+    p {
+      font-family: $font-body;
+      color: $dark;
+      font-size: 16px;
+      line-height: 1.6;
+      margin-bottom: 8px;
+      opacity: 0.85;
+    }
   }
 
   .contact-form {
+    flex: 1;
     display: flex;
     flex-direction: column;
     gap: 15px;
-    padding: 20px 0;
 
     input, textarea {
       font-family: $font-body;
-      padding: 20px;
+      padding: 16px 20px;
       border: 1px solid $rust;
       border-radius: 12px;
       font-size: 16px;
       background-color: $neutral;
       color: $dark;
       width: 100%;
+      transition: border-color 200ms;
 
-      &::placeholder {
-        color: color.adjust($dark, $lightness: 40%);
-      }
+      &::placeholder { color: color.adjust($dark, $lightness: 40%); }
+      &:focus { outline: none; border-color: color.adjust($rust, $lightness: -10%); }
     }
 
     textarea {
@@ -50,9 +75,7 @@ background-color: $neutral;
       resize: vertical;
     }
 
-    .btn {
-      align-self: flex-end;
-    }
+    .btn { align-self: flex-end; }
   }
 }
 

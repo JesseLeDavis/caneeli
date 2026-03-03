@@ -1,12 +1,44 @@
 @use '../base/variables' as *;
 @use 'sass:color';
 
+// Page header
+.shop-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 40px 0 8px;
+
+  .large_title {
+    font-size: 36px;
+    line-height: 1.1;
+
+    @media (min-width: 768px) { font-size: 56px; }
+  }
+}
+
+.shop-count {
+  font-family: $font-body;
+  font-size: 14px;
+  font-weight: 600;
+  color: color.adjust($dark, $lightness: 30%);
+}
+
+// Desktop two-column filter layout: category bar left, price slider right
+.shop-filters {
+  @media (min-width: 900px) {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 24px;
+    align-items: start;
+  }
+}
+
 // Filter bar
 .filter-bar {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  padding: 40px 0 32px;
+  padding: 24px 0 24px;
 }
 
 .filter-btn {
@@ -141,12 +173,8 @@
     grid-template-columns: repeat(2, 1fr);
   }
 
-  @media (min-width: 1000px) {
+  @media (min-width: 900px) {
     grid-template-columns: repeat(4, 1fr);
-  }
-
-  @media (min-width: 1300px) {
-    grid-template-columns: repeat(5, 1fr);
   }
 }
 

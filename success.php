@@ -83,9 +83,11 @@ if ($session_id && !empty($_SESSION['cart'])) {
 <section class="hero">
     <div class="container">
         <div class="success-page">
-            <h1 class="large_title">Thank you! 🎉</h1>
-            <p>Your order has been placed. You'll receive a confirmation email from Stripe shortly.</p>
-            <a href="/pages/shop/" class="btn blue-button">Continue Shopping</a>
+            <h1 class="large_title">You're all set.</h1>
+            <p>Order received — you'll get a confirmation email shortly. I'll be in touch once it's on its way.</p>
+            <p>Thanks for supporting my little shop. It genuinely means a lot.</p>
+            <p>-Annie</p>
+            <a href="/pages/shop/" class="btn blue-button">Keep Browsing</a>
         </div>
     </div>
 </section>

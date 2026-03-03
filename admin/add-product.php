@@ -4,8 +4,27 @@ require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../includes/db.php';
 
 $categories = ['Chairs', 'Tables', 'Shelves', 'Wall Decor', 'Lighting', 'Other'];
-$error = '';
+$error   = '';
 $success = '';
+
+// Upload a single file and return its web path, or null on skip/failure
+function upload_image(array $file, string &$error): ?string {
+    if ($file['error'] !== UPLOAD_ERR_OK || empty($file['tmp_name'])) return null;
+    $allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    $mime    = mime_content_type($file['tmp_name']);
+    if (!in_array($mime, $allowed)) {
+        $error = 'Images must be JPG, PNG, WebP, or GIF.';
+        return null;
+    }
+    $ext      = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    $filename = uniqid('product_') . '.' . $ext;
+    $dest     = __DIR__ . '/../assets/uploads/' . $filename;
+    if (!move_uploaded_file($file['tmp_name'], $dest)) {
+        $error = 'Failed to upload image.';
+        return null;
+    }
+    return '/assets/uploads/' . $filename;
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name        = trim($_POST['name'] ?? '');
@@ -15,40 +34,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $category    = $_POST['category'] ?? '';
     $active      = isset($_POST['active']) ? 1 : 0;
 
-    // Basic validation
     if (!$name || !$price || !$category) {
         $error = 'Name, price, and category are required.';
     } elseif (!in_array($category, $categories)) {
         $error = 'Invalid category.';
     } else {
-        // Handle image upload
-        $image_path = null;
-        if (!empty($_FILES['image']['name'])) {
-            $allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-            $mime    = mime_content_type($_FILES['image']['tmp_name']);
-
-            if (!in_array($mime, $allowed)) {
-                $error = 'Image must be a JPG, PNG, WebP, or GIF.';
-            } else {
-                $ext        = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
-                $filename   = uniqid('product_') . '.' . strtolower($ext);
-                $dest       = __DIR__ . '/../assets/uploads/' . $filename;
-
-                if (move_uploaded_file($_FILES['image']['tmp_name'], $dest)) {
-                    $image_path = '/assets/uploads/' . $filename;
-                } else {
-                    $error = 'Failed to upload image.';
-                }
+        // Collect uploaded files from the multi-file input
+        $uploaded = [];
+        if (!empty($_FILES['images']['name'][0])) {
+            $files = $_FILES['images'];
+            $count = count($files['name']);
+            for ($i = 0; $i < $count; $i++) {
+                $single = [
+                    'name'     => $files['name'][$i],
+                    'tmp_name' => $files['tmp_name'][$i],
+                    'error'    => $files['error'][$i],
+                ];
+                $path = upload_image($single, $error);
+                if ($error) break;
+                if ($path) $uploaded[] = $path;
             }
         }
 
         if (!$error) {
-            $pdo  = getDB();
+            $pdo = getDB();
+            // First uploaded image becomes the featured image; null if none
+            $featured_path = $uploaded[0] ?? null;
+
             $stmt = $pdo->prepare("
                 INSERT INTO products (name, description, price, stock_qty, category, image_path, active)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             ");
-            $stmt->execute([$name, $description, $price, $stock_qty, $category, $image_path, $active]);
+            $stmt->execute([$name, $description, $price, $stock_qty, $category, $featured_path, $active]);
+            $product_id = $pdo->lastInsertId();
+
+            // Insert all images into the gallery table
+            $img_stmt = $pdo->prepare("INSERT INTO product_images (product_id, image_path, sort_order) VALUES (?, ?, ?)");
+            foreach ($uploaded as $order => $path) {
+                $img_stmt->execute([$product_id, $path, $order]);
+            }
+
             $success = 'Product added successfully.';
         }
     }
@@ -106,8 +131,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <?php endforeach; ?>
             </select>
 
-            <label>Product Image</label>
-            <input type="file" name="image" accept="image/*">
+            <label>Product Photos <span style="font-weight:400;font-size:12px;opacity:.6">(first photo becomes the featured image)</span></label>
+            <input type="file" name="images[]" accept="image/*" multiple>
 
             <label>
                 <input type="checkbox" name="active" value="1" <?php echo (!isset($_POST['active']) || $_POST['active']) ? 'checked' : ''; ?>>

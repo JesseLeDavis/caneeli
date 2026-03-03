@@ -15,12 +15,14 @@ CREATE TABLE products (
     stripe_product_id VARCHAR(255),
     stripe_price_id  VARCHAR(255),
     active           TINYINT(1)     NOT NULL DEFAULT 1,
+    featured         TINYINT(1)     NOT NULL DEFAULT 0,
     created_at       TIMESTAMP      DEFAULT CURRENT_TIMESTAMP,
     updated_at       TIMESTAMP      DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
     INDEX idx_category (category),
     INDEX idx_active   (active),
-    INDEX idx_price    (price)
+    INDEX idx_price    (price),
+    INDEX idx_featured (featured)
 );
 
 -- Orders
@@ -36,6 +38,18 @@ CREATE TABLE orders (
 
     INDEX idx_status (status),
     INDEX idx_email  (customer_email)
+);
+
+-- Product Images (gallery — products.image_path stays as the featured/primary image)
+CREATE TABLE product_images (
+    id          INT AUTO_INCREMENT PRIMARY KEY,
+    product_id  INT            NOT NULL,
+    image_path  VARCHAR(255)   NOT NULL,
+    sort_order  INT            NOT NULL DEFAULT 0,
+    created_at  TIMESTAMP      DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+    INDEX idx_product_id (product_id)
 );
 
 -- Order Items

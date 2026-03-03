@@ -225,3 +225,119 @@ td img {
 
 .badge-active   { color: #276749; font-weight: 700; }
 .badge-inactive { color: #e53e3e; font-weight: 700; }
+
+/* Star toggle */
+.btn-star {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 22px;
+    color: #ccc;
+    line-height: 1;
+    padding: 2px 6px;
+    border-radius: 6px;
+    transition: color 200ms, background 200ms;
+}
+.btn-star:hover { color: var(--mustard); background: rgba(212,193,75,0.1); }
+.btn-star--on   { color: var(--mustard); }
+
+/* ── Product Gallery Management ─────────────────────────────────────────── */
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+    margin-top: 6px;
+}
+
+.gallery-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    border: 2px solid #e0d9cd;
+    border-radius: 14px;
+    background: white;
+    transition: border-color 200ms, box-shadow 200ms;
+}
+
+.gallery-tile--featured {
+    border-color: var(--rust);
+    box-shadow: 0 0 0 3px rgba(194,91,50,0.18);
+}
+
+.gallery-tile__img-wrap {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #ece6da;
+}
+
+.gallery-tile__img-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.gallery-tile__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 3px 10px;
+    border-radius: 30px;
+    background: var(--rust);
+    color: var(--neutral);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+}
+
+.gallery-tile__actions {
+    display: flex;
+    gap: 6px;
+    width: 100%;
+}
+
+.gallery-tile__actions form {
+    flex: 1;
+    margin: 0;
+    padding: 0;
+}
+
+.gallery-tile__btn {
+    width: 100%;
+    padding: 5px 0;
+    border-radius: 30px;
+    cursor: pointer;
+    font-family: 'Urbanist', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    text-align: center;
+    transition: opacity 200ms, transform 200ms;
+    white-space: nowrap;
+}
+
+.gallery-tile__btn:hover {
+    opacity: 0.82;
+    transform: scale(1.04);
+}
+
+.gallery-tile__btn--feature {
+    background: transparent;
+    border: 1.5px solid var(--rust);
+    color: var(--rust);
+}
+
+.gallery-tile__btn--delete {
+    background: transparent;
+    border: 1.5px solid #e53e3e;
+    color: #e53e3e;
+}
+
+.gallery-tile__btn--delete:hover {
+    background: #fff5f5;
+}

@@ -14,11 +14,10 @@
             </div>
             <div class="info-container">
                 <div class="tos-container">
-                    <a>Privacy Policy</a>
-                    <a>Terms of Service</a>
+                    <a href="/pages/privacy.php">Privacy Policy</a>
+                    <a href="/pages/terms.php">Terms of Service</a>
                 </div>
-                <p>© 2025 Caneeli Designs</p>
-
+                <p>© 2026 Caneeli Designs</p>
             </div>
             <div class="">
 

@@ -71,8 +71,8 @@ if (!empty($_SESSION['cart'])) {
 
         <?php if (empty($cart_items)): ?>
             <div class="cart-empty">
-                <p>Your cart is empty.</p>
-                <a href="/pages/shop/" class="btn blue-button">Browse Shop</a>
+                <p>Nothing here yet.</p>
+                <a href="/pages/shop/" class="btn blue-button">Go Find Something You Love</a>
             </div>
         <?php else: ?>
             <div class="cart">
@@ -121,7 +121,7 @@ if (!empty($_SESSION['cart'])) {
                         <span>Subtotal</span>
                         <span><?php echo formatPrice($subtotal); ?></span>
                     </div>
-                    <p class="cart__note">Shipping and taxes calculated at checkout.</p>
+                    <p class="cart__note">Shipping and taxes added at checkout.</p>
                     <a href="/checkout.php" class="btn red-button">Checkout</a>
                     <a href="/pages/shop/" class="cart__continue">← Continue Shopping</a>
                 </div>
