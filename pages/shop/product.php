@@ -13,7 +13,7 @@ $product = $stmt->fetch();
 
 if (!$product) { header('Location: /pages/shop/'); exit; }
 
-$pageTitle = sanitize($product['name']);
+$pageTitle = sanitize($product['name']) . ' — Caneeli Designs';
 
 // Fetch gallery images
 $img_stmt = $pdo->prepare("SELECT * FROM product_images WHERE product_id = ? ORDER BY sort_order, id");
@@ -23,11 +23,19 @@ $gallery = $img_stmt->fetchAll();
 
 <section class="hero">
     <div class="container">
+
+        <nav class="breadcrumb">
+            <a href="/pages/shop/">Shop</a>
+            <span>/</span>
+            <a href="/pages/shop/?category=<?php echo urlencode($product['category']); ?>"><?php echo sanitize($product['category']); ?></a>
+            <span>/</span>
+            <span><?php echo sanitize($product['name']); ?></span>
+        </nav>
+
         <div class="product-detail">
 
             <div class="product-detail__image <?php echo count($gallery) > 1 ? 'product-detail__image--gallery' : ''; ?>">
                 <?php if (count($gallery) > 1): ?>
-                    <!-- Multi-image gallery -->
                     <div class="product-gallery">
                         <div class="product-gallery__main">
                             <img id="gallery-main-img"
@@ -50,7 +58,6 @@ $gallery = $img_stmt->fetchAll();
                         </div>
                     </div>
                 <?php elseif ($product['image_path']): ?>
-                    <!-- Single image (original behaviour) -->
                     <img src="<?php echo htmlspecialchars($product['image_path']); ?>"
                          alt="<?php echo sanitize($product['name']); ?>">
                 <?php else: ?>
@@ -62,7 +69,14 @@ $gallery = $img_stmt->fetchAll();
                 <p class="product-detail__category"><?php echo sanitize($product['category']); ?></p>
                 <h1 class="large_title"><?php echo sanitize($product['name']); ?></h1>
                 <p class="product-detail__price"><?php echo formatPrice($product['price']); ?></p>
+                <div class="product-detail__divider"></div>
                 <p class="product-detail__description"><?php echo nl2br(sanitize($product['description'])); ?></p>
+
+                <div class="product-detail__craft-signals">
+                    <span class="product-detail__signal">Handcrafted to Order</span>
+                    <span class="product-detail__signal">Ships in 2–3 Weeks</span>
+                    <span class="product-detail__signal">Solid Wood</span>
+                </div>
 
                 <?php if ($product['stock_qty'] > 0): ?>
                     <form method="POST" action="/cart.php">
@@ -78,10 +92,15 @@ $gallery = $img_stmt->fetchAll();
                                 <button type="button" class="qty-stepper__btn" data-dir="1">+</button>
                             </div>
                         </div>
-                        <button type="submit" class="btn blue-button">Add to Cart</button>
+                        <?php if ($product['stock_qty'] <= 5): ?>
+                            <p class="product-detail__stock">Only <?php echo $product['stock_qty']; ?> left in stock</p>
+                        <?php endif; ?>
+                        <button type="submit" class="btn red-button product-detail__atc-btn">Add to Cart</button>
                     </form>
                 <?php else: ?>
                     <p class="sold-out">Sold Out</p>
+                    <a href="/pages/shop/?category=<?php echo urlencode($product['category']); ?>"
+                       class="btn filter-btn" style="margin-top:12px">See Similar Pieces</a>
                 <?php endif; ?>
 
                 <a href="/pages/shop/" class="product-detail__back">← Back to Shop</a>
@@ -101,17 +120,13 @@ $gallery = $img_stmt->fetchAll();
     thumbs.forEach(function (thumb) {
         thumb.addEventListener('click', function () {
             const newSrc = thumb.dataset.src;
-            // Normalise for comparison — strip origin prefix from img.src
             const currentSrc = mainImg.getAttribute('src');
             if (newSrc === currentSrc) return;
 
-            // Crossfade: fade out → swap src → fade in
             mainImg.classList.add('is-transitioning');
             setTimeout(function () {
                 mainImg.setAttribute('src', newSrc);
-                mainImg.onload = function () {
-                    mainImg.classList.remove('is-transitioning');
-                };
+                mainImg.onload = function () { mainImg.classList.remove('is-transitioning'); };
                 if (mainImg.complete) mainImg.classList.remove('is-transitioning');
             }, 250);
 

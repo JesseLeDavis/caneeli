@@ -6,13 +6,33 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 24px;
+  gap: 20px;
   padding: 80px 0;
   text-align: center;
 
-  p {
-    font-size: 20px;
-    color: color.adjust($dark, $lightness: 20%);
+  &__icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: color.adjust($neutral, $lightness: -6%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+  }
+
+  &__heading {
+    font-family: $font-heading;
+    font-size: 26px;
+    font-weight: 800;
+    color: $dark;
+  }
+
+  &__text {
+    font-size: 16px;
+    color: color.adjust($dark, $lightness: 25%);
+    line-height: 1.6;
+    max-width: 340px;
   }
 }
 
@@ -41,20 +61,23 @@
     background: white;
     padding: 16px;
     border-radius: 16px;
-    box-shadow: 0 2px 12px rgba($dark, 0.06);
+    // Cycling brand drop shadow
+    &:nth-child(3n+1) { filter: drop-shadow($blue-400 4px 4px); }
+    &:nth-child(3n+2) { filter: drop-shadow($mustard  4px 4px); }
+    &:nth-child(3n+3) { filter: drop-shadow($rust     4px 4px); }
 
     @media (min-width: 600px) {
       display: grid;
-      grid-template-columns: 80px 1fr auto auto auto;
+      grid-template-columns: 100px 1fr auto auto auto;
       align-items: center;
       gap: 16px;
     }
   }
 
   &__image {
-    width: 80px;
-    height: 80px;
-    border-radius: 10px;
+    width: 100px;
+    height: 100px;
+    border-radius: 12px;
     overflow: hidden;
     flex-shrink: 0;
 
@@ -62,7 +85,10 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
+      transition: transform 300ms ease-in-out;
     }
+
+    &:hover img { transform: scale(1.05); }
   }
 
   &__placeholder {
@@ -78,6 +104,12 @@
       font-weight: 700;
       color: $dark;
       margin-bottom: 4px;
+
+      a {
+        color: $dark;
+        transition: color 200ms ease-in-out;
+        &:hover { color: $rust; }
+      }
     }
 
     p {
@@ -106,13 +138,13 @@
     cursor: pointer;
     font-size: 16px;
     color: color.adjust($dark, $lightness: 30%);
-    padding: 4px 8px;
+    padding: 6px 10px;
     border-radius: 50%;
-    transition: ease-in-out 200ms;
+    transition: background 200ms ease-in-out, color 200ms ease-in-out;
 
     &:hover {
-      background: #fee2e2;
-      color: #e53e3e;
+      background: color.adjust($rust, $lightness: 38%);
+      color: $rust;
     }
   }
 
@@ -121,7 +153,7 @@
     background: white;
     border-radius: 20px;
     padding: 28px;
-    box-shadow: 0 2px 12px rgba($dark, 0.06);
+    filter: drop-shadow($rust 4px 4px);
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -130,22 +162,62 @@
     top: 20px;
   }
 
+  &__summary-title {
+    font-family: $font-heading;
+    font-size: 18px;
+    font-weight: 800;
+    color: $dark;
+  }
+
   &__subtotal {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    font-size: 18px;
-    font-weight: 700;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 4px;
     padding-bottom: 16px;
     border-bottom: 2px solid color.adjust($neutral, $lightness: -8%);
+  }
 
-    span:last-child { color: $rust; }
+  &__subtotal-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.10em;
+    color: color.adjust($dark, $lightness: 30%);
+  }
+
+  &__subtotal-price {
+    font-family: $font-heading;
+    font-size: clamp(20px, 5cqw, 26px);
+    font-weight: 800;
+    color: $rust;
+    min-width: 0;
+  }
+
+  &__shipping-note {
+    font-size: 13px;
+    font-weight: 600;
+    color: color.adjust($dark, $lightness: 15%);
+    padding: 8px 12px;
+    background: color.adjust($neutral, $lightness: -4%);
+    border-radius: 10px;
+    line-height: 1.5;
   }
 
   &__note {
     font-size: 13px;
     color: color.adjust($dark, $lightness: 25%);
     line-height: 1.5;
+  }
+
+  &__stripe-note {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: color.adjust($dark, $lightness: 30%);
+    justify-content: center;
   }
 
   &__continue {

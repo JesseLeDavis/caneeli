@@ -133,10 +133,6 @@
     height: var(--stage-h);
     overflow: visible;
     isolation: isolate;
-    cursor: grab;
-    user-select: none;
-
-    &:active { cursor: grabbing; }
 
     @media (min-width: 600px) {
       --stage-h: 460px;

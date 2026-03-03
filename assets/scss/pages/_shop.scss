@@ -16,6 +16,13 @@
   }
 }
 
+.shop-tagline {
+  font-size: 14px;
+  color: color.adjust($dark, $lightness: 25%);
+  padding-bottom: 8px;
+  font-style: italic;
+}
+
 .shop-count {
   font-family: $font-body;
   font-size: 14px;
@@ -49,6 +56,26 @@
   &:hover {
     background: $dark;
     color: $neutral;
+  }
+
+  &--blue {
+    border-color: $blue-400;
+    color: $blue-400;
+
+    &:hover {
+      background: $blue-400;
+      color: $neutral;
+    }
+  }
+
+  &--yellow {
+    border-color: $mustard;
+    color: color.adjust($mustard, $lightness: -20%);
+
+    &:hover {
+      background: $mustard;
+      color: $dark;
+    }
   }
 }
 
@@ -162,11 +189,33 @@
   color: color.adjust($dark, $lightness: 30%);
 }
 
+// Empty state
+.shop-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 60px 0 80px;
+
+  &__heading {
+    font-family: $font-heading;
+    font-size: 24px;
+    font-weight: 800;
+    color: $dark;
+  }
+
+  &__text {
+    font-size: 16px;
+    color: color.adjust($dark, $lightness: 25%);
+    line-height: 1.6;
+  }
+}
+
 // Product grid — mobile first
 .product-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 16px;
+  gap: 20px;
   padding-bottom: 60px;
 
   @media (min-width: 600px) {
@@ -174,6 +223,10 @@
   }
 
   @media (min-width: 900px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  @media (min-width: 1200px) {
     grid-template-columns: repeat(4, 1fr);
   }
 }
@@ -186,7 +239,7 @@
   border: 2px solid $rust;
   aspect-ratio: 3 / 4;
   display: block;
-  transition: transform ease-in-out 300ms, box-shadow ease-in-out 300ms;
+  transition: transform 300ms ease-in-out, box-shadow 300ms ease-in-out;
 
   // Cycle border colors through brand palette
   &:nth-child(3n+1) { border-color: $blue-400; }
@@ -194,18 +247,17 @@
   &:nth-child(3n+3) { border-color: $rust; }
 
   &:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 12px 30px rgba($dark, 0.18);
+    transform: translateY(-8px);
+    box-shadow: 0 20px 48px rgba($dark, 0.22);
   }
 
-  // Image fills the full card
   &__bg {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform ease-in-out 400ms;
+    transition: transform 500ms ease-in-out;
   }
 
   &__placeholder {
@@ -215,53 +267,84 @@
   }
 
   &:hover &__bg {
-    transform: scale(1.04);
+    transform: scale(1.06);
   }
 
-  // Text overlay — top left, white text over subtle gradient
-  // TODO: adjust gradient stops/opacity and text sizes to taste
+  // Gradient anchored at bottom — product photos are naturally darker there
   &__overlay {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    padding: 14px 16px;
+    inset: 0;
+    padding: 16px;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    justify-content: flex-end;
+    gap: 4px;
     background: linear-gradient(
-      to bottom,
-      rgba($dark, 0.45) 0%,
-      rgba($dark, 0.1) 40%,
-      transparent 100%
+      to top,
+      rgba($dark, 0.82) 0%,
+      rgba($dark, 0.40) 35%,
+      transparent 65%
     );
   }
 
   &__name {
     font-family: $font-heading;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 800;
     color: white;
     line-height: 1.2;
-    text-shadow: 0 1px 4px rgba($dark, 0.5);
   }
 
+  // Description hidden by default, revealed on hover
   &__description {
     font-family: $font-body;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 400;
-    color: white;
-    line-height: 1.3;
-    text-shadow: 0 1px 4px rgba($dark, 0.5);
+    color: rgba(white, 0.80);
+    line-height: 1.4;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 300ms ease-in-out, opacity 300ms ease-in-out;
+  }
+
+  &:hover &__description {
+    max-height: 48px;
+    opacity: 1;
   }
 
   &__price {
     font-family: $font-body;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 700;
     color: white;
-    text-shadow: 0 1px 4px rgba($dark, 0.5);
+    letter-spacing: 0.02em;
+  }
+
+  // "View Piece" pill — slides up on hover
+  &__cta {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 6px 14px;
+    border-radius: 30px;
+    background: rgba(white, 0.15);
+    border: 1px solid rgba(white, 0.50);
+    font-family: $font-body;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: white;
+    backdrop-filter: blur(4px);
+    transform: translateY(8px);
+    opacity: 0;
+    transition: transform 300ms ease-in-out, opacity 300ms ease-in-out;
+    align-self: flex-start;
+  }
+
+  &:hover &__cta {
+    transform: translateY(0);
+    opacity: 1;
   }
 }
 

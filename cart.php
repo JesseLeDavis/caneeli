@@ -71,25 +71,27 @@ if (!empty($_SESSION['cart'])) {
 
         <?php if (empty($cart_items)): ?>
             <div class="cart-empty">
-                <p>Nothing here yet.</p>
-                <a href="/pages/shop/" class="btn blue-button">Go Find Something You Love</a>
+                <div class="cart-empty__icon">🛒</div>
+                <p class="cart-empty__heading">Your cart is empty</p>
+                <p class="cart-empty__text">You haven't added anything yet. Browse the shop and find a piece you love.</p>
+                <a href="/pages/shop/" class="btn red-button">Go Find Something You Love</a>
             </div>
         <?php else: ?>
             <div class="cart">
                 <div class="cart__items">
                     <?php foreach ($cart_items as $item): ?>
                     <div class="cart__row">
-                        <div class="cart__image">
+                        <a href="/pages/shop/product.php?id=<?php echo $item['id']; ?>" class="cart__image">
                             <?php if ($item['image_path']): ?>
                                 <img src="<?php echo htmlspecialchars($item['image_path']); ?>"
                                      alt="<?php echo sanitize($item['name']); ?>">
                             <?php else: ?>
                                 <div class="cart__placeholder"></div>
                             <?php endif; ?>
-                        </div>
+                        </a>
 
                         <div class="cart__details">
-                            <h3><?php echo sanitize($item['name']); ?></h3>
+                            <h3><a href="/pages/shop/product.php?id=<?php echo $item['id']; ?>"><?php echo sanitize($item['name']); ?></a></h3>
                             <p><?php echo sanitize($item['category']); ?></p>
                         </div>
 
@@ -110,19 +112,31 @@ if (!empty($_SESSION['cart'])) {
                         <form method="POST">
                             <input type="hidden" name="action" value="remove">
                             <input type="hidden" name="product_id" value="<?php echo $item['id']; ?>">
-                            <button type="submit" class="cart__remove">✕</button>
+                            <button type="submit" class="cart__remove"
+                                    onclick="return confirm('Remove <?php echo addslashes(sanitize($item['name'])); ?> from your cart?')">✕</button>
                         </form>
                     </div>
                     <?php endforeach; ?>
                 </div>
 
                 <div class="cart__summary">
+                    <p class="cart__summary-title">Order Summary</p>
+                    <?php
+                        $free_shipping_threshold = 200;
+                        $remaining = $free_shipping_threshold - $subtotal;
+                    ?>
+                    <?php if ($remaining > 0): ?>
+                        <p class="cart__shipping-note">Add <?php echo formatPrice($remaining); ?> more for free shipping!</p>
+                    <?php else: ?>
+                        <p class="cart__shipping-note">Free shipping applied!</p>
+                    <?php endif; ?>
                     <div class="cart__subtotal">
-                        <span>Subtotal</span>
-                        <span><?php echo formatPrice($subtotal); ?></span>
+                        <span class="cart__subtotal-label">Subtotal</span>
+                        <span class="cart__subtotal-price"><?php echo formatPrice($subtotal); ?></span>
                     </div>
-                    <p class="cart__note">Shipping and taxes added at checkout.</p>
-                    <a href="/checkout.php" class="btn red-button">Checkout</a>
+                    <p class="cart__note">Taxes calculated at checkout.</p>
+                    <a href="/checkout.php" class="btn blue-button">Checkout</a>
+                    <p class="cart__stripe-note">🔒 Secure checkout via Stripe</p>
                     <a href="/pages/shop/" class="cart__continue">← Continue Shopping</a>
                 </div>
             </div>

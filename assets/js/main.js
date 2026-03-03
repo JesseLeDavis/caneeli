@@ -16,9 +16,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         let current = 0;
         let timer;
-        let dragStartX = null;
-        let didDrag    = false;
-        const DRAG_THRESHOLD = 50;
 
         function update() {
             const prev = (current - 1 + total) % total;
@@ -65,34 +62,6 @@ document.addEventListener('DOMContentLoaded', function() {
         stage.addEventListener('mouseenter', function() { clearInterval(timer); });
         stage.addEventListener('mouseleave', restart);
 
-        // Drag / swipe support
-        stage.addEventListener('pointerdown', function(e) {
-            if (e.button !== 0) return;
-            dragStartX = e.clientX;
-            didDrag    = false;
-            stage.setPointerCapture(e.pointerId);
-        });
-
-        stage.addEventListener('pointermove', function(e) {
-            if (dragStartX === null) return;
-            if (Math.abs(e.clientX - dragStartX) > 8) didDrag = true;
-        });
-
-        stage.addEventListener('pointerup', function(e) {
-            if (dragStartX === null) return;
-            const dx = e.clientX - dragStartX;
-            dragStartX = null;
-            if (Math.abs(dx) >= DRAG_THRESHOLD) {
-                goTo(dx < 0 ? current + 1 : current - 1);
-            }
-        });
-
-        stage.addEventListener('pointercancel', function() { dragStartX = null; });
-
-        // Suppress card link clicks after a drag
-        stage.addEventListener('click', function(e) {
-            if (didDrag) { e.preventDefault(); didDrag = false; }
-        }, true);
 
         // Init without transition so cards snap to position instantly
         cards.forEach(function(c) { c.style.transition = 'none'; });

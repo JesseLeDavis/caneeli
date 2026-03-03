@@ -4,18 +4,19 @@
 .product-detail {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 40px;
-  padding: 40px 0 80px;
+  gap: 32px;
+  padding: 40px 0 100px;
 
   @media (min-width: 768px) {
-    grid-template-columns: 1fr 1fr;
-    gap: 60px;
+    grid-template-columns: 58fr 42fr;
+    gap: 64px;
+    align-items: start;
   }
 
   &__image {
-    border-radius: 20px;
+    border-radius: 24px;
     overflow: hidden;
-    aspect-ratio: 1 / 1;
+    aspect-ratio: 4 / 5;
 
     img {
       width: 100%;
@@ -33,39 +34,76 @@
 
   &__placeholder {
     width: 100%;
-    height: 100%;
+    aspect-ratio: 4 / 5;
     background: color.adjust($neutral, $lightness: -5%);
-    border-radius: 20px;
-    aspect-ratio: 1 / 1;
+    border-radius: 24px;
   }
 
   &__info {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    justify-content: center;
+    gap: 0;
+    padding-top: 8px;
+
+    @media (min-width: 768px) {
+      position: sticky;
+      top: 32px;
+    }
   }
 
   &__category {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.14em;
     color: $rust;
+    margin-bottom: 10px;
   }
 
   &__price {
     font-family: $font-heading;
-    font-size: 28px;
+    font-size: 32px;
     font-weight: 800;
     color: $dark;
+    margin-top: 12px;
+    margin-bottom: 20px;
+  }
+
+  // Rust rule separating price from description
+  &__divider {
+    width: 40px;
+    height: 3px;
+    background: $rust;
+    border-radius: 2px;
+    margin-bottom: 20px;
   }
 
   &__description {
     font-size: 16px;
-    line-height: 1.7;
+    line-height: 1.75;
+    color: color.adjust($dark, $lightness: 10%);
+    margin-bottom: 28px;
+  }
+
+  // Craft signal pills — handmade, lead time, materials
+  &__craft-signals {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 28px;
+  }
+
+  &__signal {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 30px;
+    background: color.adjust($neutral, $lightness: -5%);
+    font-family: $font-body;
+    font-size: 12px;
+    font-weight: 600;
     color: $dark;
-    opacity: 0.8;
   }
 
   &__qty {
@@ -73,30 +111,55 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
+    margin-bottom: 16px;
 
     label {
-      font-size: 13px;
+      font-size: 11px;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: $dark;
+      letter-spacing: 0.10em;
+      color: color.adjust($dark, $lightness: 20%);
     }
   }
 
-  // Form wrapping qty + add-to-cart button
   form {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 14px;
+  }
+
+  // Low stock warning
+  &__stock {
+    font-size: 13px;
+    font-weight: 700;
+    color: $rust;
+    letter-spacing: 0.02em;
+  }
+
+  // Add to cart button — full width, prominent
+  &__atc-btn {
+    width: 100%;
+    padding: 16px 28px;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-align: center;
+    justify-content: center;
   }
 
   &__back {
-    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
     font-weight: 600;
-    color: $rust;
-    margin-top: 8px;
+    color: color.adjust($dark, $lightness: 30%);
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid color.adjust($neutral, $lightness: -10%);
+    transition: color 200ms ease-in-out;
 
-    &:hover { opacity: 0.7; }
+    &:hover { color: $rust; }
   }
 }
 
@@ -104,12 +167,12 @@
 .product-gallery {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 
   &__main {
-    border-radius: 20px;
+    border-radius: 24px;
     overflow: hidden;
-    aspect-ratio: 1 / 1;
+    aspect-ratio: 4 / 5;
     background: color.adjust($neutral, $lightness: -5%);
 
     img {
@@ -125,40 +188,42 @@
   &__thumbs {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
-
-    @media (min-width: 768px) { gap: 10px; }
+    gap: 10px;
   }
 
   &__thumb {
-    width: 60px;
-    height: 60px;
-    border-radius: 10px;
+    width: 68px;
+    height: 68px;
+    border-radius: 12px;
     overflow: hidden;
     cursor: pointer;
-    border: 2px solid transparent;
+    border: 2.5px solid transparent;
+    outline: 2px solid transparent;
+    outline-offset: 2px;
     flex-shrink: 0;
-    transition: border-color 200ms, transform 200ms;
+    transition: border-color 180ms ease-in-out, outline-color 180ms ease-in-out,
+                transform 180ms ease-in-out;
 
-    @media (min-width: 768px) { width: 72px; height: 72px; }
+    @media (min-width: 768px) { width: 80px; height: 80px; }
 
     img {
       width: 100%;
       height: 100%;
       object-fit: cover;
       display: block;
-      filter: saturate(0.7);
-      transition: filter 200ms;
+      filter: saturate(0.65) brightness(0.95);
+      transition: filter 200ms ease-in-out;
     }
 
     &:hover {
-      transform: translateY(-2px);
-      img { filter: saturate(1); }
+      transform: translateY(-3px);
+      img { filter: saturate(1) brightness(1); }
     }
 
     &--active {
       border-color: $rust;
-      img { filter: saturate(1); }
+      outline-color: rgba($rust, 0.25);
+      img { filter: saturate(1) brightness(1); }
     }
   }
 }
@@ -171,4 +236,25 @@
   color: white;
   font-weight: 700;
   font-size: 14px;
+}
+
+// Breadcrumb nav
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 24px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: color.adjust($dark, $lightness: 30%);
+  flex-wrap: wrap;
+
+  a {
+    color: color.adjust($dark, $lightness: 30%);
+    transition: color 200ms ease-in-out;
+
+    &:hover { color: $rust; }
+  }
+
+  span:not(:last-child) { opacity: 0.5; }
 }

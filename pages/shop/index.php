@@ -60,17 +60,28 @@ function shop_url($overrides = []) {
             <h1 class="large_title">Shop</h1>
             <p class="shop-count"><?php echo $total; ?> piece<?php echo $total !== 1 ? 's' : ''; ?></p>
         </div>
+        <p class="shop-tagline">Each piece is made by hand in small batches. No two are exactly alike.</p>
 
         <!-- Filters -->
         <div class="shop-filters">
 
         <!-- Category filters -->
+        <?php
+        $btn_styles = [
+            ['active' => 'red-button',    'inactive' => 'filter-btn'],
+            ['active' => 'blue-button',   'inactive' => 'filter-btn filter-btn--blue'],
+            ['active' => 'yellow-button', 'inactive' => 'filter-btn filter-btn--yellow'],
+        ];
+        $btn_i = 0;
+        ?>
         <div class="filter-bar">
+            <?php $s = $btn_styles[$btn_i++ % 3]; ?>
             <a href="<?php echo shop_url(['category' => '', 'page' => 1]); ?>"
-               class="btn <?php echo !$category ? 'red-button' : 'filter-btn'; ?>">All</a>
+               class="btn <?php echo !$category ? $s['active'] : 'filter-btn'; ?>">All</a>
             <?php foreach ($categories as $cat): ?>
+                <?php $s = $btn_styles[$btn_i++ % 3]; ?>
                 <a href="<?php echo shop_url(['category' => $cat, 'page' => 1]); ?>"
-                   class="btn <?php echo $category === $cat ? 'red-button' : 'filter-btn'; ?>">
+                   class="btn <?php echo $category === $cat ? $s['active'] : 'filter-btn'; ?>">
                     <?php echo $cat; ?>
                 </a>
             <?php endforeach; ?>
@@ -109,7 +120,11 @@ function shop_url($overrides = []) {
 
         <!-- Product grid -->
         <?php if (empty($products)): ?>
-            <p class="shop-empty">Nothing here — try widening your filters.</p>
+            <div class="shop-empty">
+                <p class="shop-empty__heading">No pieces found</p>
+                <p class="shop-empty__text">Try adjusting your filters, or browse everything Annie makes.</p>
+                <a href="/pages/shop/" class="btn filter-btn">Clear Filters</a>
+            </div>
         <?php else: ?>
             <div class="product-grid">
                 <?php foreach ($products as $product): ?>
@@ -122,8 +137,9 @@ function shop_url($overrides = []) {
                     <?php endif; ?>
                     <div class="product-card__overlay">
                         <h3 class="product-card__name"><?php echo sanitize($product['name']); ?></h3>
-                        <p class="product-card__description"><?php echo sanitize($product['description']); ?></p>
+                        <p class="product-card__description"><?php echo mb_strimwidth(sanitize($product['description']), 0, 60, '…'); ?></p>
                         <p class="product-card__price"><?php echo formatPrice($product['price']); ?></p>
+                        <span class="product-card__cta">View Piece</span>
                     </div>
                 </a>
                 <?php endforeach; ?>
