@@ -184,18 +184,11 @@
 
 // Empty state
 .shop-empty {
-  padding: 60px 0;
-  font-size: 18px;
-  color: color.adjust($dark, $lightness: 30%);
-}
-
-// Empty state
-.shop-empty {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 16px;
-  padding: 60px 0 80px;
+  padding: 60px 0;
 
   &__heading {
     font-family: $font-heading;

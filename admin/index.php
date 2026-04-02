@@ -1,5 +1,11 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_set_cookie_params([
+        'httponly'  => true,
+        'samesite'  => 'Strict',
+    ]);
+    session_start();
+}
 require_once __DIR__ . '/../config/config.php';
 
 // Already logged in
@@ -15,6 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $pass = $_POST['password'] ?? '';
 
     if (hash_equals(ADMIN_USER, $user) && hash_equals(ADMIN_PASS, $pass)) {
+        session_regenerate_id(true);
         $_SESSION['admin_logged_in'] = true;
         header('Location: /admin/dashboard.php');
         exit;
@@ -32,7 +39,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
     <div class="login-wrap">
-        <h1>Admin Login</h1>
+        <div class="login-logo-wrap">
+            <img src="/assets/images/logoni.svg" alt="Caneeli Designs">
+            <span class="login-admin-badge">Admin</span>
+        </div>
         <?php if ($error): ?>
             <p class="error"><?php echo $error; ?></p>
         <?php endif; ?>

@@ -16,14 +16,20 @@ $products = $pdo->query("SELECT * FROM products ORDER BY created_at DESC")->fetc
 <body>
 
 <div class="admin-header">
-    <strong>Caneeli Admin</strong>
-    <a href="/admin/logout.php">Log Out</a>
+    <div class="admin-header__brand">
+        <img src="/assets/images/logowi.svg" alt="Caneeli Designs" class="admin-header__logo">
+        <span class="admin-header__admin-label">Admin</span>
+    </div>
+    <a href="/admin/logout.php" class="admin-header__logout">Log Out</a>
 </div>
 
 <div class="container">
     <div class="page-header">
         <h1>Products</h1>
-        <a href="/admin/add-product.php" class="btn btn-primary">+ Add Product</a>
+        <div style="display:flex;gap:10px">
+            <a href="/admin/email-signups.php" class="btn btn-secondary">Email Signups</a>
+            <a href="/admin/add-product.php" class="btn btn-primary">+ Add Product</a>
+        </div>
     </div>
 
     <?php if (empty($products)): ?>
@@ -65,6 +71,7 @@ $products = $pdo->query("SELECT * FROM products ORDER BY created_at DESC")->fetc
                 </td>
                 <td>
                     <form method="POST" action="/admin/toggle-featured.php" style="display:inline">
+                        <?php echo csrf_field(); ?>
                         <input type="hidden" name="id" value="<?php echo $product['id']; ?>">
                         <button type="submit" class="btn-star <?php echo $product['featured'] ? 'btn-star--on' : ''; ?>" title="<?php echo $product['featured'] ? 'Remove from Hot Off the Shelf' : 'Add to Hot Off the Shelf'; ?>">
                             <?php echo $product['featured'] ? '★' : '☆'; ?>
@@ -72,11 +79,14 @@ $products = $pdo->query("SELECT * FROM products ORDER BY created_at DESC")->fetc
                     </form>
                 </td>
                 <td>
-                    <a href="/admin/edit-product.php?id=<?php echo $product['id']; ?>" class="btn btn-secondary">Edit</a>
-                    <form method="POST" action="/admin/delete-product.php" style="display:inline" onsubmit="return confirm('Delete this product?')">
-                        <input type="hidden" name="id" value="<?php echo $product['id']; ?>">
-                        <button type="submit" class="btn btn-danger">Delete</button>
-                    </form>
+                    <div class="td-actions">
+                        <a href="/admin/edit-product.php?id=<?php echo $product['id']; ?>" class="btn btn-secondary">Edit</a>
+                        <form method="POST" action="/admin/delete-product.php" onsubmit="return confirm('Delete this product?')">
+                            <?php echo csrf_field(); ?>
+                            <input type="hidden" name="id" value="<?php echo $product['id']; ?>">
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                        </form>
+                    </div>
                 </td>
             </tr>
             <?php endforeach; ?>

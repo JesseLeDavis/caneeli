@@ -1,0 +1,42 @@
+RewriteEngine On
+
+# ── Block access to sensitive files and directories ─────────────────
+<FilesMatch "^\.env$">
+    Require all denied
+</FilesMatch>
+
+<FilesMatch "\.(sql|sh|log|bak|ini)$">
+    Require all denied
+</FilesMatch>
+
+RewriteRule ^config/ - [F,L]
+RewriteRule ^includes/ - [F,L]
+RewriteRule ^database/ - [F,L]
+RewriteRule ^vendor/ - [F,L]
+
+# ── Security headers ───────────────────────────────────────────────
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "DENY"
+    Header set X-XSS-Protection "1; mode=block"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# ── Redirect .php URLs to clean versions (external redirect) ──────────
+# Skip directory index files (index.php should stay as-is)
+RewriteCond %{THE_REQUEST} /index\.php[\s?] [NC]
+RewriteRule ^(.*)index\.php$ /$1 [R=301,L]
+
+# Redirect any .php URL to the version without .php
+# Skip POST requests (API endpoints like signup need .php to stay)
+RewriteCond %{REQUEST_METHOD} !POST
+RewriteCond %{THE_REQUEST} \.php[\s?] [NC]
+RewriteRule ^(.+)\.php$ /$1 [R=301,L]
+
+# ── Internally rewrite clean URLs to .php files ──────────────────────
+# Skip existing files and directories
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+# If a matching .php file exists, rewrite to it
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^(.+)$ $1.php [L]

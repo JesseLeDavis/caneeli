@@ -2,6 +2,11 @@
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/../includes/db.php';
 
+if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !csrf_verify()) {
+    header('Location: /admin/dashboard.php');
+    exit;
+}
+
 $image_id   = intval($_POST['image_id']   ?? 0);
 $product_id = intval($_POST['product_id'] ?? 0);
 

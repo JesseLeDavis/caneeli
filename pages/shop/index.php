@@ -37,8 +37,8 @@ $page        = min($page, $total_pages);
 $offset      = ($page - 1) * $per_page;
 
 // Fetch products
-$stmt = $pdo->prepare("SELECT * FROM products $where ORDER BY created_at DESC LIMIT $per_page OFFSET $offset");
-$stmt->execute($params);
+$stmt = $pdo->prepare("SELECT * FROM products $where ORDER BY created_at DESC LIMIT ? OFFSET ?");
+$stmt->execute(array_merge($params, [$per_page, $offset]));
 $products = $stmt->fetchAll();
 
 // URL builder — keeps all active filters

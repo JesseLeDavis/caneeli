@@ -1,4 +1,8 @@
 <?php
+if (time() < strtotime('2026-05-01 18:00:00 America/Los_Angeles')) {
+    header('Location: /coming-soon.php');
+    exit;
+}
 $pageTitle = "Home";
 include 'includes/header.php';
 include 'includes/db.php';

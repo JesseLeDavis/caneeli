@@ -1,5 +1,5 @@
 <?php
-session_start();
+$pageTitle = "Cart";
 include __DIR__ . '/includes/header.php';
 include __DIR__ . '/includes/db.php';
 

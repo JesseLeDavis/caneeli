@@ -72,11 +72,25 @@ $gallery = $img_stmt->fetchAll();
                 <div class="product-detail__divider"></div>
                 <p class="product-detail__description"><?php echo nl2br(sanitize($product['description'])); ?></p>
 
+                <?php
+                $signals = json_decode($product['craft_signals'] ?? '[]', true) ?? [];
+                if (!empty($signals)):
+                ?>
                 <div class="product-detail__craft-signals">
-                    <span class="product-detail__signal">Handcrafted to Order</span>
-                    <span class="product-detail__signal">Ships in 2–3 Weeks</span>
-                    <span class="product-detail__signal">Solid Wood</span>
+                    <?php foreach ($signals as $signal):
+                        $signal = htmlspecialchars(strip_tags($signal));
+                        if (str_contains($signal, 'Ship') || str_contains($signal, 'Order')) {
+                            $mod = 'product-detail__signal--shipping';
+                        } elseif (str_contains($signal, 'Edition') || str_contains($signal, 'Signed')) {
+                            $mod = 'product-detail__signal--premium';
+                        } else {
+                            $mod = 'product-detail__signal--material';
+                        }
+                    ?>
+                        <span class="product-detail__signal <?php echo $mod; ?>"><?php echo $signal; ?></span>
+                    <?php endforeach; ?>
                 </div>
+                <?php endif; ?>
 
                 <?php if ($product['stock_qty'] > 0): ?>
                     <form method="POST" action="/cart.php">

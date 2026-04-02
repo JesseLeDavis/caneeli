@@ -1,0 +1,499 @@
+@use '../base/variables' as *;
+@use 'sass:color';
+
+// ─── Keyframes ────────────────────────────────────────────────────────────────
+
+@keyframes cs-fadeup {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes cs-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+
+@keyframes cs-shake {
+  0%, 100% { transform: translateX(0); }
+  20%      { transform: translateX(-6px); }
+  40%      { transform: translateX(6px); }
+  60%      { transform: translateX(-4px); }
+  80%      { transform: translateX(4px); }
+}
+
+// ─── Page shell ───────────────────────────────────────────────────────────────
+
+.cs-body {
+  background: $neutral;
+  min-height: 100vh;
+}
+
+.cs-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+// ─── Wordmark ─────────────────────────────────────────────────────────────────
+
+.cs-wordmark {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-top: 32px;
+}
+
+.cs-wordmark__logo {
+  height: 80px;
+  // Recolor white SVG to $rust (#C25B32)
+  filter: brightness(0) saturate(100%) invert(39%) sepia(44%) saturate(800%) hue-rotate(343deg) brightness(95%);
+
+  @media (min-width: 768px) {
+    height: 110px;
+  }
+}
+
+// ─── Hero ─────────────────────────────────────────────────────────────────────
+
+.cs-hero {
+  text-align: center;
+  padding: 48px 20px 32px;
+}
+
+.cs-hero__inner {
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.cs-hero__eyebrow {
+  font-family: $font-body;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: $rust;
+  animation: cs-fadeup 0.6s ease both;
+  animation-delay: 0.1s;
+}
+
+.cs-hero__headline {
+  font-family: $font-heading;
+  font-size: 52px;
+  font-weight: 800;
+  color: $dark;
+  line-height: 1.05;
+  margin: 16px 0 24px;
+  animation: cs-fadeup 0.6s ease both;
+  animation-delay: 0.25s;
+  @media (min-width: 600px) {
+    font-size: 72px;
+  }
+
+  @media (min-width: 1024px) {
+    font-size: 96px;
+  }
+}
+
+.cs-hero__rule {
+  width: 60px;
+  height: 4px;
+  background: $mustard;
+  border-radius: 30px;
+  margin: 0 auto 24px;
+  animation: cs-fadeup 0.6s ease both;
+  animation-delay: 0.4s;
+}
+
+.cs-hero__sub {
+  font-family: $font-body;
+  font-size: 17px;
+  line-height: 1.7;
+  color: color.adjust($dark, $lightness: 20%);
+  animation: cs-fadeup 0.6s ease both;
+  animation-delay: 0.55s;
+
+  @media (min-width: 768px) {
+    font-size: 19px;
+  }
+}
+
+// ─── Countdown ────────────────────────────────────────────────────────────────
+
+.cs-countdown {
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px 48px;
+}
+
+.cs-countdown__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+
+  .cs-countdown__sep {
+    display: none;
+  }
+
+  @media (min-width: 560px) {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    .cs-countdown__sep {
+      display: block;
+    }
+  }
+
+  @media (min-width: 768px) {
+    gap: 24px;
+  }
+}
+
+.cs-countdown__block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: 2px solid $dark;
+  border-radius: 16px;
+  padding: 20px 16px 14px;
+  width: 120px;
+  flex-shrink: 0;
+
+  @media (min-width: 560px) {
+    padding: 20px 20px 14px;
+    width: 130px;
+  }
+
+  @media (min-width: 768px) {
+    width: 150px;
+  }
+
+  @media (min-width: 768px) {
+    padding: 24px 28px 16px;
+  }
+
+  // Cycling border colors & drop shadows — nth-child accounts for separators
+  // blocks are children 1, 3, 5, 7 (separators occupy 2, 4, 6)
+  &:nth-child(1) {
+    border-color: $blue-400;
+    filter: drop-shadow($blue-400 3px 3px);
+  }
+
+  &:nth-child(3) {
+    border-color: $mustard;
+    filter: drop-shadow($mustard 3px 3px);
+  }
+
+  &:nth-child(5) {
+    border-color: $rust;
+    filter: drop-shadow($rust 3px 3px);
+  }
+
+  &:nth-child(7) {
+    border-color: $dark;
+    filter: drop-shadow($dark 3px 3px);
+  }
+}
+
+.cs-countdown__number {
+  font-family: $font-heading;
+  font-size: 48px;
+  font-weight: 800;
+  color: $dark;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  transition: transform 200ms ease, opacity 200ms ease;
+
+  @media (min-width: 560px) {
+    font-size: 52px;
+  }
+
+  @media (min-width: 768px) {
+    font-size: 64px;
+  }
+
+  &.is-flipping {
+    transform: translateY(-6px);
+    opacity: 0;
+  }
+}
+
+.cs-countdown__label {
+  font-family: $font-body;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: color.adjust($dark, $lightness: 35%);
+  margin-top: 6px;
+
+  @media (min-width: 480px) {
+    font-size: 11px;
+  }
+}
+
+.cs-countdown__sep {
+  font-family: $font-heading;
+  font-size: 28px;
+  font-weight: 800;
+  color: $rust;
+  margin-bottom: 24px;
+  animation: cs-pulse 2s ease-in-out infinite;
+  user-select: none;
+
+  @media (min-width: 380px) {
+    font-size: 36px;
+  }
+
+  @media (min-width: 480px) {
+    font-size: 52px;
+  }
+
+  @media (min-width: 768px) {
+    font-size: 64px;
+  }
+}
+
+// ─── Signup ───────────────────────────────────────────────────────────────────
+
+.cs-signup {
+  text-align: center;
+  padding: 0 20px 64px;
+}
+
+.cs-signup__inner {
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.cs-signup__eyebrow {
+  font-family: $font-body;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: $mustard;
+}
+
+.cs-signup__heading {
+  font-family: $font-heading;
+  font-size: 36px;
+  font-weight: 800;
+  color: $dark;
+  margin: 12px 0 16px;
+
+  @media (min-width: 768px) {
+    font-size: 48px;
+  }
+}
+
+.cs-signup__sub {
+  font-family: $font-body;
+  font-size: 15px;
+  color: color.adjust($dark, $lightness: 30%);
+  line-height: 1.65;
+  margin-bottom: 32px;
+}
+
+.cs-signup__field {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  @media (min-width: 480px) {
+    flex-direction: row;
+    gap: 10px;
+    align-items: flex-start;
+  }
+}
+
+.cs-signup__input {
+  flex: 1;
+  border-radius: 30px;
+  background: white;
+  border: 2px solid color.adjust($neutral, $lightness: -10%);
+  font-family: $font-body;
+  font-size: 15px;
+  color: $dark;
+  padding: 12px 20px;
+  outline: none;
+  transition: border-color 200ms ease, box-shadow 200ms ease;
+
+  &::placeholder {
+    color: color.adjust($dark, $lightness: 45%);
+  }
+
+  &:focus {
+    border-color: $rust;
+    box-shadow: 0 0 0 3px color.adjust($rust, $alpha: -0.8);
+  }
+
+  &.is-invalid {
+    border-color: $rust;
+    animation: cs-shake 0.4s ease;
+  }
+}
+
+.cs-signup__btn {
+  padding: 12px 28px;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  &.is-loading {
+    opacity: 0.6;
+    pointer-events: none;
+    cursor: wait;
+  }
+}
+
+.cs-signup__error {
+  font-family: $font-body;
+  font-size: 13px;
+  color: $rust;
+  margin-top: 10px;
+  min-height: 18px;
+}
+
+.cs-signup__success {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-family: $font-body;
+  font-size: 18px;
+  font-weight: 600;
+  color: $dark;
+  background: white;
+  border: 2px solid $mustard;
+  filter: drop-shadow($mustard 3px 3px);
+  border-radius: 16px;
+  padding: 20px 24px;
+  margin-top: 24px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 400ms ease, transform 400ms ease;
+
+  &.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cs-signup__success-icon {
+  font-size: 22px;
+  color: $mustard;
+  font-weight: 800;
+  line-height: 1;
+}
+
+// ─── Gallery ──────────────────────────────────────────────────────────────────
+
+.cs-gallery {
+  padding: 0 0 80px;
+  overflow: hidden;
+}
+
+.cs-gallery__track {
+  display: flex;
+  gap: 12px;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 20px;
+  align-items: center;
+
+  @media (min-width: 600px) {
+    gap: 20px;
+  }
+}
+
+.cs-gallery__item {
+  border-radius: 16px;
+  overflow: hidden;
+  flex: 1;
+  border: 2px solid transparent;
+
+  &:nth-child(1) { border-color: $blue-400; }
+  &:nth-child(2) { border-color: $mustard; }
+  &:nth-child(3) { border-color: $rust; }
+
+  &--tall {
+    aspect-ratio: 3 / 4;
+  }
+
+  &--short {
+    aspect-ratio: 4 / 5;
+  }
+
+  &:hover .cs-gallery__img {
+    transform: scale(1.05);
+  }
+}
+
+.cs-gallery__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 600ms ease;
+}
+
+.cs-gallery__placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    135deg,
+    color.adjust($neutral, $lightness: -5%) 0%,
+    color.adjust($neutral, $lightness: -12%) 100%
+  );
+}
+
+// ─── Footer ───────────────────────────────────────────────────────────────────
+
+.cs-footer {
+  border-top: 2px solid $rust;
+  padding: 24px 20px;
+  text-align: center;
+  margin-top: auto;
+}
+
+.cs-footer__socials {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.cs-footer__icon {
+  height: 24px;
+  opacity: 0.75;
+  transition: opacity 200ms ease;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.cs-footer__social-link {
+  font-family: $font-body;
+  font-size: 13px;
+  font-weight: 600;
+  color: $rust;
+  text-decoration: none;
+  letter-spacing: 0.05em;
+  opacity: 0.75;
+  transition: opacity 200ms ease;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.cs-footer__copy {
+  font-family: $font-body;
+  font-size: 12px;
+  color: $rust;
+  font-weight: 500;
+}

@@ -1,10 +1,10 @@
 <?php
-// Site Configuration
-define('SITE_NAME', 'Caneeli');
-define('SITE_URL', 'http://localhost:8000'); // Update this for production
-
 // Load .env
 $env = parse_ini_file(__DIR__ . '/../.env');
+
+// Site Configuration
+define('SITE_NAME', 'Caneeli');
+define('SITE_URL', $env['SITE_URL'] ?? 'http://localhost:8000');
 
 // Database Configuration
 define('DB_HOST', $env['DB_HOST']);
@@ -21,6 +21,8 @@ define('STRIPE_PUBLIC_KEY', $env['STRIPE_PUBLIC_KEY']);
 define('STRIPE_SECRET_KEY', $env['STRIPE_SECRET_KEY']);
 define('STRIPE_WEBHOOK_SECRET', $env['STRIPE_WEBHOOK_SECRET']);
 
-// Error reporting (disable in production)
+// Error reporting — display errors only in local dev
+$is_local = in_array($_SERVER['SERVER_NAME'] ?? '', ['localhost', '127.0.0.1']);
 error_reporting(E_ALL);
-ini_set('display_errors', 1);
+ini_set('display_errors', $is_local ? 1 : 0);
+ini_set('log_errors', 1);

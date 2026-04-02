@@ -104,6 +104,21 @@
     font-size: 12px;
     font-weight: 600;
     color: $dark;
+
+    &--shipping {
+      border-left: 2px solid $rust;
+      padding-left: 12px;
+    }
+
+    &--material {
+      border-left: 2px solid $blue-400;
+      padding-left: 12px;
+    }
+
+    &--premium {
+      border-left: 2px solid $mustard;
+      padding-left: 12px;
+    }
   }
 
   &__qty {

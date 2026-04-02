@@ -1,5 +1,4 @@
 <?php
-session_start();
 $pageTitle = "Order Confirmed";
 include __DIR__ . '/includes/header.php';
 require_once __DIR__ . '/vendor/autoload.php';
