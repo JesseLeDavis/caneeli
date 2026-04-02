@@ -2,11 +2,13 @@ RewriteEngine On
 
 # ── Block access to sensitive files and directories ─────────────────
 <FilesMatch "^\.env$">
-    Require all denied
+    Order allow,deny
+    Deny from all
 </FilesMatch>
 
 <FilesMatch "\.(sql|sh|log|bak|ini)$">
-    Require all denied
+    Order allow,deny
+    Deny from all
 </FilesMatch>
 
 RewriteRule ^config/ - [F,L]
