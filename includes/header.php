@@ -19,6 +19,12 @@ if (session_status() === PHP_SESSION_NONE) {
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400..800&family=Urbanist:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link rel="icon" href="<?php echo SITE_URL; ?>/assets/images/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="<?php echo SITE_URL; ?>/assets/images/favicon-96x96.png" type="image/png" sizes="96x96">
+    <link rel="icon" href="<?php echo SITE_URL; ?>/assets/images/favicon.ico" sizes="32x32">
+    <link rel="apple-touch-icon" href="<?php echo SITE_URL; ?>/assets/images/apple-touch-icon.png">
+    <link rel="manifest" href="<?php echo SITE_URL; ?>/site.webmanifest">
+    <meta name="theme-color" content="#C25B32">
     <link rel="stylesheet" href="<?php echo SITE_URL; ?>/assets/css/style.css">
 </head>
 <body>
