@@ -13,6 +13,10 @@ $product = $stmt->fetch();
 
 if (!$product) { header('Location: /pages/shop/'); exit; }
 
+// Record the view for the admin insights report (fire-and-forget).
+require_once __DIR__ . '/../../includes/tracking.php';
+track_product_view((int) $product['id'], $_SERVER['HTTP_REFERER'] ?? null);
+
 $pageTitle = sanitize($product['name']) . ' — Caneeli Designs';
 
 // Fetch gallery images

@@ -2,6 +2,7 @@
 $pageTitle = "Cart";
 include __DIR__ . '/includes/header.php';
 include __DIR__ . '/includes/db.php';
+require_once __DIR__ . '/includes/tracking.php';
 
 // Handle cart actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -23,6 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             $new_qty = $_SESSION['cart'][$product_id] + $qty;
             $_SESSION['cart'][$product_id] = min($new_qty, $product['stock_qty']);
+            track_cart_event($product_id, 'add');
         }
         header('Location: /cart.php');
         exit;
@@ -32,6 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $qty = intval($_POST['quantity'] ?? 0);
         if ($qty <= 0) {
             unset($_SESSION['cart'][$product_id]);
+            track_cart_event($product_id, 'remove');
         } else {
             $_SESSION['cart'][$product_id] = $qty;
         }
@@ -41,6 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'remove' && $product_id) {
         unset($_SESSION['cart'][$product_id]);
+        track_cart_event($product_id, 'remove');
         header('Location: /cart.php');
         exit;
     }

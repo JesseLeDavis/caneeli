@@ -2,6 +2,7 @@
 session_start();
 require_once __DIR__ . '/config/config.php';
 require_once __DIR__ . '/includes/db.php';
+require_once __DIR__ . '/includes/tracking.php';
 require_once __DIR__ . '/vendor/autoload.php';
 
 if (empty($_SESSION['cart'])) {
@@ -48,6 +49,7 @@ foreach ($products as $product) {
         'price'      => (float) $product['price'],
         'qty'        => (int) $_SESSION['cart'][$product['id']],
     ];
+    track_cart_event((int) $product['id'], 'checkout_start');
 }
 
 try {

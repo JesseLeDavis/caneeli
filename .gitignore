@@ -19,3 +19,6 @@ Thumbs.db
 # Uploads
 assets/uploads/*
 !assets/uploads/.gitkeep
+
+# Archives / backups — never commit zips of the project
+*.zip
