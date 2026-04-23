@@ -3,6 +3,7 @@ $pageTitle = "Cart";
 include __DIR__ . '/includes/header.php';
 include __DIR__ . '/includes/db.php';
 require_once __DIR__ . '/includes/tracking.php';
+require_once __DIR__ . '/includes/discounts.php';
 
 // Handle cart actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -48,6 +49,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Location: /cart.php');
         exit;
     }
+
+    if ($action === 'apply_discount') {
+        $code = $_POST['discount_code'] ?? '';
+        $row  = discount_lookup($code);
+        if ($row) {
+            $_SESSION['discount_code_id'] = (int) $row['id'];
+            $_SESSION['discount_flash']   = ['type' => 'success', 'msg' => 'Code applied.'];
+        } else {
+            unset($_SESSION['discount_code_id']);
+            $_SESSION['discount_flash']   = ['type' => 'error', 'msg' => 'That code isn\'t valid.'];
+        }
+        header('Location: /cart.php');
+        exit;
+    }
+
+    if ($action === 'remove_discount') {
+        unset($_SESSION['discount_code_id']);
+        header('Location: /cart.php');
+        exit;
+    }
 }
 
 // Load cart products from DB
@@ -68,6 +89,25 @@ if (!empty($_SESSION['cart'])) {
         $cart_items[] = array_merge($product, ['qty' => $qty, 'line_total' => $line_total]);
     }
 }
+
+// Resolve discount (if any) against the current subtotal.
+$active_discount = null;
+$discount_value  = 0;
+if (!empty($_SESSION['discount_code_id']) && $subtotal > 0) {
+    $stmt = getDB()->prepare("SELECT * FROM discount_codes WHERE id = ? AND active = 1");
+    $stmt->execute([(int) $_SESSION['discount_code_id']]);
+    $row = $stmt->fetch();
+    if ($row && ($row['max_uses'] === null || $row['times_used'] < $row['max_uses'])) {
+        $active_discount = $row;
+        $discount_value  = discount_amount($row, $subtotal);
+    } else {
+        unset($_SESSION['discount_code_id']);
+    }
+}
+$total_after_discount = max(0, $subtotal - $discount_value);
+
+$discount_flash = $_SESSION['discount_flash'] ?? null;
+unset($_SESSION['discount_flash']);
 ?>
 
 <section class="hero">
@@ -139,6 +179,39 @@ if (!empty($_SESSION['cart'])) {
                         <span class="cart__subtotal-label">Subtotal</span>
                         <span class="cart__subtotal-price"><?php echo formatPrice($subtotal); ?></span>
                     </div>
+
+                    <?php if ($discount_flash): ?>
+                        <p class="cart__discount-flash cart__discount-flash--<?php echo htmlspecialchars($discount_flash['type']); ?>">
+                            <?php echo htmlspecialchars($discount_flash['msg']); ?>
+                        </p>
+                    <?php endif; ?>
+
+                    <?php if ($active_discount): ?>
+                        <div class="cart__discount-row">
+                            <span>
+                                <strong><?php echo htmlspecialchars($active_discount['code']); ?></strong>
+                                <?php echo $active_discount['type'] === 'percent'
+                                    ? '(' . rtrim(rtrim(number_format((float) $active_discount['value'], 2), '0'), '.') . '% off)'
+                                    : '(' . formatPrice($active_discount['value']) . ' off)'; ?>
+                            </span>
+                            <span>−<?php echo formatPrice($discount_value); ?></span>
+                            <form method="POST" style="margin:0">
+                                <input type="hidden" name="action" value="remove_discount">
+                                <button type="submit" class="cart__discount-remove" aria-label="Remove discount">✕</button>
+                            </form>
+                        </div>
+                        <div class="cart__subtotal" style="padding-top:8px;border-top:1px solid rgba(0,0,0,.08)">
+                            <span class="cart__subtotal-label">Total</span>
+                            <span class="cart__subtotal-price"><?php echo formatPrice($total_after_discount); ?></span>
+                        </div>
+                    <?php else: ?>
+                        <form method="POST" class="cart__discount-form">
+                            <input type="hidden" name="action" value="apply_discount">
+                            <input type="text" name="discount_code" placeholder="Discount code" maxlength="40" autocomplete="off">
+                            <button type="submit" class="cart__discount-apply">Apply</button>
+                        </form>
+                    <?php endif; ?>
+
                     <p class="cart__note">Taxes calculated at checkout.</p>
                     <a href="/checkout.php" class="btn blue-button">Checkout</a>
                     <p class="cart__stripe-note">🔒 Secure checkout via Stripe</p>

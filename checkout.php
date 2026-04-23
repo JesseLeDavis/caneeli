@@ -3,6 +3,7 @@ session_start();
 require_once __DIR__ . '/config/config.php';
 require_once __DIR__ . '/includes/db.php';
 require_once __DIR__ . '/includes/tracking.php';
+require_once __DIR__ . '/includes/discounts.php';
 require_once __DIR__ . '/vendor/autoload.php';
 
 if (empty($_SESSION['cart'])) {
@@ -52,8 +53,33 @@ foreach ($products as $product) {
     track_cart_event((int) $product['id'], 'checkout_start');
 }
 
+// Resolve active discount code (if any) and create a one-off Stripe coupon.
+$discounts_arg = [];
+$applied_code  = null;
+if (!empty($_SESSION['discount_code_id'])) {
+    $stmt = getDB()->prepare("SELECT * FROM discount_codes WHERE id = ? AND active = 1");
+    $stmt->execute([(int) $_SESSION['discount_code_id']]);
+    $row = $stmt->fetch();
+    if ($row && ($row['max_uses'] === null || $row['times_used'] < $row['max_uses'])) {
+        try {
+            $coupon_args = ['duration' => 'once', 'name' => 'Promo: ' . $row['code']];
+            if ($row['type'] === 'percent') {
+                $coupon_args['percent_off'] = (float) $row['value'];
+            } else {
+                $coupon_args['amount_off'] = (int) round($row['value'] * 100);
+                $coupon_args['currency']   = 'usd';
+            }
+            $coupon = \Stripe\Coupon::create($coupon_args);
+            $discounts_arg = [['coupon' => $coupon->id]];
+            $applied_code  = $row['code'];
+        } catch (\Stripe\Exception\ApiErrorException $e) {
+            // If the coupon can't be created, just proceed without the discount.
+        }
+    }
+}
+
 try {
-    $session = \Stripe\Checkout\Session::create([
+    $session_args = [
         'payment_method_types' => ['card'],
         'line_items'           => $line_items,
         'mode'                 => 'payment',
@@ -63,9 +89,15 @@ try {
             'allowed_countries' => ['US', 'CA'],
         ],
         'metadata' => [
-            'cart' => json_encode($cart_snapshot),
+            'cart'          => json_encode($cart_snapshot),
+            'discount_code' => $applied_code,
         ],
-    ]);
+    ];
+    if ($discounts_arg) {
+        $session_args['discounts'] = $discounts_arg;
+    }
+
+    $session = \Stripe\Checkout\Session::create($session_args);
 
     header('Location: ' . $session->url);
     exit;

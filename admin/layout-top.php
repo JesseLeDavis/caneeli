@@ -2,7 +2,7 @@
 /**
  * Shared admin chrome (header + sub-nav).
  * Expects $pageTitle (string) to be set before include.
- * Expects $activeNav (string) — one of: 'dashboard', 'products', 'orders', 'insights', 'signups', ''.
+ * Expects $activeNav (string) — one of: 'dashboard', 'products', 'orders', 'insights', 'discounts', 'signups', ''.
  */
 $activeNav = $activeNav ?? '';
 $pageTitle = $pageTitle ?? 'Admin';
@@ -30,6 +30,7 @@ $pageTitle = $pageTitle ?? 'Admin';
         <a href="/admin/products.php" class="admin-subnav__link <?php echo $activeNav === 'products' ? 'is-active' : ''; ?>">Products</a>
         <a href="/admin/orders.php" class="admin-subnav__link <?php echo $activeNav === 'orders' ? 'is-active' : ''; ?>">Orders</a>
         <a href="/admin/insights.php" class="admin-subnav__link <?php echo $activeNav === 'insights' ? 'is-active' : ''; ?>">Insights</a>
+        <a href="/admin/discounts.php" class="admin-subnav__link <?php echo $activeNav === 'discounts' ? 'is-active' : ''; ?>">Discounts</a>
         <a href="/admin/email-signups.php" class="admin-subnav__link <?php echo $activeNav === 'signups' ? 'is-active' : ''; ?>">Email Signups</a>
     </div>
 </nav>

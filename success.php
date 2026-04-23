@@ -69,8 +69,8 @@ if ($session_id && !empty($_SESSION['cart'])) {
                 }
             }
 
-            // Clear the cart
-            unset($_SESSION['cart']);
+            // Clear the cart + any applied discount.
+            unset($_SESSION['cart'], $_SESSION['discount_code_id']);
             $order_saved = true;
         }
     } catch (\Stripe\Exception\ApiErrorException $e) {

@@ -106,6 +106,13 @@ try {
         }
     }
 
+    // Bump usage counter for the applied discount code (if any).
+    $applied_code = $full_session->metadata->discount_code ?? null;
+    if ($applied_code) {
+        $pdo->prepare("UPDATE discount_codes SET times_used = times_used + 1 WHERE code = ?")
+            ->execute([$applied_code]);
+    }
+
     $pdo->commit();
 } catch (\Throwable $e) {
     $pdo->rollBack();

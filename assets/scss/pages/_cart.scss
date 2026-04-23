@@ -195,6 +195,82 @@
     min-width: 0;
   }
 
+  &__discount-form {
+    display: flex;
+    gap: 8px;
+    margin: 14px 0 10px;
+  }
+  &__discount-form input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1.5px solid color.adjust($neutral, $lightness: -10%);
+    border-radius: 30px;
+    font-family: $font-body;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: white;
+  }
+  &__discount-form input:focus {
+    outline: none;
+    border-color: $rust;
+  }
+  &__discount-apply {
+    padding: 10px 18px;
+    border-radius: 30px;
+    background: $dark;
+    color: $neutral;
+    border: none;
+    font-family: $font-body;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 200ms;
+  }
+  &__discount-apply:hover { opacity: 0.85; }
+
+  &__discount-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin: 12px 0;
+    padding: 10px 14px;
+    background: rgba($mustard, 0.18);
+    border-radius: 12px;
+    font-size: 14px;
+    color: $dark;
+  }
+  &__discount-row strong {
+    font-family: $font-heading;
+    letter-spacing: 0.04em;
+  }
+  &__discount-remove {
+    background: transparent;
+    border: none;
+    color: color.adjust($dark, $lightness: 25%);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+  }
+  &__discount-remove:hover { color: $rust; }
+
+  &__discount-flash {
+    font-size: 13px;
+    margin: 8px 0;
+    padding: 8px 12px;
+    border-radius: 8px;
+  }
+  &__discount-flash--success {
+    background: rgba(#276749, 0.1);
+    color: #276749;
+  }
+  &__discount-flash--error {
+    background: rgba(#e53e3e, 0.08);
+    color: #e53e3e;
+  }
+
   &__shipping-note {
     font-size: 13px;
     font-weight: 600;
