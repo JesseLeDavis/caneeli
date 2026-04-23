@@ -4,6 +4,20 @@ require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/product_status.php';
 
+// Temporary: surface errors to an authenticated admin for debugging.
+if (isset($_GET['debug'])) {
+    ini_set('display_errors', 1);
+    error_reporting(E_ALL);
+    set_exception_handler(function (\Throwable $e) {
+        http_response_code(500);
+        echo '<pre style="padding:20px;background:#fff5f5;color:#b00;font-family:monospace;font-size:13px;white-space:pre-wrap">';
+        echo 'ERROR: ' . htmlspecialchars($e->getMessage()) . "\n\n";
+        echo htmlspecialchars($e->getTraceAsString());
+        echo '</pre>';
+        exit;
+    });
+}
+
 $pdo = getDB();
 
 // ── Time window ─────────────────────────────────────────────────────────
