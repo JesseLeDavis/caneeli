@@ -70,6 +70,27 @@ $sold_out_products = $pdo->query("
     LIMIT 5
 ")->fetchAll();
 
+// Daily revenue for the last 30 days (for the chart).
+$rev_series = $pdo->prepare("
+    SELECT DATE(created_at) AS d, COALESCE(SUM(total), 0) AS revenue
+    FROM orders
+    WHERE status IN ('paid','fulfilled') AND created_at >= ?
+    GROUP BY DATE(created_at)
+");
+$rev_series->execute([$d30]);
+$rev_by_day = [];
+foreach ($rev_series->fetchAll() as $r) {
+    $rev_by_day[$r['d']] = (float) $r['revenue'];
+}
+// Fill in every day (so empty days show as 0 on the chart).
+$chart_labels = [];
+$chart_values = [];
+for ($i = 29; $i >= 0; $i--) {
+    $day = date('Y-m-d', strtotime("-$i days"));
+    $chart_labels[] = date('M j', strtotime($day));
+    $chart_values[] = $rev_by_day[$day] ?? 0;
+}
+
 // Top sellers (last 30d, paid/fulfilled only)
 $top_sellers_stmt = $pdo->prepare("
     SELECT
@@ -96,6 +117,51 @@ $recent_orders = $pdo->query("
     ORDER BY created_at DESC
     LIMIT 5
 ")->fetchAll();
+
+// Activity feed — merge recent events from multiple tables.
+$activity = [];
+
+foreach ($pdo->query("SELECT id, created_at, customer_name, customer_email, total FROM orders ORDER BY created_at DESC LIMIT 10") as $r) {
+    $activity[] = [
+        'type'      => 'order',
+        'at'        => $r['created_at'],
+        'icon'      => '🛒',
+        'text'      => 'New order #' . $r['id'] . ' from ' . ($r['customer_name'] ?: $r['customer_email']) . ' ($' . number_format((float) $r['total'], 2) . ')',
+        'href'      => '/admin/order-detail.php?id=' . $r['id'],
+    ];
+}
+
+foreach ($pdo->query("SELECT email, created_at FROM email_signups ORDER BY created_at DESC LIMIT 10") as $r) {
+    $activity[] = [
+        'type'      => 'signup',
+        'at'        => $r['created_at'],
+        'icon'      => '✉️',
+        'text'      => 'New signup: ' . $r['email'],
+        'href'      => '/admin/email-signups.php',
+    ];
+}
+
+foreach ($pdo->query("SELECT id, name, created_at FROM products ORDER BY created_at DESC LIMIT 5") as $r) {
+    $activity[] = [
+        'type'      => 'product',
+        'at'        => $r['created_at'],
+        'icon'      => '🪵',
+        'text'      => 'Added product: ' . $r['name'],
+        'href'      => '/admin/edit-product.php?id=' . $r['id'],
+    ];
+}
+
+usort($activity, fn($a, $b) => strcmp($b['at'], $a['at']));
+$activity = array_slice($activity, 0, 10);
+
+function activity_ago(string $ts): string {
+    $s = time() - strtotime($ts);
+    if ($s < 60)     return $s . 's ago';
+    if ($s < 3600)   return floor($s / 60) . 'm ago';
+    if ($s < 86400)  return floor($s / 3600) . 'h ago';
+    if ($s < 604800) return floor($s / 86400) . 'd ago';
+    return date('M j', strtotime($ts));
+}
 
 $pageTitle = 'Dashboard';
 $activeNav = 'dashboard';
@@ -147,6 +213,19 @@ require __DIR__ . '/layout-top.php';
     <div class="dash-grid">
         <!-- Left column -->
         <div class="dash-col">
+            <div class="order-card">
+                <div class="dash-card-header">
+                    <h3 class="order-card__title" style="margin:0;padding:0;border:none">Revenue (30d)</h3>
+                    <span style="font-size:13px;color:rgba(45,45,45,0.55)">$<?php echo number_format($stats_30d['revenue'], 2); ?></span>
+                </div>
+                <div style="position:relative;height:220px;margin-top:12px">
+                    <canvas id="revenue-chart"></canvas>
+                </div>
+                <?php if (array_sum($chart_values) == 0): ?>
+                    <p style="text-align:center;color:rgba(45,45,45,0.55);margin-top:12px;font-size:13px">No revenue yet — the curve will wake up with your first order.</p>
+                <?php endif; ?>
+            </div>
+
             <div class="order-card">
                 <div class="dash-card-header">
                     <h3 class="order-card__title" style="margin:0;padding:0;border:none">Recent orders</h3>
@@ -220,6 +299,29 @@ require __DIR__ . '/layout-top.php';
         <div class="dash-col">
             <div class="order-card">
                 <div class="dash-card-header">
+                    <h3 class="order-card__title" style="margin:0;padding:0;border:none">Activity</h3>
+                </div>
+                <?php if (!$activity): ?>
+                    <p style="color:rgba(45,45,45,0.55);margin-top:12px;font-size:14px">Nothing to show yet — it'll fill up as people find you.</p>
+                <?php else: ?>
+                    <ul class="activity-list">
+                        <?php foreach ($activity as $a): ?>
+                            <li class="activity-item activity-item--<?php echo htmlspecialchars($a['type']); ?>">
+                                <span class="activity-item__icon"><?php echo $a['icon']; ?></span>
+                                <div class="activity-item__body">
+                                    <a href="<?php echo htmlspecialchars($a['href']); ?>" class="activity-item__text">
+                                        <?php echo htmlspecialchars($a['text']); ?>
+                                    </a>
+                                    <span class="activity-item__time"><?php echo activity_ago($a['at']); ?></span>
+                                </div>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php endif; ?>
+            </div>
+
+            <div class="order-card">
+                <div class="dash-card-header">
                     <h3 class="order-card__title" style="margin:0;padding:0;border:none">Inventory</h3>
                     <a href="/admin/products.php" style="font-size:13px">Manage &rarr;</a>
                 </div>
@@ -286,6 +388,61 @@ require __DIR__ . '/layout-top.php';
         </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+    const el = document.getElementById('revenue-chart');
+    if (!el || typeof Chart === 'undefined') return;
+    const labels = <?php echo json_encode($chart_labels); ?>;
+    const values = <?php echo json_encode($chart_values); ?>;
+    new Chart(el, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Revenue',
+                data: values,
+                borderColor: '#C25B32',
+                backgroundColor: 'rgba(194, 91, 50, 0.12)',
+                borderWidth: 2,
+                tension: 0.3,
+                fill: true,
+                pointRadius: 0,
+                pointHoverRadius: 6,
+                pointHoverBackgroundColor: '#C25B32',
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: c => '$' + Number(c.parsed.y).toFixed(2)
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { color: 'rgba(45,45,45,0.5)', font: { size: 11 }, maxRotation: 0, autoSkipPadding: 14 }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(45,45,45,0.06)' },
+                    ticks: {
+                        color: 'rgba(45,45,45,0.5)',
+                        font: { size: 11 },
+                        callback: v => '$' + v
+                    }
+                }
+            }
+        }
+    });
+})();
+</script>
 
 </body>
 </html>

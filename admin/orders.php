@@ -10,6 +10,7 @@ $filter = $_GET['status'] ?? 'all';
 if (!in_array($filter, $allowed_statuses, true)) {
     $filter = 'all';
 }
+$q = trim($_GET['q'] ?? '');
 
 // Status counts for the tabs.
 $counts_by_status = [
@@ -53,23 +54,32 @@ if (isset($_GET['export'])) {
 }
 
 // List of orders, joined with item count.
-$where = $filter === 'all' ? '' : 'WHERE o.status = :status';
+$conditions = [];
+$params     = [];
+if ($filter !== 'all') {
+    $conditions[] = 'o.status = ?';
+    $params[]     = $filter;
+}
+if ($q !== '') {
+    $conditions[] = '(o.customer_email LIKE ? OR o.customer_name LIKE ?)';
+    $params[]     = '%' . $q . '%';
+    $params[]     = '%' . $q . '%';
+}
+$where_sql = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
+
 $sql = "
     SELECT
         o.*,
         COALESCE(SUM(oi.quantity), 0) AS item_count
     FROM orders o
     LEFT JOIN order_items oi ON oi.order_id = o.id
-    $where
+    $where_sql
     GROUP BY o.id
     ORDER BY o.created_at DESC
     LIMIT 200
 ";
 $stmt = $pdo->prepare($sql);
-if ($filter !== 'all') {
-    $stmt->bindValue(':status', $filter);
-}
-$stmt->execute();
+$stmt->execute($params);
 $orders = $stmt->fetchAll();
 
 $pageTitle = 'Orders';
@@ -95,8 +105,15 @@ require __DIR__ . '/layout-top.php';
         <?php endforeach; ?>
     </div>
 
+    <?php if ($q): ?>
+        <p style="margin-top:8px;font-size:13px;color:rgba(45,45,45,0.6)">
+            Showing orders matching "<strong><?php echo htmlspecialchars($q); ?></strong>" —
+            <a href="/admin/orders.php?status=<?php echo htmlspecialchars($filter); ?>">clear</a>
+        </p>
+    <?php endif; ?>
+
     <?php if (!$orders): ?>
-        <p style="margin-top:20px">No <?php echo $filter === 'all' ? '' : $filter . ' '; ?>orders yet.</p>
+        <p style="margin-top:20px">No <?php echo $filter === 'all' ? '' : $filter . ' '; ?>orders<?php echo $q ? ' matching that search' : ''; ?>.</p>
     <?php else: ?>
     <table>
         <thead>
