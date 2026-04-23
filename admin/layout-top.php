@@ -11,6 +11,7 @@ $pageTitle = $pageTitle ?? 'Admin';
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title><?php echo htmlspecialchars($pageTitle); ?> | Caneeli Admin</title>
     <link rel="stylesheet" href="/admin/admin.css">
 </head>

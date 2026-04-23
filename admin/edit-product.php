@@ -172,6 +172,7 @@ $current_signals = json_decode($product['craft_signals'] ?? '[]', true) ?? [];
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>Edit Product | Caneeli Admin</title>
     <link rel="stylesheet" href="/admin/admin.css">
 </head>
