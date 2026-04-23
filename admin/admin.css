@@ -1128,6 +1128,115 @@ td img {
 }
 
 /* ─────────────────────────────────────────────────────────────────────── */
+/*  POLISH — borrowed patterns from the shop to feel warmer and crafted   */
+/* ─────────────────────────────────────────────────────────────────────── */
+
+/* Soft paper-like body gradient (barely perceptible) */
+body {
+    background-image:
+        radial-gradient(circle at 10% 0%, rgba(212, 193, 75, 0.05) 0%, transparent 40%),
+        radial-gradient(circle at 100% 100%, rgba(100, 151, 214, 0.04) 0%, transparent 40%);
+}
+
+/* KPI cards — cycle brand colors on the top border (like shop cards) */
+.kpi-card:nth-child(4n+1) { border-top-color: var(--blue-400); }
+.kpi-card:nth-child(4n+2) { border-top-color: var(--mustard); }
+.kpi-card:nth-child(4n+3) { border-top-color: var(--rust); }
+.kpi-card:nth-child(4n+4) { border-top-color: var(--dark); }
+
+.kpi-card {
+    transition: transform 220ms ease, box-shadow 220ms ease;
+}
+.kpi-card--action:hover,
+.kpi-card:hover {
+    transform: translateY(-2px);
+}
+
+/* Order cards in the dashboard columns — cycle colors as they stack */
+.dash-col .order-card:nth-of-type(3n+1) { border-top-color: var(--blue-400); }
+.dash-col .order-col .order-card:nth-of-type(3n+2),
+.dash-col .order-card:nth-of-type(3n+2) { border-top-color: var(--mustard); }
+.dash-col .order-card:nth-of-type(3n+3) { border-top-color: var(--rust); }
+
+/* Order detail sidebar cards — same cycling */
+.order-side .order-card:nth-of-type(3n+1) { border-top-color: var(--mustard); }
+.order-side .order-card:nth-of-type(3n+2) { border-top-color: var(--blue-400); }
+.order-side .order-card:nth-of-type(3n+3) { border-top-color: var(--rust); }
+
+/* Funnel steps — each step gets a distinct brand color */
+.funnel-step:nth-child(1) { border-top-color: var(--blue-400); }
+.funnel-step:nth-child(3) { border-top-color: var(--mustard); }
+.funnel-step:nth-child(5) { border-top-color: var(--dark); }
+.funnel-step:nth-child(7), .funnel-step--end { border-top-color: var(--rust); }
+
+/* Form card — slightly lifted with brand drop shadow (matches shop buttons) */
+.form-card {
+    box-shadow:
+        0 4px 20px rgba(45, 45, 45, 0.06),
+        4px 4px 0 rgba(194, 91, 50, 0.10);
+}
+
+/* Table polish — softer divider, warmer row hover */
+table {
+    box-shadow:
+        0 4px 20px rgba(45, 45, 45, 0.06),
+        4px 4px 0 rgba(212, 193, 75, 0.08);
+}
+tr:hover td {
+    background: rgba(242, 236, 222, 0.7);
+}
+tr:hover td:first-child {
+    box-shadow: inset 4px 0 0 var(--rust);
+}
+
+/* Status tab polish — active tab gets a tiny brand shadow */
+.status-tab.is-active {
+    box-shadow: 3px 3px 0 var(--rust);
+}
+
+/* Empty-state paragraphs — warmer, more personal */
+.container > p,
+.order-card > p {
+    font-size: 15px;
+    line-height: 1.55;
+}
+
+/* Button secondary — give it its own signature shadow */
+.btn-secondary {
+    filter: drop-shadow(var(--rust) 3px 3px);
+}
+
+/* Page header: let the h1 breathe a little */
+.page-header h1 {
+    letter-spacing: -0.01em;
+}
+
+/* Better focus ring on inputs — warmer, more brand */
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="number"]:focus,
+input[type="password"]:focus,
+textarea:focus,
+select:focus {
+    box-shadow: 0 0 0 3px rgba(194, 91, 50, 0.18),
+                2px 2px 0 rgba(212, 193, 75, 0.25);
+}
+
+/* Badge-status: add a small paper shadow for presence */
+.badge-status {
+    box-shadow: 2px 2px 0 rgba(45, 45, 45, 0.06);
+}
+
+/* MOBILE: drop the signature shadows a bit so they don't feel heavy */
+@media (max-width: 768px) {
+    .form-card,
+    table {
+        box-shadow: 0 2px 12px rgba(45, 45, 45, 0.06);
+    }
+    .btn-secondary { filter: drop-shadow(var(--rust) 2px 2px); }
+}
+
+/* ─────────────────────────────────────────────────────────────────────── */
 /*  MOBILE (iPad portrait and phone)                                       */
 /*  Partner manages the admin from iPad + iPhone, so all surfaces need     */
 /*  to stay usable on narrow viewports with touch-sized tap targets.       */
