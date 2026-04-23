@@ -49,26 +49,28 @@ $view_cond   = $since ? "AND o2.created_at >= ?" : "";
 $view_params2 = $since ? [$since, $since] : [];
 
 $most_viewed = $pdo->prepare("
-    SELECT
-        p.id,
-        p.name,
-        p.stock_qty,
-        p.status,
-        COUNT(pv.id)                           AS total_views,
-        COUNT(DISTINCT pv.session_id)          AS unique_viewers,
-        (
-            SELECT COUNT(DISTINCT oi.order_id)
-            FROM order_items oi
-            JOIN orders o2 ON o2.id = oi.order_id
-            WHERE oi.product_id = p.id
-              AND o2.status IN ('paid','fulfilled')
-              $view_cond
-        ) AS purchases
-    FROM products p
-    LEFT JOIN product_views pv ON pv.product_id = p.id $view_join
-    WHERE p.status != 'archived'
-    GROUP BY p.id, p.name, p.stock_qty, p.status
-    HAVING total_views > 0 OR purchases > 0
+    SELECT * FROM (
+        SELECT
+            p.id,
+            p.name,
+            p.stock_qty,
+            p.status,
+            COUNT(pv.id)                           AS total_views,
+            COUNT(DISTINCT pv.session_id)          AS unique_viewers,
+            (
+                SELECT COUNT(DISTINCT oi.order_id)
+                FROM order_items oi
+                JOIN orders o2 ON o2.id = oi.order_id
+                WHERE oi.product_id = p.id
+                  AND o2.status IN ('paid','fulfilled')
+                  $view_cond
+            ) AS purchases
+        FROM products p
+        LEFT JOIN product_views pv ON pv.product_id = p.id $view_join
+        WHERE p.status != 'archived'
+        GROUP BY p.id, p.name, p.stock_qty, p.status
+    ) mv
+    WHERE total_views > 0 OR purchases > 0
     ORDER BY total_views DESC, purchases DESC
     LIMIT 20
 ");
@@ -81,26 +83,28 @@ $cart_join_a  = $since ? "AND ce.created_at >= ?" : "";
 $cart_cond_o  = $since ? "AND o3.created_at >= ?" : "";
 
 $cart_funnel = $pdo->prepare("
-    SELECT
-        p.id,
-        p.name,
-        p.stock_qty,
-        p.status,
-        SUM(CASE WHEN ce.event_type = 'add'    THEN 1 ELSE 0 END) AS adds,
-        SUM(CASE WHEN ce.event_type = 'remove' THEN 1 ELSE 0 END) AS removes,
-        (
-            SELECT COUNT(DISTINCT oi.order_id)
-            FROM order_items oi
-            JOIN orders o3 ON o3.id = oi.order_id
-            WHERE oi.product_id = p.id
-              AND o3.status IN ('paid','fulfilled')
-              $cart_cond_o
-        ) AS purchases
-    FROM products p
-    LEFT JOIN cart_events ce ON ce.product_id = p.id $cart_join_a
-    WHERE p.status != 'archived'
-    GROUP BY p.id, p.name, p.stock_qty, p.status
-    HAVING adds > 0 OR purchases > 0
+    SELECT * FROM (
+        SELECT
+            p.id,
+            p.name,
+            p.stock_qty,
+            p.status,
+            SUM(CASE WHEN ce.event_type = 'add'    THEN 1 ELSE 0 END) AS adds,
+            SUM(CASE WHEN ce.event_type = 'remove' THEN 1 ELSE 0 END) AS removes,
+            (
+                SELECT COUNT(DISTINCT oi.order_id)
+                FROM order_items oi
+                JOIN orders o3 ON o3.id = oi.order_id
+                WHERE oi.product_id = p.id
+                  AND o3.status IN ('paid','fulfilled')
+                  $cart_cond_o
+            ) AS purchases
+        FROM products p
+        LEFT JOIN cart_events ce ON ce.product_id = p.id $cart_join_a
+        WHERE p.status != 'archived'
+        GROUP BY p.id, p.name, p.stock_qty, p.status
+    ) cf
+    WHERE adds > 0 OR purchases > 0
     ORDER BY adds DESC, purchases DESC
     LIMIT 20
 ");
@@ -111,21 +115,23 @@ $cart_funnel_rows = $cart_funnel->fetchAll();
 // Products with demand signal (views or adds) that can't be bought right now.
 $pop_out_params = $since ? [$since, $since] : [];
 $pop_out = $pdo->prepare("
-    SELECT
-        p.id,
-        p.name,
-        p.stock_qty,
-        p.status,
-        COUNT(DISTINCT pv.id)                                                                        AS views,
-        COALESCE(SUM(CASE WHEN ce.event_type = 'add' THEN 1 ELSE 0 END), 0)                          AS adds
-    FROM products p
-    LEFT JOIN product_views pv ON pv.product_id = p.id " . ($since ? "AND pv.viewed_at >= ?" : "") . "
-    LEFT JOIN cart_events   ce ON ce.product_id = p.id " . ($since ? "AND ce.created_at >= ?" : "") . "
-    WHERE (p.stock_qty = 0 OR p.status = 'sold_out')
-      AND p.status != 'archived'
-    GROUP BY p.id, p.name, p.stock_qty, p.status
-    HAVING views > 0 OR adds > 0
-    ORDER BY (views + adds*3) DESC
+    SELECT * FROM (
+        SELECT
+            p.id,
+            p.name,
+            p.stock_qty,
+            p.status,
+            COUNT(DISTINCT pv.id)                                               AS views,
+            COALESCE(SUM(CASE WHEN ce.event_type = 'add' THEN 1 ELSE 0 END), 0) AS adds
+        FROM products p
+        LEFT JOIN product_views pv ON pv.product_id = p.id " . ($since ? "AND pv.viewed_at >= ?" : "") . "
+        LEFT JOIN cart_events   ce ON ce.product_id = p.id " . ($since ? "AND ce.created_at >= ?" : "") . "
+        WHERE (p.stock_qty = 0 OR p.status = 'sold_out')
+          AND p.status != 'archived'
+        GROUP BY p.id, p.name, p.stock_qty, p.status
+    ) po
+    WHERE views > 0 OR adds > 0
+    ORDER BY (views + adds * 3) DESC
     LIMIT 10
 ");
 $pop_out->execute($pop_out_params);
