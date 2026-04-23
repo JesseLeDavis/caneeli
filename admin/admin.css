@@ -999,6 +999,22 @@ td img {
     box-shadow: 0 0 0 3px rgba(194,91,50,0.18);
 }
 
+/* SortableJS drag states */
+.gallery-grid { touch-action: pan-y; }
+.gallery-tile { cursor: grab; }
+.gallery-tile:active { cursor: grabbing; }
+.gallery-tile--ghost {
+    opacity: 0.3;
+    background: rgba(194, 91, 50, 0.08);
+}
+.gallery-tile--chosen {
+    transform: scale(1.02);
+    box-shadow: 0 10px 24px rgba(45, 45, 45, 0.18);
+}
+.gallery-tile--drag {
+    opacity: 0.9;
+}
+
 .gallery-tile__img-wrap {
     width: 100%;
     aspect-ratio: 1 / 1;

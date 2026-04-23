@@ -201,12 +201,17 @@ $current_signals = json_decode($product['craft_signals'] ?? '[]', true) ?? [];
 
     <!-- Gallery management lives OUTSIDE the main form to avoid nested <form> -->
     <div class="form-card" style="margin-bottom:16px">
-        <label>Photos</label>
+        <label>Photos
+            <?php if ($gallery && count($gallery) > 1): ?>
+                <span style="font-weight:400;font-size:12px;opacity:.6">— drag to reorder</span>
+            <?php endif; ?>
+        </label>
         <?php if ($gallery): ?>
-            <div class="gallery-grid">
+            <div class="gallery-grid" id="gallery-grid" data-product-id="<?php echo $id; ?>">
                 <?php foreach ($gallery as $img): ?>
                     <?php $is_featured = ($product['image_path'] === $img['image_path']); ?>
-                    <div class="gallery-tile <?php echo $is_featured ? 'gallery-tile--featured' : ''; ?>">
+                    <div class="gallery-tile <?php echo $is_featured ? 'gallery-tile--featured' : ''; ?>"
+                         data-image-id="<?php echo $img['id']; ?>">
                         <div class="gallery-tile__img-wrap">
                             <img src="<?php echo htmlspecialchars($img['image_path']); ?>" alt="Product photo">
                         </div>
@@ -326,6 +331,53 @@ $current_signals = json_decode($product['craft_signals'] ?? '[]', true) ?? [];
         </form>
     </div>
 </div>
+
+<?php if ($gallery && count($gallery) > 1): ?>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script>
+(function () {
+    const grid = document.getElementById('gallery-grid');
+    if (!grid || typeof Sortable === 'undefined') return;
+
+    const csrfToken = <?php echo json_encode(csrf_token()); ?>;
+    const productId = grid.dataset.productId;
+
+    function showToast(msg, isError) {
+        const t = document.createElement('div');
+        t.textContent = msg;
+        t.style.cssText =
+            'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);' +
+            'background:' + (isError ? '#e53e3e' : '#2D2D2D') + ';color:#F2ECDE;' +
+            'padding:10px 18px;border-radius:30px;font-size:13px;font-weight:600;' +
+            'box-shadow:0 4px 20px rgba(0,0,0,0.2);z-index:1000;';
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 1500);
+    }
+
+    Sortable.create(grid, {
+        animation: 180,
+        ghostClass: 'gallery-tile--ghost',
+        chosenClass: 'gallery-tile--chosen',
+        dragClass:   'gallery-tile--drag',
+        onEnd: function () {
+            const ids = Array.from(grid.querySelectorAll('.gallery-tile'))
+                .map(el => el.dataset.imageId);
+            const fd = new FormData();
+            fd.append('csrf_token', csrfToken);
+            fd.append('product_id', productId);
+            ids.forEach(id => fd.append('order[]', id));
+            fetch('/admin/reorder-images.php', {
+                method: 'POST', body: fd, credentials: 'same-origin',
+                headers: { 'X-Requested-With': 'fetch' }
+            })
+                .then(r => r.json())
+                .then(d => showToast(d.ok ? 'Order saved' : 'Save failed', !d.ok))
+                .catch(() => showToast('Save failed', true));
+        }
+    });
+})();
+</script>
+<?php endif; ?>
 
 </body>
 </html>
