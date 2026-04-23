@@ -29,29 +29,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id']) && csrf_
 
 $signups = $pdo->query("SELECT * FROM email_signups ORDER BY created_at DESC")->fetchAll();
 $count   = count($signups);
-?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Email Signups | Caneeli Admin</title>
-    <link rel="stylesheet" href="/admin/admin.css">
-</head>
-<body>
 
-<div class="admin-header">
-    <div class="admin-header__brand">
-        <img src="/assets/images/logowi.svg" alt="Caneeli Designs" class="admin-header__logo">
-        <span class="admin-header__admin-label">Admin</span>
-    </div>
-    <a href="/admin/logout.php" class="admin-header__logout">Log Out</a>
-</div>
+$pageTitle = 'Email Signups';
+$activeNav = 'signups';
+require __DIR__ . '/layout-top.php';
+?>
 
 <div class="container">
     <div class="page-header">
         <h1>Email Signups (<?php echo $count; ?>)</h1>
         <div style="display:flex;gap:10px;align-items:center">
-            <a href="/admin/dashboard.php" class="btn btn-secondary">&larr; Products</a>
             <?php if ($count): ?>
                 <a href="/admin/email-signups.php?export=1" class="btn btn-primary">Export CSV</a>
             <?php endif; ?>

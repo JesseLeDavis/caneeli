@@ -11,8 +11,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'add' && $product_id) {
         $qty = intval($_POST['quantity'] ?? 1);
 
-        // Verify product exists and has stock
-        $stmt = getDB()->prepare("SELECT * FROM products WHERE id = ? AND active = 1");
+        // Verify product exists, is active, and has stock. Sold-out products stay
+        // visible in the shop but can't be added to the cart.
+        $stmt = getDB()->prepare("SELECT * FROM products WHERE id = ? AND active = 1 AND status = 'active'");
         $stmt->execute([$product_id]);
         $product = $stmt->fetch();
 

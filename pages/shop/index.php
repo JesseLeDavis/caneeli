@@ -128,18 +128,22 @@ function shop_url($overrides = []) {
         <?php else: ?>
             <div class="product-grid">
                 <?php foreach ($products as $product): ?>
-                <a href="/pages/shop/product.php?id=<?php echo $product['id']; ?>" class="product-card">
+                <?php $card_sold_out = ($product['status'] ?? 'active') === 'sold_out' || (int) $product['stock_qty'] <= 0; ?>
+                <a href="/pages/shop/product.php?id=<?php echo $product['id']; ?>" class="product-card <?php echo $card_sold_out ? 'product-card--sold-out' : ''; ?>">
                     <?php if ($product['image_path']): ?>
                         <img class="product-card__bg" src="<?php echo htmlspecialchars($product['image_path']); ?>"
                              alt="<?php echo sanitize($product['name']); ?>">
                     <?php else: ?>
                         <div class="product-card__bg product-card__placeholder"></div>
                     <?php endif; ?>
+                    <?php if ($card_sold_out): ?>
+                        <span class="product-card__sold-out">Sold Out</span>
+                    <?php endif; ?>
                     <div class="product-card__overlay">
                         <h3 class="product-card__name"><?php echo sanitize($product['name']); ?></h3>
                         <p class="product-card__description"><?php echo mb_strimwidth(sanitize($product['description']), 0, 60, '…'); ?></p>
                         <p class="product-card__price"><?php echo formatPrice($product['price']); ?></p>
-                        <span class="product-card__cta">View Piece</span>
+                        <span class="product-card__cta"><?php echo $card_sold_out ? 'View Piece' : 'View Piece'; ?></span>
                     </div>
                 </a>
                 <?php endforeach; ?>

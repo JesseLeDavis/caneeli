@@ -92,7 +92,10 @@ $gallery = $img_stmt->fetchAll();
                 </div>
                 <?php endif; ?>
 
-                <?php if ($product['stock_qty'] > 0): ?>
+                <?php
+                $is_sold_out = ($product['status'] ?? 'active') === 'sold_out' || $product['stock_qty'] <= 0;
+                ?>
+                <?php if (!$is_sold_out): ?>
                     <form method="POST" action="/cart.php">
                         <input type="hidden" name="action" value="add">
                         <input type="hidden" name="product_id" value="<?php echo $product['id']; ?>">

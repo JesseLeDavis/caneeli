@@ -14,7 +14,7 @@ if (empty($_SESSION['cart'])) {
 // Build line items from cart
 $ids          = array_keys($_SESSION['cart']);
 $placeholders = implode(',', array_fill(0, count($ids), '?'));
-$stmt         = getDB()->prepare("SELECT * FROM products WHERE id IN ($placeholders) AND active = 1");
+$stmt         = getDB()->prepare("SELECT * FROM products WHERE id IN ($placeholders) AND active = 1 AND status = 'active'");
 $stmt->execute($ids);
 $products     = $stmt->fetchAll();
 
@@ -38,6 +38,18 @@ foreach ($products as $product) {
     ];
 }
 
+// Snapshot cart (product_id => qty) + current prices so the webhook can
+// persist line items back to the order_items table after payment succeeds.
+$cart_snapshot = [];
+foreach ($products as $product) {
+    $cart_snapshot[] = [
+        'product_id' => (int) $product['id'],
+        'name'       => $product['name'],
+        'price'      => (float) $product['price'],
+        'qty'        => (int) $_SESSION['cart'][$product['id']],
+    ];
+}
+
 try {
     $session = \Stripe\Checkout\Session::create([
         'payment_method_types' => ['card'],
@@ -47,6 +59,9 @@ try {
         'cancel_url'           => SITE_URL . '/cart.php',
         'shipping_address_collection' => [
             'allowed_countries' => ['US', 'CA'],
+        ],
+        'metadata' => [
+            'cart' => json_encode($cart_snapshot),
         ],
     ]);
 

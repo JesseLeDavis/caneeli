@@ -2,6 +2,7 @@
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/product_status.php';
 
 $categories = ['Chairs', 'Tables', 'Shelves', 'Wall Decor', 'Lighting', 'Other'];
 $preset_signals = [
@@ -82,7 +83,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $price       = $_POST['price'] ?? '';
     $stock_qty   = intval($_POST['stock_qty'] ?? 1);
     $category    = $_POST['category'] ?? '';
-    $active      = isset($_POST['active']) ? 1 : 0;
+    $status      = $_POST['status'] ?? 'active';
+    if (!in_array($status, PRODUCT_STATUSES, true)) $status = 'active';
+    $active      = product_active_for_status($status);
 
     // Craft signals — merge presets + custom, cap at 5, sanitize
     $preset_tags = $_POST['craft_signals_preset'] ?? [];
@@ -121,9 +124,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->prepare("
                 UPDATE products
                 SET name = ?, description = ?, craft_signals = ?, price = ?, stock_qty = ?,
-                    category = ?, active = ?
+                    category = ?, active = ?, status = ?
                 WHERE id = ?
-            ")->execute([$name, $description, $craft_signals_json, $price, $stock_qty, $category, $active, $id]);
+            ")->execute([$name, $description, $craft_signals_json, $price, $stock_qty, $category, $active, $status, $id]);
 
             // Insert new gallery images
             if ($new_paths) {
@@ -160,6 +163,7 @@ $gallery = $gallery_stmt->fetchAll();
 
 // Flash messages from redirect
 if (isset($_GET['deleted'])) $success = 'Image deleted.';
+if (isset($_GET['msg']))     $success = htmlspecialchars((string) $_GET['msg']);
 
 // Decode saved signals for pre-checking checkboxes
 $current_signals = json_decode($product['craft_signals'] ?? '[]', true) ?? [];
@@ -297,13 +301,25 @@ $current_signals = json_decode($product['craft_signals'] ?? '[]', true) ?? [];
                    maxlength="40"
                    style="margin-bottom:24px">
 
-            <span class="form-section-label">Visibility</span>
+            <span class="form-section-label">Status</span>
 
-            <label>
-                <input type="checkbox" name="active" value="1" <?php echo $product['active'] ? 'checked' : ''; ?>>
-                Active (visible in shop)
-            </label>
-            <br>
+            <label>Visibility</label>
+            <select name="status">
+                <?php foreach (PRODUCT_STATUSES as $s): ?>
+                    <option value="<?php echo $s; ?>" <?php echo (($product['status'] ?? 'active') === $s) ? 'selected' : ''; ?>>
+                        <?php echo product_status_label($s); ?>
+                        <?php
+                            echo match ($s) {
+                                'active'   => ' — visible & for sale',
+                                'sold_out' => ' — visible, cannot be bought',
+                                'draft'    => ' — hidden from shop',
+                                'archived' => ' — hidden, preserved for records',
+                                default    => '',
+                            };
+                        ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
 
             <button type="submit" class="btn btn-primary">Save Changes</button>
         </form>

@@ -2,6 +2,7 @@
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/product_status.php';
 
 $categories = ['Chairs', 'Tables', 'Shelves', 'Wall Decor', 'Lighting', 'Other'];
 $preset_signals = [
@@ -73,7 +74,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $price       = $_POST['price'] ?? '';
     $stock_qty   = intval($_POST['stock_qty'] ?? 1);
     $category    = $_POST['category'] ?? '';
-    $active      = isset($_POST['active']) ? 1 : 0;
+    $status      = $_POST['status'] ?? 'active';
+    if (!in_array($status, PRODUCT_STATUSES, true)) $status = 'active';
+    $active      = product_active_for_status($status);
 
     // Craft signals — merge presets + custom, cap at 5, sanitize
     $preset_tags = $_POST['craft_signals_preset'] ?? [];
@@ -113,10 +116,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $featured_path = $uploaded[0] ?? null;
 
             $stmt = $pdo->prepare("
-                INSERT INTO products (name, description, craft_signals, price, stock_qty, category, image_path, active)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO products (name, description, craft_signals, price, stock_qty, category, image_path, active, status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
-            $stmt->execute([$name, $description, $craft_signals_json, $price, $stock_qty, $category, $featured_path, $active]);
+            $stmt->execute([$name, $description, $craft_signals_json, $price, $stock_qty, $category, $featured_path, $active, $status]);
             $product_id = $pdo->lastInsertId();
 
             // Insert all images into the gallery table
@@ -215,13 +218,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                    value="<?php echo htmlspecialchars($_POST['craft_signal_custom'] ?? ''); ?>"
                    style="margin-bottom:24px">
 
-            <span class="form-section-label">Visibility</span>
+            <span class="form-section-label">Status</span>
 
-            <label>
-                <input type="checkbox" name="active" value="1" <?php echo (!isset($_POST['active']) || $_POST['active']) ? 'checked' : ''; ?>>
-                Active (visible in shop)
-            </label>
-            <br>
+            <label>Visibility</label>
+            <select name="status">
+                <?php foreach (PRODUCT_STATUSES as $s): ?>
+                    <option value="<?php echo $s; ?>" <?php echo (($_POST['status'] ?? 'active') === $s) ? 'selected' : ''; ?>>
+                        <?php echo product_status_label($s); ?>
+                        <?php
+                            echo match ($s) {
+                                'active'   => ' — visible & for sale',
+                                'sold_out' => ' — visible, cannot be bought',
+                                'draft'    => ' — hidden from shop',
+                                'archived' => ' — hidden, preserved for records',
+                                default    => '',
+                            };
+                        ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
 
             <button type="submit" class="btn btn-primary">Add Product</button>
         </form>

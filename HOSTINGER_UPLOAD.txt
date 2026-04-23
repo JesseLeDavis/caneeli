@@ -1,0 +1,79 @@
+=============================================
+  CANEELI DESIGNS — HOSTINGER UPLOAD LIST
+=============================================
+
+BEFORE YOU UPLOAD:
+  1. Run: npm run build   (compiles SCSS to CSS)
+  2. Update your .env with Hostinger credentials (see bottom of this file)
+
+---------------------------------------------
+  FOLDERS TO UPLOAD (drag entire folder)
+---------------------------------------------
+
+  admin/
+  assets/
+  config/
+  includes/
+  pages/
+  vendor/
+
+---------------------------------------------
+  FILES TO UPLOAD
+---------------------------------------------
+
+  cart.php
+  checkout.php
+  coming-soon.php
+  coming-soon-signup.php
+  composer.json
+  composer.lock
+  index.php
+  success.php
+  webhook.php
+
+---------------------------------------------
+  DO NOT UPLOAD THESE
+---------------------------------------------
+
+  .env                 ← create this manually on the server
+  .git/
+  .claude/
+  .idea/
+  node_modules/
+  assets/scss/
+  database/
+  package.json
+  package-lock.json
+  CLAUDE.md
+  HOSTINGER_UPLOAD.txt
+  *.pdf
+  *.png
+
+---------------------------------------------
+  AFTER UPLOADING — CREATE .env ON SERVER
+---------------------------------------------
+
+  In File Manager, create a new file in public_html called .env
+  and paste this (fill in your Hostinger DB password):
+
+  DB_HOST=localhost
+  DB_NAME=u891906320_8GdFY
+  DB_USER=u891906320_CTwNq
+  DB_PASS=your_hostinger_db_password
+  SITE_URL=https://caneelidesigns.com
+  ADMIN_USER=admin
+  ADMIN_PASS=something_strong
+  STRIPE_PUBLIC_KEY=pk_test_...
+  STRIPE_SECRET_KEY=sk_test_...
+  STRIPE_WEBHOOK_SECRET=whsec_...
+
+---------------------------------------------
+  VERIFY IT WORKED
+---------------------------------------------
+
+  Visit: https://caneelidesigns.com/coming-soon.php
+  - Should show the countdown to April 1
+  - Try submitting an email — check phpMyAdmin > email_signups table
+  - Visit: https://caneelidesigns.com/admin to test the admin panel
+
+=============================================
