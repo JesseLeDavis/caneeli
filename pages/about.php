@@ -5,28 +5,15 @@ include __DIR__ . '/../includes/header.php';
 
 <section class="about-editorial">
     <div class="container">
-        <div class="about-masthead">
-            <span class="about-masthead__mark">Vol. 01</span>
-            <span class="about-masthead__rule" aria-hidden="true"></span>
-            <span class="about-masthead__label">Maker's Notes</span>
-            <span class="about-masthead__rule" aria-hidden="true"></span>
-            <span class="about-masthead__date">Spring 2026</span>
-        </div>
-
         <h1 class="about-title">
             <span class="about-title__line">Hi,</span>
             <span class="about-title__line about-title__line--accent">I'm Annie.</span>
         </h1>
-
-        <p class="about-deck">Raised in South Florida, I always knew I was an artist.</p>
-
-        <p class="about-byline">In her own words</p>
     </div>
 
     <div class="container">
         <article class="about-chapters">
             <div class="about-chapter">
-                <span class="about-chapter__num" aria-hidden="true">01</span>
                 <h2 class="about-chapter__title">Beginnings</h2>
                 <div class="about-chapter__body">
                     <p>That instinct was nurtured by my free-spirited mother, who raised my sister and me in a home where creativity was encouraged at every turn. I began attending a specialized art school in sixth grade and continued there until my junior year, when my family moved to Colorado.</p>
@@ -35,7 +22,6 @@ include __DIR__ . '/../includes/header.php';
             </div>
 
             <div class="about-chapter">
-                <span class="about-chapter__num" aria-hidden="true">02</span>
                 <h2 class="about-chapter__title">The Pivot</h2>
                 <div class="about-chapter__body">
                     <p>I quickly fell in love with the medium and truly believed it would shape my future. I thrived in the program, and many opportunities began to open up. But during my final semester, my mother passed away. Instead of moving to pursue a career in animation, I returned to her home in South Florida.</p>
@@ -44,13 +30,7 @@ include __DIR__ . '/../includes/header.php';
                 </div>
             </div>
 
-            <blockquote class="about-pullquote">
-                <span class="about-pullquote__open" aria-hidden="true">&ldquo;</span>
-                <p>I found a sense of flow I hadn't experienced in years.</p>
-            </blockquote>
-
             <div class="about-chapter">
-                <span class="about-chapter__num" aria-hidden="true">03</span>
                 <h2 class="about-chapter__title">The Studio</h2>
                 <div class="about-chapter__body">
                     <p>I joined a creative coworking space, hoping to reconnect with hands-on work. With access to woodworking, metalworking, ceramics, and more, I found myself unexpectedly drawn to the stained glass studio. Before long, I was spending nearly all my free time there. Working with glass came naturally.</p>
