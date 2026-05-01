@@ -25,36 +25,12 @@ include __DIR__ . '/../includes/header.php';
         </article>
     </div>
 
-    <div class="about-stats">
-        <div class="container">
-            <ul class="about-stats__list">
-                <li class="about-stats__item">
-                    <span class="about-stats__num">01</span>
-                    <span class="about-stats__label">Maker</span>
-                </li>
-                <li class="about-stats__item">
-                    <span class="about-stats__num">&infin;</span>
-                    <span class="about-stats__label">Variations</span>
-                </li>
-                <li class="about-stats__item">
-                    <span class="about-stats__num">00</span>
-                    <span class="about-stats__label">Two Alike</span>
-                </li>
-                <li class="about-stats__item">
-                    <span class="about-stats__num">100%</span>
-                    <span class="about-stats__label">By Hand</span>
-                </li>
-            </ul>
-        </div>
-    </div>
-
     <div class="container">
         <div class="about-cta">
-            <p class="about-cta__eyebrow">Two ways in</p>
-            <h2 class="about-cta__title">Have a look, or tell me what you have in mind.</h2>
+            <h2 class="about-cta__title">Take a look around, or get in touch.</h2>
             <div class="about-cta__buttons">
                 <a class="btn red-button" href="<?php echo SITE_URL; ?>/pages/shop/">Browse the Shop</a>
-                <a class="btn blue-button" href="<?php echo SITE_URL; ?>/pages/contact.php">Start a Commission</a>
+                <a class="btn blue-button" href="<?php echo SITE_URL; ?>/pages/contact.php">Get in Touch</a>
             </div>
         </div>
     </div>
