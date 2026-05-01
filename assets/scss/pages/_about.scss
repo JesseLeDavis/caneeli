@@ -137,6 +137,8 @@
       margin: 0;
 
       @media (min-width: 768px) { font-size: 18px; }
+
+      & + p { margin-top: 16px; }
     }
   }
 
