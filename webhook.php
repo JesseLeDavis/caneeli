@@ -86,7 +86,7 @@ try {
         VALUES (?, ?, ?, ?, ?)
     ");
     $stock_stmt    = $pdo->prepare("UPDATE products SET stock_qty = GREATEST(0, stock_qty - ?) WHERE id = ?");
-    $sold_out_stmt = $pdo->prepare("UPDATE products SET active = 0 WHERE id = ? AND stock_qty = 0");
+    $sold_out_stmt = $pdo->prepare("UPDATE products SET status = 'sold_out' WHERE id = ? AND stock_qty = 0 AND status = 'active'");
 
     if (is_array($cart) && $cart) {
         foreach ($cart as $item) {

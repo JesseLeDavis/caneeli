@@ -167,9 +167,6 @@
         opacity: 1;
         pointer-events: all;
         z-index: 2;
-
-        // Mobile: wider card (closer to square)
-        @media (max-width: 599px) { width: var(--stage-h); }
       }
 
       // Left side card

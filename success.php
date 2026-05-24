@@ -78,9 +78,11 @@ if ($session_id && !empty($_SESSION['cart'])) {
                         WHERE id = ?
                     ")->execute([$qty, $product['id']]);
 
-                    // Auto-hide if sold out
+                    // Flip to sold_out if stock hit 0 (keeps the product visible
+                    // in the shop but blocks add-to-cart via the status check).
                     $pdo->prepare("
-                        UPDATE products SET active = 0 WHERE id = ? AND stock_qty = 0
+                        UPDATE products SET status = 'sold_out'
+                        WHERE id = ? AND stock_qty = 0 AND status = 'active'
                     ")->execute([$product['id']]);
                 }
             }
