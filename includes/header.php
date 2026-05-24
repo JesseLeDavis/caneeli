@@ -3,9 +3,11 @@ require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/functions.php';
 require_once __DIR__ . '/csrf.php';
 if (session_status() === PHP_SESSION_NONE) {
+    // SameSite=Lax so the cart survives the Stripe checkout round-trip
+    // (Strict would block the cookie on Stripe's return redirect).
     session_set_cookie_params([
         'httponly'  => true,
-        'samesite'  => 'Strict',
+        'samesite'  => 'Lax',
     ]);
     session_start();
 }

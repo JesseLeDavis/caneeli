@@ -29,8 +29,12 @@ if (!empty($_SESSION['cart'])) {
             <div class="checkout-status__intro">
                 <p class="checkout-status__eyebrow">Checkout Paused</p>
                 <h1 class="large_title">No charge made.</h1>
-                <p class="checkout-status__lede">You stepped back from checkout — that's fine. Nothing was charged and your cart is right where you left it.</p>
-                <p class="checkout-status__lede">Whenever you're ready, pick up where you stopped.</p>
+                <?php if (!empty($cart_items)): ?>
+                    <p class="checkout-status__lede">You stepped back from checkout — that's fine. Nothing was charged and your cart is right where you left it.</p>
+                    <p class="checkout-status__lede">Whenever you're ready, pick up where you stopped.</p>
+                <?php else: ?>
+                    <p class="checkout-status__lede">You stepped back from checkout — that's fine. Nothing was charged.</p>
+                <?php endif; ?>
                 <p class="checkout-status__sign-off">-Annie</p>
             </div>
 
