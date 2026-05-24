@@ -158,6 +158,19 @@ require __DIR__ . '/layout-top.php';
                 <?php endif; ?>
             </div>
 
+            <div class="order-card" id="notes">
+                <h3 class="order-card__title">Shipment &amp; notes</h3>
+                <form method="POST" action="/admin/update-order-notes.php">
+                    <?php echo csrf_field(); ?>
+                    <input type="hidden" name="id" value="<?php echo $order['id']; ?>">
+                    <label style="display:block;font-size:12px;color:rgba(45,45,45,0.6);margin-bottom:4px">Tracking number</label>
+                    <input type="text" name="tracking_number" value="<?php echo htmlspecialchars($order['tracking_number'] ?? ''); ?>" placeholder="e.g. 9400 1234 5678 9012 3456 78" style="width:100%;margin-bottom:12px">
+                    <label style="display:block;font-size:12px;color:rgba(45,45,45,0.6);margin-bottom:4px">Notes</label>
+                    <textarea name="notes" rows="4" placeholder="Carrier, packaging notes, customer requests…" style="width:100%;margin-bottom:12px;font-family:inherit"><?php echo htmlspecialchars($order['notes'] ?? ''); ?></textarea>
+                    <button type="submit" class="btn btn-primary" style="width:100%">Save</button>
+                </form>
+            </div>
+
             <?php if ($stripe_dashboard): ?>
             <div class="order-card">
                 <h3 class="order-card__title">Stripe</h3>

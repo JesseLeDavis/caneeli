@@ -1,0 +1,255 @@
+@use '../base/variables' as *;
+@use 'sass:color';
+
+// Shared layout for success / cancel / error pages.
+.checkout-status {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+  padding: 60px 0 100px;
+  max-width: 620px;
+  margin: 0 auto;
+
+  &__eyebrow {
+    font-family: $font-body;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: color.adjust($dark, $lightness: 28%);
+    margin-bottom: 12px;
+  }
+
+  &__intro {
+    .large_title { margin-bottom: 20px; }
+  }
+
+  &__lede {
+    font-size: 18px;
+    line-height: 1.6;
+    color: color.adjust($dark, $lightness: 10%);
+    margin-bottom: 14px;
+    max-width: 520px;
+  }
+
+  &__sign-off {
+    font-family: $font-heading;
+    font-size: 18px;
+    font-weight: 700;
+    color: $rust;
+    margin-top: 6px;
+  }
+
+  // Card (order summary / cart preview / contact)
+  &__card {
+    background: white;
+    border-radius: 20px;
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    filter: drop-shadow($blue-400 5px 5px);
+
+    &--empty {
+      filter: drop-shadow($mustard 5px 5px);
+      p {
+        font-size: 15px;
+        line-height: 1.6;
+        color: color.adjust($dark, $lightness: 15%);
+        margin: 0;
+      }
+    }
+
+    &--contact {
+      filter: drop-shadow($mustard 5px 5px);
+      align-items: flex-start;
+      gap: 8px;
+    }
+  }
+
+  &__card-header {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 18px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid color.adjust($neutral, $lightness: -8%);
+  }
+
+  &__label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: color.adjust($dark, $lightness: 30%);
+    margin-bottom: 4px;
+  }
+
+  &__order-number,
+  &__order-date {
+    font-family: $font-heading;
+    font-size: 18px;
+    font-weight: 800;
+    color: $dark;
+  }
+
+  // Item rows
+  &__items {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  &__item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    font-size: 15px;
+    color: $dark;
+    padding-bottom: 14px;
+    border-bottom: 1px solid color.adjust($neutral, $lightness: -6%);
+
+    &:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    &--with-image {
+      display: grid;
+      grid-template-columns: 56px 1fr auto;
+      align-items: center;
+    }
+  }
+
+  &__thumb {
+    width: 56px;
+    height: 56px;
+    border-radius: 10px;
+    overflow: hidden;
+    flex-shrink: 0;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    &--placeholder {
+      background: color.adjust($neutral, $lightness: -5%);
+    }
+  }
+
+  &__item-name {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-family: $font-heading;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  &__item-qty {
+    font-family: $font-body;
+    font-size: 13px;
+    font-weight: 500;
+    color: color.adjust($dark, $lightness: 25%);
+    letter-spacing: 0.04em;
+  }
+
+  &__item-price {
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  // Totals
+  &__total {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding-top: 16px;
+    border-top: 2px solid color.adjust($neutral, $lightness: -8%);
+
+    span:first-child {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      color: color.adjust($dark, $lightness: 30%);
+    }
+
+    span:last-child {
+      font-family: $font-heading;
+      font-size: 26px;
+      font-weight: 800;
+      color: $rust;
+    }
+  }
+
+  // Shipping block
+  &__shipping {
+    padding-top: 16px;
+    border-top: 1px solid color.adjust($neutral, $lightness: -6%);
+
+    address {
+      font-style: normal;
+      font-size: 15px;
+      line-height: 1.55;
+      color: $dark;
+    }
+  }
+
+  // Contact card pieces
+  &__email {
+    font-family: $font-heading;
+    font-size: 22px;
+    font-weight: 800;
+    color: $rust;
+    word-break: break-all;
+    transition: opacity 200ms ease-in-out;
+
+    &:hover { opacity: 0.75; }
+  }
+
+  &__contact-note {
+    font-size: 13px;
+    color: color.adjust($dark, $lightness: 25%);
+  }
+
+  // Actions
+  &__cta {
+    justify-self: start;
+    display: inline-block;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 22px;
+  }
+
+  &__secondary {
+    font-size: 14px;
+    font-weight: 600;
+    color: $rust;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+
+    &:hover { opacity: 0.7; }
+  }
+
+  // Per-variant accents on the lede + card shadow
+  &--cancel {
+    .checkout-status__card { filter: drop-shadow($mustard 5px 5px); }
+    .checkout-status__eyebrow { color: color.adjust($rust, $lightness: -5%); }
+  }
+
+  &--error {
+    .checkout-status__card { filter: drop-shadow($rust 5px 5px); }
+    .checkout-status__eyebrow { color: $rust; }
+  }
+}

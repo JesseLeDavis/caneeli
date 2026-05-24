@@ -12,10 +12,10 @@
 USE caneeli;
 
 ALTER TABLE products
-    ADD COLUMN IF NOT EXISTS status ENUM('active','sold_out','draft','archived')
+    ADD COLUMN status ENUM('active','sold_out','draft','archived')
         NOT NULL DEFAULT 'active' AFTER active,
-    ADD INDEX IF NOT EXISTS idx_status (status);
+    ADD INDEX idx_status (status);
 
--- Seed status from existing active flag (only for rows still at default).
-UPDATE products SET status = 'active' WHERE active = 1 AND status = 'active';
-UPDATE products SET status = 'draft'  WHERE active = 0 AND status = 'active';
+-- Seed status from existing active flag.
+UPDATE products SET status = 'active' WHERE active = 1;
+UPDATE products SET status = 'draft'  WHERE active = 0;

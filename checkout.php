@@ -84,7 +84,7 @@ try {
         'line_items'           => $line_items,
         'mode'                 => 'payment',
         'success_url'          => SITE_URL . '/success.php?session_id={CHECKOUT_SESSION_ID}',
-        'cancel_url'           => SITE_URL . '/cart.php',
+        'cancel_url'           => SITE_URL . '/cancel.php',
         'shipping_address_collection' => [
             'allowed_countries' => ['US', 'CA'],
         ],
@@ -103,6 +103,7 @@ try {
     exit;
 
 } catch (\Stripe\Exception\ApiErrorException $e) {
-    header('Location: /cart.php?error=1');
+    error_log('Stripe checkout error: ' . $e->getMessage());
+    header('Location: ' . SITE_URL . '/error.php?reason=checkout');
     exit;
 }

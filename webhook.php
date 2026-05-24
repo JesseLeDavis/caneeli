@@ -45,10 +45,13 @@ $full_session = \Stripe\Checkout\Session::retrieve([
 ]);
 
 $shipping = null;
-if (!empty($full_session->shipping_details->address)) {
-    $addr = $full_session->shipping_details->address;
+$shipping_details = $full_session->collected_information->shipping_details
+    ?? $full_session->shipping_details
+    ?? null;
+if (!empty($shipping_details->address)) {
+    $addr = $shipping_details->address;
     $shipping = trim(implode("\n", array_filter([
-        $full_session->shipping_details->name ?? '',
+        $shipping_details->name ?? '',
         $addr->line1 ?? '',
         $addr->line2 ?? '',
         trim(($addr->city ?? '') . ', ' . ($addr->state ?? '') . ' ' . ($addr->postal_code ?? ''), ', '),
@@ -82,6 +85,8 @@ try {
         INSERT INTO order_items (order_id, product_id, product_name, quantity, price_at_purchase)
         VALUES (?, ?, ?, ?, ?)
     ");
+    $stock_stmt    = $pdo->prepare("UPDATE products SET stock_qty = GREATEST(0, stock_qty - ?) WHERE id = ?");
+    $sold_out_stmt = $pdo->prepare("UPDATE products SET active = 0 WHERE id = ? AND stock_qty = 0");
 
     if (is_array($cart) && $cart) {
         foreach ($cart as $item) {
@@ -92,6 +97,10 @@ try {
                 (int) ($item['qty'] ?? 1),
                 (float) ($item['price'] ?? 0),
             ]);
+            if (!empty($item['product_id'])) {
+                $stock_stmt->execute([(int) ($item['qty'] ?? 1), (int) $item['product_id']]);
+                $sold_out_stmt->execute([(int) $item['product_id']]);
+            }
         }
     } elseif (!empty($full_session->line_items->data)) {
         // Fallback: reconstruct from Stripe line items if metadata is missing.

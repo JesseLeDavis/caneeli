@@ -103,7 +103,7 @@ $top_sellers_stmt = $pdo->prepare("
     LEFT JOIN products p ON p.id = oi.product_id
     WHERE o.status IN ('paid','fulfilled')
       AND o.created_at >= ?
-    GROUP BY oi.product_id, name
+    GROUP BY oi.product_id, oi.product_name, p.name
     ORDER BY units_sold DESC, revenue DESC
     LIMIT 5
 ");

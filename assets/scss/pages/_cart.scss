@@ -305,18 +305,3 @@
     &:hover { opacity: 0.7; }
   }
 }
-
-// Success page
-.success-page {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  padding: 80px 0;
-  max-width: 500px;
-
-  p {
-    font-size: 18px;
-    line-height: 1.6;
-    color: color.adjust($dark, $lightness: 10%);
-  }
-}
