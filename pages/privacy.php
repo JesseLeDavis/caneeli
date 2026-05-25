@@ -50,7 +50,7 @@ include __DIR__ . '/../includes/header.php';
                 <p>Your personal information is not sold, rented, or traded to third parties. The only third parties who may receive limited information are:</p>
                 <ul>
                     <li><strong>Stripe</strong> — to process your payment</li>
-                    <li><strong>Shipping carriers</strong> (UPS, USPS, FedEx, Canada Post, etc.) — to deliver your order</li>
+                    <li><strong>Shipping carriers</strong> (UPS, USPS, FedEx, etc.) — to deliver your order</li>
                 </ul>
                 <p>These parties receive only what's needed for their specific role.</p>
             </div>

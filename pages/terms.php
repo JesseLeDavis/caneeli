@@ -29,7 +29,7 @@ include __DIR__ . '/../includes/header.php';
 
             <div class="legal__section">
                 <h2>Shipping</h2>
-                <p>Caneeli ships within the United States and Canada only. Orders outside these countries cannot be accepted at this time.</p>
+                <p>Caneeli ships within the United States only. Orders outside the U.S. cannot be accepted at this time.</p>
                 <p>Shipping timelines are estimates. In-stock items typically ship within 5–10 business days. Custom or made-to-order pieces ship according to the timeline discussed at the time of order. Once your order is handed off to the carrier, delivery timelines are out of my hands. Caneeli Designs is not responsible for delays, damage, or losses caused by the shipping carrier.</p>
                 <p>You'll receive a tracking number by email once your order ships. If your package arrives visibly damaged, please photograph it before opening and reach out — I'll do what I can to help.</p>
             </div>
