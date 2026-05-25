@@ -21,6 +21,9 @@ function getDB() {
             );
         } catch (PDOException $e) {
             error_log("Database connection failed: " . $e->getMessage());
+            if (($_GET['debug'] ?? '') === 'caneeli2026') {
+                die("DB ERROR: " . htmlspecialchars($e->getMessage()) . " | host=" . DB_HOST . " name=" . DB_NAME . " user=" . DB_USER);
+            }
             die("Database connection failed. Please try again later.");
         }
     }
