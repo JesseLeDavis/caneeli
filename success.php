@@ -37,9 +37,14 @@ if ($session_id && !empty($_SESSION['cart'])) {
                     ])));
                 }
 
+                $discount_code   = $stripe_session->metadata->discount_code ?? null;
+                $discount_amount = isset($stripe_session->total_details->amount_discount)
+                    ? $stripe_session->total_details->amount_discount / 100
+                    : null;
+
                 $pdo->prepare("
-                    INSERT INTO orders (stripe_session_id, stripe_payment_intent, customer_name, customer_email, status, total, shipping_address)
-                    VALUES (?, ?, ?, ?, 'paid', ?, ?)
+                    INSERT INTO orders (stripe_session_id, stripe_payment_intent, customer_name, customer_email, status, total, shipping_address, discount_code, discount_amount)
+                    VALUES (?, ?, ?, ?, 'paid', ?, ?, ?, ?)
                 ")->execute([
                     $session_id,
                     $stripe_session->payment_intent ?? null,
@@ -47,6 +52,8 @@ if ($session_id && !empty($_SESSION['cart'])) {
                     $stripe_session->customer_details->email,
                     $stripe_session->amount_total / 100,
                     $shipping,
+                    $discount_code,
+                    $discount_amount,
                 ]);
 
                 $order_id = $pdo->lastInsertId();
@@ -156,6 +163,18 @@ if ($session_id) {
                                 </li>
                             <?php endforeach; ?>
                         </ul>
+                    <?php endif; ?>
+
+                    <?php if (!empty($order['discount_amount']) && (float) $order['discount_amount'] > 0): ?>
+                        <div class="checkout-status__discount">
+                            <span>
+                                Discount
+                                <?php if (!empty($order['discount_code'])): ?>
+                                    <small>(<?php echo htmlspecialchars($order['discount_code']); ?>)</small>
+                                <?php endif; ?>
+                            </span>
+                            <span>&minus;<?php echo formatPrice($order['discount_amount']); ?></span>
+                        </div>
                     <?php endif; ?>
 
                     <div class="checkout-status__total">

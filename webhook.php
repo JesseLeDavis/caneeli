@@ -62,10 +62,15 @@ if (!empty($shipping_details->address)) {
 try {
     $pdo->beginTransaction();
 
+    $discount_code   = $full_session->metadata->discount_code ?? null;
+    $discount_amount = isset($full_session->total_details->amount_discount)
+        ? $full_session->total_details->amount_discount / 100
+        : null;
+
     $pdo->prepare("
         INSERT INTO orders
-            (stripe_session_id, stripe_payment_intent, customer_name, customer_email, status, total, shipping_address)
-        VALUES (?, ?, ?, ?, 'paid', ?, ?)
+            (stripe_session_id, stripe_payment_intent, customer_name, customer_email, status, total, shipping_address, discount_code, discount_amount)
+        VALUES (?, ?, ?, ?, 'paid', ?, ?, ?, ?)
     ")->execute([
         $stripe_session->id,
         $stripe_session->payment_intent ?? null,
@@ -73,6 +78,8 @@ try {
         $full_session->customer_details->email ?? '',
         $stripe_session->amount_total / 100,
         $shipping,
+        $discount_code,
+        $discount_amount,
     ]);
 
     $order_id = (int) $pdo->lastInsertId();

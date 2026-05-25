@@ -165,6 +165,26 @@
     white-space: nowrap;
   }
 
+  // Discount line (above total)
+  &__discount {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 12px 0;
+    font-size: 14px;
+    color: $rust;
+
+    small {
+      font-size: 11px;
+      color: color.adjust($dark, $lightness: 30%);
+      margin-left: 4px;
+    }
+
+    span:last-child {
+      font-weight: 700;
+    }
+  }
+
   // Totals
   &__total {
     display: flex;

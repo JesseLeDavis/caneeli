@@ -32,7 +32,8 @@ $subtotal = 0;
 foreach ($items as $it) {
     $subtotal += ((float) $it['price_at_purchase']) * (int) $it['quantity'];
 }
-$shipping_cost = max(0, (float) $order['total'] - $subtotal);
+$discount_amount = (float) ($order['discount_amount'] ?? 0);
+$shipping_cost   = max(0, (float) $order['total'] - $subtotal + $discount_amount);
 
 $stripe_dashboard = null;
 if (!empty($order['stripe_payment_intent'])) {
@@ -98,6 +99,12 @@ require __DIR__ . '/layout-top.php';
                     <span>Subtotal</span>
                     <span>$<?php echo number_format($subtotal, 2); ?></span>
                 </div>
+                <?php if ($discount_amount > 0): ?>
+                <div class="order-totals__row">
+                    <span>Discount<?php if (!empty($order['discount_code'])): ?> <small style="color:rgba(45,45,45,0.55)">(<?php echo htmlspecialchars($order['discount_code']); ?>)</small><?php endif; ?></span>
+                    <span style="color:<?php echo '#C25B32'; ?>">&minus;$<?php echo number_format($discount_amount, 2); ?></span>
+                </div>
+                <?php endif; ?>
                 <?php if ($shipping_cost > 0): ?>
                 <div class="order-totals__row">
                     <span>Shipping / tax</span>
