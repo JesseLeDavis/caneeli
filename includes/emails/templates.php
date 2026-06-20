@@ -174,6 +174,40 @@ function build_order_confirmation_email(array $order, array $items)
 }
 
 /**
+ * Personal reply from Annie to a contact-form message. Accent: mustard,
+ * shadow: rust. Quotes the customer's original message underneath.
+ *
+ * @param array  $message   contact_messages row (name, email, message, created_at)
+ * @param string $replyText Annie's reply (plain text)
+ */
+function build_reply_email(array $message, $replyText)
+{
+    $name = htmlspecialchars($message['name'] ?: 'there');
+    $bf   = EMAIL_FONT_BODY;
+
+    // Preserve the writer's line breaks; escape everything.
+    $reply = nl2br(htmlspecialchars(trim($replyText)));
+
+    $quoted = '';
+    if (!empty($message['message'])) {
+        $when = !empty($message['created_at'])
+            ? ' on ' . date('M j, Y', strtotime($message['created_at']))
+            : '';
+        $quoted = '<div style="margin-top:28px;border-left:3px solid ' . EMAIL_MUSTARD . ';padding:4px 0 4px 16px;">'
+            . '<div style="font-family:' . $bf . ';font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:#a59f93;margin-bottom:6px;">You wrote' . $when . '</div>'
+            . '<p style="margin:0;font-family:' . $bf . ';font-size:14px;line-height:1.6;color:#7a756a;white-space:pre-line;">'
+            . htmlspecialchars($message['message']) . '</p></div>';
+    }
+
+    $body = email_h1('Hi ' . $name . ',')
+        . '<div style="font-family:' . $bf . ';font-size:15px;line-height:1.65;color:' . EMAIL_DARK . ';">' . $reply . '</div>'
+        . email_p('&mdash; Annie', '#4a4a4a', '15px')
+        . $quoted;
+
+    return email_wrap('Re: your message to ' . SITE_NAME, $body, EMAIL_MUSTARD, EMAIL_RUST);
+}
+
+/**
  * Shipping notification with tracking number. Accent: blue-400, shadow: mustard.
  */
 function build_shipping_email(array $order)

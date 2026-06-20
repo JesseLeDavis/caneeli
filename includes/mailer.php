@@ -21,9 +21,10 @@ use PHPMailer\PHPMailer\Exception as PHPMailerException;
  * @param string      $html    HTML body (full document)
  * @param string      $altText Plain-text fallback (auto-derived if empty)
  * @param string|null $bcc     Optional BCC address
+ * @param string|null $replyTo Optional Reply-To address (e.g. so replies reach Annie)
  * @return bool  true on success, false if not configured or send failed
  */
-function send_mail($toEmail, $toName, $subject, $html, $altText = '', $bcc = null)
+function send_mail($toEmail, $toName, $subject, $html, $altText = '', $bcc = null, $replyTo = null)
 {
     $toEmail = trim((string) $toEmail);
     if ($toEmail === '' || !filter_var($toEmail, FILTER_VALIDATE_EMAIL)) {
@@ -52,6 +53,9 @@ function send_mail($toEmail, $toName, $subject, $html, $altText = '', $bcc = nul
         $mail->addAddress($toEmail, $toName !== '' ? $toName : $toEmail);
         if ($bcc) {
             $mail->addBCC($bcc);
+        }
+        if ($replyTo && filter_var($replyTo, FILTER_VALIDATE_EMAIL)) {
+            $mail->addReplyTo($replyTo);
         }
 
         $mail->isHTML(true);
