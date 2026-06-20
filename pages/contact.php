@@ -1,30 +1,34 @@
 <?php
 $pageTitle = "Contact";
 include __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../includes/db.php';
 
 $contactStatus = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $name    = trim($_POST['name'] ?? '');
-    $email   = trim($_POST['email'] ?? '');
-    $message = trim($_POST['message'] ?? '');
+    $name     = trim($_POST['name'] ?? '');
+    $email    = trim($_POST['email'] ?? '');
+    $message  = trim($_POST['message'] ?? '');
+    $honeypot = trim($_POST['website'] ?? ''); // hidden field — only bots fill it
 
-    if ($name === '' || $message === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    if ($honeypot !== '') {
+        // Silently accept bot submissions: show success, store nothing.
+        $contactStatus = ['type' => 'success', 'text' => "Thanks — I'll be in touch soon."];
+    } elseif ($name === '' || $message === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $contactStatus = ['type' => 'error', 'text' => 'Please fill out every field with a valid email.'];
     } else {
-        $to      = 'annie@caneelidesigns.com';
-        $subject = 'New message from ' . $name . ' via caneelidesigns.com';
-        $body    = "Name: {$name}\nEmail: {$email}\n\n{$message}\n";
-        $headers = [
-            'From: website@caneelidesigns.com',
-            'Reply-To: ' . $email,
-            'Content-Type: text/plain; charset=UTF-8',
-        ];
-
-        if (mail($to, $subject, $body, implode("\r\n", $headers))) {
+        // Store the message so Annie reads it in the admin (/admin/messages.php)
+        // rather than relying on email delivery.
+        try {
+            $pdo  = getDB();
+            $stmt = $pdo->prepare(
+                "INSERT INTO contact_messages (name, email, message) VALUES (?, ?, ?)"
+            );
+            $stmt->execute([$name, $email, $message]);
             $contactStatus = ['type' => 'success', 'text' => "Thanks — I'll be in touch soon."];
-        } else {
-            $contactStatus = ['type' => 'error', 'text' => 'Something went wrong sending your message. Please try again.'];
+        } catch (PDOException $e) {
+            error_log('contact form: ' . $e->getMessage());
+            $contactStatus = ['type' => 'error', 'text' => 'Something went wrong saving your message. Please try again.'];
         }
     }
 }
@@ -43,6 +47,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <?= htmlspecialchars($contactStatus['text']) ?>
             </p>
         <?php endif; ?>
+        <div aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden">
+            <label>Website<input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+        </div>
         <input type="text" name="name" placeholder="Name" required value="<?= htmlspecialchars($contactStatus['type'] ?? '') === 'success' ? '' : htmlspecialchars($_POST['name'] ?? '') ?>">
         <input type="email" name="email" placeholder="Email" required value="<?= htmlspecialchars($contactStatus['type'] ?? '') === 'success' ? '' : htmlspecialchars($_POST['email'] ?? '') ?>">
         <textarea name="message" placeholder="What are you thinking?" required><?= htmlspecialchars($contactStatus['type'] ?? '') === 'success' ? '' : htmlspecialchars($_POST['message'] ?? '') ?></textarea>
