@@ -67,11 +67,20 @@ function email_wrap($title, $body, $accent = EMAIL_RUST, $shadow = EMAIL_BLUE_20
 
 <table role="presentation" class="email-card" width="560" cellpadding="0" cellspacing="0" style="width:560px;max-width:560px;background:#ffffff;border:2px solid ' . EMAIL_DARK . ';border-radius:18px;box-shadow:7px 7px 0 ' . $shadow . ';overflow:hidden;">
   <tr>
-    <td style="background:' . EMAIL_DARK . ';padding:22px 36px;">
+    <td style="background:' . EMAIL_DARK . ';padding:22px 36px 24px;">
       <a href="' . $url . '" style="font-family:' . $hf . ';color:' . EMAIL_NEUTRAL . ';font-size:24px;font-weight:800;letter-spacing:2px;text-decoration:none;text-transform:uppercase;">' . $site . '</a>
-      <div style="height:4px;width:48px;background:' . $accent . ';margin-top:10px;border-radius:2px;"></div>
+      <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:12px;">
+        <tr>
+          <td style="height:5px;width:34px;background:' . EMAIL_RUST . ';border-radius:3px;"></td>
+          <td style="width:6px;"></td>
+          <td style="height:5px;width:34px;background:' . EMAIL_MUSTARD . ';border-radius:3px;"></td>
+          <td style="width:6px;"></td>
+          <td style="height:5px;width:34px;background:' . EMAIL_BLUE_400 . ';border-radius:3px;"></td>
+        </tr>
+      </table>
     </td>
   </tr>
+  <tr><td style="height:6px;background:' . $accent . ';"></td></tr>'/* thin accent stripe keyed to the email type */ . '
   <tr>
     <td class="email-pad" style="padding:36px;">' . $body . '</td>
   </tr>
@@ -170,7 +179,7 @@ function build_order_confirmation_email(array $order, array $items)
         . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:6px;">' . $totals . '</table>'
         . $shipBlock;
 
-    return email_wrap('Your ' . SITE_NAME . ' order #' . $orderNo, $body, EMAIL_RUST, EMAIL_BLUE_200);
+    return email_wrap('Your ' . SITE_NAME . ' order #' . $orderNo, $body, EMAIL_RUST, EMAIL_BLUE_400);
 }
 
 /**
@@ -199,9 +208,9 @@ function build_reply_email(array $message, $replyText)
             . htmlspecialchars($message['message']) . '</p></div>';
     }
 
+    // No auto-appended signature — Annie signs off however she likes in her reply.
     $body = email_h1('Hi ' . $name . ',')
         . '<div style="font-family:' . $bf . ';font-size:15px;line-height:1.65;color:' . EMAIL_DARK . ';">' . $reply . '</div>'
-        . email_p('&mdash; Annie', '#4a4a4a', '15px')
         . $quoted;
 
     return email_wrap('Re: your message to ' . SITE_NAME, $body, EMAIL_MUSTARD, EMAIL_RUST);
