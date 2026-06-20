@@ -272,9 +272,12 @@ input[type="checkbox"] { margin-right: 8px; accent-color: var(--rust); }
 
 .btn:hover { transform: scale(1.03); opacity: 1; }
 
-.btn-primary   { background: var(--rust);    color: var(--neutral); filter: drop-shadow(var(--dark) 3px 3px); }
-.btn-secondary { background: var(--dark);    color: var(--neutral); }
-.btn-danger    { background: #e53e3e;        color: white; }
+/* Buttons borrow the site's colorful offset-shadow system (red/blue/yellow). */
+.btn-primary   { background: var(--rust);     color: var(--neutral); filter: drop-shadow(var(--blue-200) 3px 3px); }
+.btn-secondary { background: var(--blue-400); color: var(--neutral); filter: drop-shadow(var(--dark) 3px 3px); }
+.btn-mustard   { background: var(--mustard);  color: var(--dark);    filter: drop-shadow(var(--rust) 3px 3px); }
+.btn-dark      { background: var(--dark);     color: var(--neutral); filter: drop-shadow(var(--mustard) 3px 3px); }
+.btn-danger    { background: #e53e3e;         color: white;          filter: drop-shadow(var(--dark) 3px 3px); }
 
 /* ── Table ──────────────────────────────────────────────────────────────── */
 table {
@@ -1268,10 +1271,7 @@ tr:hover td:first-child {
     line-height: 1.55;
 }
 
-/* Button secondary — give it its own signature shadow */
-.btn-secondary {
-    filter: drop-shadow(var(--rust) 3px 3px);
-}
+/* (button shadows defined with the variants above) */
 
 /* Page header: let the h1 breathe a little */
 .page-header h1 {
@@ -1300,7 +1300,10 @@ select:focus {
     table {
         box-shadow: 0 2px 12px rgba(45, 45, 45, 0.06);
     }
-    .btn-secondary { filter: drop-shadow(var(--rust) 2px 2px); }
+    .btn-primary   { filter: drop-shadow(var(--blue-200) 2px 2px); }
+    .btn-secondary { filter: drop-shadow(var(--dark) 2px 2px); }
+    .btn-mustard   { filter: drop-shadow(var(--rust) 2px 2px); }
+    .btn-dark      { filter: drop-shadow(var(--mustard) 2px 2px); }
 }
 
 /* ─────────────────────────────────────────────────────────────────────── */

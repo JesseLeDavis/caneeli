@@ -153,7 +153,7 @@ require __DIR__ . '/layout-top.php';
 
                 <?php if ($order['status'] !== 'fulfilled'): ?>
                     <details style="margin-top:10px">
-                        <summary class="btn btn-secondary" style="width:100%;box-sizing:border-box;text-align:center;cursor:pointer;list-style:none">Mark as fulfilled</summary>
+                        <summary class="btn btn-mustard" style="width:100%;box-sizing:border-box;text-align:center;cursor:pointer;list-style:none">Mark as fulfilled</summary>
                         <form method="POST" action="/admin/update-order-status.php" style="margin-top:12px;padding:14px;background:rgba(194,91,50,0.05);border-radius:10px">
                             <?php echo csrf_field(); ?>
                             <input type="hidden" name="id" value="<?php echo $order['id']; ?>">
@@ -178,7 +178,7 @@ require __DIR__ . '/layout-top.php';
                         <?php elseif (!empty($order['customer_email'])): ?>
                             <br><span style="color:#C25B32">Shipping email not sent yet.</span>
                             <details style="margin-top:8px">
-                                <summary class="btn btn-secondary" style="width:100%;box-sizing:border-box;text-align:center;cursor:pointer;list-style:none">Send tracking email</summary>
+                                <summary class="btn btn-mustard" style="width:100%;box-sizing:border-box;text-align:center;cursor:pointer;list-style:none">Send tracking email</summary>
                                 <form method="POST" action="/admin/update-order-status.php" style="margin-top:12px;padding:14px;background:rgba(194,91,50,0.05);border-radius:10px">
                                     <?php echo csrf_field(); ?>
                                     <input type="hidden" name="id" value="<?php echo $order['id']; ?>">
