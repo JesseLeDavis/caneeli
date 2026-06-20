@@ -152,15 +152,43 @@ require __DIR__ . '/layout-top.php';
                 </form>
 
                 <?php if ($order['status'] !== 'fulfilled'): ?>
-                    <form method="POST" action="/admin/update-order-status.php" style="margin-top:10px">
-                        <?php echo csrf_field(); ?>
-                        <input type="hidden" name="id" value="<?php echo $order['id']; ?>">
-                        <input type="hidden" name="status" value="fulfilled">
-                        <button type="submit" class="btn btn-secondary" style="width:100%">Mark as fulfilled</button>
-                    </form>
+                    <details style="margin-top:10px">
+                        <summary class="btn btn-secondary" style="width:100%;box-sizing:border-box;text-align:center;cursor:pointer;list-style:none">Mark as fulfilled</summary>
+                        <form method="POST" action="/admin/update-order-status.php" style="margin-top:12px;padding:14px;background:rgba(194,91,50,0.05);border-radius:10px">
+                            <?php echo csrf_field(); ?>
+                            <input type="hidden" name="id" value="<?php echo $order['id']; ?>">
+                            <input type="hidden" name="status" value="fulfilled">
+                            <label style="display:block;font-size:12px;color:rgba(45,45,45,0.6);margin-bottom:4px">Tracking number</label>
+                            <input type="text" name="tracking_number" inputmode="numeric" autocomplete="off" value="<?php echo htmlspecialchars($order['tracking_number'] ?? ''); ?>" placeholder="e.g. 9400 1234 5678 9012 3456 78" style="width:100%;margin-bottom:6px">
+                            <p style="margin:0 0 12px;font-size:12px;color:rgba(45,45,45,0.55)">
+                                <?php if (!empty($order['customer_email'])): ?>
+                                    Saving will email the tracking number to <?php echo htmlspecialchars($order['customer_email']); ?>.
+                                <?php else: ?>
+                                    No customer email on file — the order will be fulfilled without a shipping email.
+                                <?php endif; ?>
+                            </p>
+                            <button type="submit" class="btn btn-primary" style="width:100%">Fulfill &amp; email customer</button>
+                        </form>
+                    </details>
                 <?php elseif (!empty($order['fulfilled_at'])): ?>
                     <div style="margin-top:10px;font-size:13px;color:rgba(45,45,45,0.55)">
                         Fulfilled <?php echo date('M j, Y g:ia', strtotime($order['fulfilled_at'])); ?>
+                        <?php if (!empty($order['shipping_email_sent_at'])): ?>
+                            <br>Shipping email sent <?php echo date('M j, Y g:ia', strtotime($order['shipping_email_sent_at'])); ?>
+                        <?php elseif (!empty($order['customer_email'])): ?>
+                            <br><span style="color:#C25B32">Shipping email not sent yet.</span>
+                            <details style="margin-top:8px">
+                                <summary class="btn btn-secondary" style="width:100%;box-sizing:border-box;text-align:center;cursor:pointer;list-style:none">Send tracking email</summary>
+                                <form method="POST" action="/admin/update-order-status.php" style="margin-top:12px;padding:14px;background:rgba(194,91,50,0.05);border-radius:10px">
+                                    <?php echo csrf_field(); ?>
+                                    <input type="hidden" name="id" value="<?php echo $order['id']; ?>">
+                                    <input type="hidden" name="status" value="fulfilled">
+                                    <label style="display:block;font-size:12px;color:rgba(45,45,45,0.6);margin-bottom:4px">Tracking number</label>
+                                    <input type="text" name="tracking_number" inputmode="numeric" autocomplete="off" value="<?php echo htmlspecialchars($order['tracking_number'] ?? ''); ?>" placeholder="e.g. 9400 1234 5678 9012 3456 78" style="width:100%;margin-bottom:12px">
+                                    <button type="submit" class="btn btn-primary" style="width:100%">Send to <?php echo htmlspecialchars($order['customer_email']); ?></button>
+                                </form>
+                            </details>
+                        <?php endif; ?>
                     </div>
                 <?php endif; ?>
             </div>

@@ -6,6 +6,8 @@
 
 require_once __DIR__ . '/config/config.php';
 require_once __DIR__ . '/includes/db.php';
+require_once __DIR__ . '/includes/mailer.php';
+require_once __DIR__ . '/includes/emails/templates.php';
 require_once __DIR__ . '/vendor/autoload.php';
 
 \Stripe\Stripe::setApiKey(STRIPE_SECRET_KEY);
@@ -134,6 +136,36 @@ try {
     $pdo->rollBack();
     http_response_code(500);
     exit;
+}
+
+// Send the order confirmation email. Isolated from the DB work above: a mail
+// failure must never turn a successful order into a 500 (Stripe would retry and
+// the dedup check would just skip re-insertion anyway).
+try {
+    $order_stmt = $pdo->prepare("SELECT * FROM orders WHERE id = ?");
+    $order_stmt->execute([$order_id]);
+    $order = $order_stmt->fetch();
+
+    $line_stmt = $pdo->prepare("SELECT * FROM order_items WHERE order_id = ? ORDER BY id");
+    $line_stmt->execute([$order_id]);
+    $line_items = $line_stmt->fetchAll();
+
+    if ($order && !empty($order['customer_email']) && empty($order['confirmation_email_sent_at'])) {
+        $sent = send_mail(
+            $order['customer_email'],
+            $order['customer_name'] ?? '',
+            'Your ' . SITE_NAME . ' order #' . $order['id'],
+            build_order_confirmation_email($order, $line_items),
+            '',
+            OWNER_EMAIL !== '' ? OWNER_EMAIL : null
+        );
+        if ($sent) {
+            $pdo->prepare("UPDATE orders SET confirmation_email_sent_at = CURRENT_TIMESTAMP WHERE id = ?")
+                ->execute([$order_id]);
+        }
+    }
+} catch (\Throwable $e) {
+    error_log('webhook: confirmation email failed for order ' . $order_id . ': ' . $e->getMessage());
 }
 
 http_response_code(200);
