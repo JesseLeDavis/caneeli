@@ -1500,3 +1500,76 @@ select:focus {
     /* Gallery: 2 per row on phones */
     .gallery-grid { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ─────────────────────────────────────────────────────────────────────── */
+/*  MOBILE CARD TABLES                                                      */
+/*  Read-only tables tagged `.table--cards` (orders, customers, signups)    */
+/*  collapse into stacked cards on phones instead of scrolling sideways —   */
+/*  each row becomes a card and each cell shows its column name as a label. */
+/*  The products table is intentionally excluded: it keeps the horizontal   */
+/*  scroll so its inline-edit / bulk-select grid stays intact.              */
+/* ─────────────────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .table--cards {
+        display: block;
+        overflow: visible;
+        white-space: normal;
+        background: transparent;
+        box-shadow: none;
+        border-radius: 0;
+    }
+    .table--cards thead { display: none; }
+    .table--cards tbody { display: block; }
+
+    .table--cards tr {
+        display: block;
+        background: white;
+        border-radius: 14px;
+        padding: 6px 18px;
+        margin-bottom: 14px;
+        box-shadow: 0 2px 12px rgba(45, 45, 45, 0.06),
+                    4px 4px 0 rgba(212, 193, 75, 0.10);
+    }
+    /* Cycle the signature brand shadow colors as cards stack */
+    .table--cards tr:nth-child(3n+2) { box-shadow: 0 2px 12px rgba(45,45,45,0.06), 4px 4px 0 rgba(100,151,214,0.12); }
+    .table--cards tr:nth-child(3n+3) { box-shadow: 0 2px 12px rgba(45,45,45,0.06), 4px 4px 0 rgba(194,91,50,0.12); }
+
+    .table--cards td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        padding: 11px 0;
+        border-bottom: 1px solid rgba(194, 91, 50, 0.10);
+        white-space: normal;
+        text-align: right;
+        font-size: 15px;
+    }
+    .table--cards tr td:last-child { border-bottom: none; }
+
+    .table--cards td::before {
+        content: attr(data-label);
+        font-family: 'Syne', sans-serif;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: rgba(45, 45, 45, 0.5);
+        text-align: left;
+        flex-shrink: 0;
+    }
+
+    /* Action cell: full-width button, no label */
+    .table--cards td.cell-actions {
+        justify-content: stretch;
+        text-align: center;
+        padding-top: 14px;
+    }
+    .table--cards td.cell-actions::before { display: none; }
+    .table--cards td.cell-actions form { width: 100%; margin: 0; }
+    .table--cards td.cell-actions .btn { width: 100%; }
+
+    /* Kill table hover artifacts in card mode */
+    .table--cards tr:hover td { background: transparent; }
+    .table--cards tr:hover td:first-child { box-shadow: none; }
+}

@@ -48,7 +48,7 @@ require __DIR__ . '/layout-top.php';
     <?php if (!$count): ?>
         <p>No signups yet.</p>
     <?php else: ?>
-    <table>
+    <table class="table--cards">
         <thead>
             <tr>
                 <th>Email</th>
@@ -59,9 +59,9 @@ require __DIR__ . '/layout-top.php';
         <tbody>
             <?php foreach ($signups as $signup): ?>
             <tr>
-                <td><?php echo htmlspecialchars($signup['email']); ?></td>
-                <td><?php echo date('M j, Y g:ia', strtotime($signup['created_at'])); ?></td>
-                <td>
+                <td data-label="Email"><?php echo htmlspecialchars($signup['email']); ?></td>
+                <td data-label="Signed Up"><?php echo date('M j, Y g:ia', strtotime($signup['created_at'])); ?></td>
+                <td class="cell-actions">
                     <form method="POST" onsubmit="return confirm('Remove this email?')">
                         <?php echo csrf_field(); ?>
                         <input type="hidden" name="delete_id" value="<?php echo $signup['id']; ?>">

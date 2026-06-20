@@ -68,7 +68,7 @@ require __DIR__ . '/layout-top.php';
     <?php if (!$customers): ?>
         <p style="margin-top:20px">No customers yet. Once someone orders, they'll show up here.</p>
     <?php else: ?>
-    <table>
+    <table class="table--cards">
         <thead>
             <tr>
                 <th>Customer</th>
@@ -83,23 +83,23 @@ require __DIR__ . '/layout-top.php';
             <?php foreach ($customers as $c): ?>
                 <?php $is_repeat = (int) $c['order_count'] > 1; ?>
                 <tr>
-                    <td>
+                    <td data-label="Customer">
                         <div style="font-weight:600"><?php echo htmlspecialchars($c['name'] ?: '—'); ?></div>
                         <div style="font-size:12px;color:rgba(45,45,45,0.55)">
                             <a href="mailto:<?php echo htmlspecialchars($c['customer_email']); ?>"><?php echo htmlspecialchars($c['customer_email']); ?></a>
                         </div>
                     </td>
-                    <td>
+                    <td data-label="Orders">
                         <?php if ($is_repeat): ?>
                             <span class="badge-status badge-status--fulfilled"><?php echo $c['order_count']; ?>×</span>
                         <?php else: ?>
                             <?php echo $c['order_count']; ?>
                         <?php endif; ?>
                     </td>
-                    <td>$<?php echo number_format((float) $c['total_spent'], 2); ?></td>
-                    <td><?php echo date('M j, Y', strtotime($c['first_order'])); ?></td>
-                    <td><?php echo date('M j, Y', strtotime($c['latest_order'])); ?></td>
-                    <td>
+                    <td data-label="Total spent">$<?php echo number_format((float) $c['total_spent'], 2); ?></td>
+                    <td data-label="First order"><?php echo date('M j, Y', strtotime($c['first_order'])); ?></td>
+                    <td data-label="Latest"><?php echo date('M j, Y', strtotime($c['latest_order'])); ?></td>
+                    <td class="cell-actions">
                         <a href="/admin/orders.php?status=all&q=<?php echo urlencode($c['customer_email']); ?>" class="btn btn-secondary" style="padding:8px 14px;font-size:12px">Orders</a>
                     </td>
                 </tr>

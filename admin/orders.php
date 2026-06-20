@@ -115,7 +115,7 @@ require __DIR__ . '/layout-top.php';
     <?php if (!$orders): ?>
         <p style="margin-top:20px">No <?php echo $filter === 'all' ? '' : $filter . ' '; ?>orders<?php echo $q ? ' matching that search' : ''; ?>.</p>
     <?php else: ?>
-    <table>
+    <table class="table--cards">
         <thead>
             <tr>
                 <th>Order</th>
@@ -130,16 +130,16 @@ require __DIR__ . '/layout-top.php';
         <tbody>
             <?php foreach ($orders as $o): ?>
             <tr>
-                <td><strong>#<?php echo $o['id']; ?></strong></td>
-                <td><?php echo date('M j, Y g:ia', strtotime($o['created_at'])); ?></td>
-                <td>
+                <td data-label="Order"><strong>#<?php echo $o['id']; ?></strong></td>
+                <td data-label="Date"><?php echo date('M j, Y g:ia', strtotime($o['created_at'])); ?></td>
+                <td data-label="Customer">
                     <div style="font-weight:600"><?php echo htmlspecialchars($o['customer_name'] ?: '—'); ?></div>
                     <div style="font-size:12px;color:rgba(45,45,45,0.55)"><?php echo htmlspecialchars($o['customer_email']); ?></div>
                 </td>
-                <td><?php echo (int) $o['item_count']; ?></td>
-                <td>$<?php echo number_format((float) $o['total'], 2); ?></td>
-                <td><span class="badge-status badge-status--<?php echo htmlspecialchars($o['status']); ?>"><?php echo ucfirst($o['status']); ?></span></td>
-                <td>
+                <td data-label="Items"><?php echo (int) $o['item_count']; ?></td>
+                <td data-label="Total">$<?php echo number_format((float) $o['total'], 2); ?></td>
+                <td data-label="Status"><span class="badge-status badge-status--<?php echo htmlspecialchars($o['status']); ?>"><?php echo ucfirst($o['status']); ?></span></td>
+                <td class="cell-actions">
                     <a href="/admin/order-detail.php?id=<?php echo $o['id']; ?>" class="btn btn-secondary" style="padding:8px 14px;font-size:13px">View</a>
                 </td>
             </tr>
