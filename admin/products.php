@@ -11,9 +11,12 @@ $pdo = getDB();
 $q           = trim($_GET['q']        ?? '');
 $status_f    = $_GET['status']        ?? 'all';
 $category_f  = $_GET['category']      ?? 'all';
-$sort        = $_GET['sort']          ?? 'newest';
+$sort        = $_GET['sort']          ?? 'manual';
 
 $allowed_sort = [
+    // Manual is the default: it's the order the shop actually renders, and the
+    // only mode where dragging rows means anything.
+    'manual'      => 'sort_order ASC, created_at DESC',
     'newest'      => 'created_at DESC',
     'oldest'      => 'created_at ASC',
     'name_asc'    => 'name ASC',
@@ -23,7 +26,11 @@ $allowed_sort = [
     'stock_asc'   => 'stock_qty ASC',
     'stock_desc'  => 'stock_qty DESC',
 ];
-$order_by = $allowed_sort[$sort] ?? $allowed_sort['newest'];
+$order_by = $allowed_sort[$sort] ?? $allowed_sort['manual'];
+
+// Dragging only makes sense while the list is in shop order — in any other
+// sort the visual order isn't the order being saved.
+$drag_enabled = ($sort === 'manual');
 
 $where   = [];
 $params  = [];
@@ -115,6 +122,7 @@ require __DIR__ . '/layout-top.php';
             <?php endforeach; ?>
         </select>
         <select name="sort" class="filter-bar__select">
+            <option value="manual"     <?php echo $sort === 'manual' ? 'selected' : ''; ?>>Shop order (drag)</option>
             <option value="newest"     <?php echo $sort === 'newest' ? 'selected' : ''; ?>>Newest</option>
             <option value="oldest"     <?php echo $sort === 'oldest' ? 'selected' : ''; ?>>Oldest</option>
             <option value="name_asc"   <?php echo $sort === 'name_asc' ? 'selected' : ''; ?>>Name A–Z</option>
@@ -125,10 +133,20 @@ require __DIR__ . '/layout-top.php';
             <option value="stock_desc" <?php echo $sort === 'stock_desc' ? 'selected' : ''; ?>>Stock high–low</option>
         </select>
         <button type="submit" class="btn btn-secondary" style="padding:10px 18px">Apply</button>
-        <?php if ($q || $category_f !== 'all' || $sort !== 'newest'): ?>
+        <?php if ($q || $category_f !== 'all' || $sort !== 'manual'): ?>
             <a href="/admin/products.php?status=<?php echo htmlspecialchars($status_f); ?>" class="filter-bar__clear">Clear</a>
         <?php endif; ?>
     </form>
+
+    <?php if (!empty($products)): ?>
+        <p class="drag-hint">
+            <?php if ($drag_enabled): ?>
+                Drag <span class="drag-handle drag-handle--inline" aria-hidden="true"></span> to set the order pieces appear in the shop. Saves as you go.
+            <?php else: ?>
+                Switch the sort back to <strong>Shop order (drag)</strong> to rearrange how pieces appear in the shop.
+            <?php endif; ?>
+        </p>
+    <?php endif; ?>
 
     <?php if (empty($products)): ?>
         <p style="margin-top:20px">No products match these filters.</p>
@@ -156,6 +174,7 @@ require __DIR__ . '/layout-top.php';
         <table>
             <thead>
                 <tr>
+                    <?php if ($drag_enabled): ?><th style="width:28px"><span class="visually-hidden">Reorder</span></th><?php endif; ?>
                     <th style="width:30px"><input type="checkbox" id="bulk-select-all" aria-label="Select all"></th>
                     <th>Image</th>
                     <th>Name</th>
@@ -167,9 +186,12 @@ require __DIR__ . '/layout-top.php';
                     <th>Actions</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="product-rows">
                 <?php foreach ($products as $product): ?>
-                <tr class="product-row product-row--<?php echo htmlspecialchars($product['status']); ?>">
+                <tr class="product-row product-row--<?php echo htmlspecialchars($product['status']); ?>" data-product-id="<?php echo $product['id']; ?>">
+                    <?php if ($drag_enabled): ?>
+                        <td class="drag-cell"><span class="drag-handle" title="Drag to reorder" aria-label="Drag to reorder" role="img"></span></td>
+                    <?php endif; ?>
                     <td><input type="checkbox" name="ids[]" value="<?php echo $product['id']; ?>" class="bulk-check"></td>
                     <td>
                         <?php if ($product['image_path']): ?>
@@ -345,6 +367,53 @@ require __DIR__ . '/layout-top.php';
     });
 })();
 </script>
+
+<?php if ($drag_enabled && count($products) > 1): ?>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script>
+(function () {
+    const body = document.getElementById('product-rows');
+    if (!body || typeof Sortable === 'undefined') return;
+
+    const csrfToken = <?php echo json_encode(csrf_token()); ?>;
+
+    function showToast(msg, isError) {
+        const t = document.createElement('div');
+        t.textContent = msg;
+        t.style.cssText =
+            'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);' +
+            'background:' + (isError ? '#e53e3e' : '#2D2D2D') + ';color:#F2ECDE;' +
+            'padding:10px 18px;border-radius:30px;font-size:13px;font-weight:600;' +
+            'box-shadow:0 4px 20px rgba(0,0,0,0.2);z-index:1000;';
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 1500);
+    }
+
+    Sortable.create(body, {
+        animation: 180,
+        // Handle-only: the rows carry inline-edit inputs and the table scrolls
+        // sideways on the iPad, so dragging from anywhere would fight both.
+        handle: '.drag-handle',
+        ghostClass: 'product-row--ghost',
+        chosenClass: 'product-row--chosen',
+        onEnd: function () {
+            const ids = Array.from(body.querySelectorAll('.product-row'))
+                .map(el => el.dataset.productId);
+            const fd = new FormData();
+            fd.append('csrf_token', csrfToken);
+            ids.forEach(id => fd.append('order[]', id));
+            fetch('/admin/reorder-products.php', {
+                method: 'POST', body: fd, credentials: 'same-origin',
+                headers: { 'X-Requested-With': 'fetch' }
+            })
+                .then(r => r.json())
+                .then(d => showToast(d.ok ? 'Shop order saved' : 'Save failed', !d.ok))
+                .catch(() => showToast('Save failed', true));
+        }
+    });
+})();
+</script>
+<?php endif; ?>
 
 </body>
 </html>

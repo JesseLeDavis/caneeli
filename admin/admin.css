@@ -1093,6 +1093,60 @@ td img {
     box-shadow: 0 0 0 3px rgba(194,91,50,0.18);
 }
 
+/* Product list drag-to-reorder */
+.drag-hint {
+    margin: 14px 0 0;
+    font-size: 13px;
+    color: rgba(45, 45, 45, 0.55);
+}
+
+.drag-cell { width: 28px; padding-right: 0 !important; }
+
+.drag-handle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    min-height: 44px;
+    color: rgba(45, 45, 45, 0.3);
+    cursor: grab;
+    /* Stops the iPad treating a handle drag as a page scroll. */
+    touch-action: none;
+    user-select: none;
+}
+
+/* Grip dots drawn in CSS rather than a glyph — the obvious characters for this
+   (⠿, ⋮⋮) fall back to tofu or a dash wherever the font lacks them. */
+.drag-handle::before {
+    content: '';
+    width: 8px;
+    height: 14px;
+    background-image: radial-gradient(currentColor 1.1px, transparent 1.2px);
+    background-size: 4px 4px;
+}
+
+.drag-handle:active { cursor: grabbing; }
+tr:hover .drag-handle { color: var(--rust); }
+
+.drag-handle--inline {
+    min-width: 0;
+    min-height: 0;
+    vertical-align: -3px;
+    color: rgba(45, 45, 45, 0.45);
+    cursor: default;
+}
+
+.product-row--ghost { opacity: 0.35; }
+.product-row--chosen { background: rgba(212, 193, 75, 0.18); }
+
+.visually-hidden {
+    position: absolute;
+    width: 1px; height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
 /* SortableJS drag states */
 .gallery-grid { touch-action: pan-y; }
 .gallery-tile { cursor: grab; }
