@@ -33,11 +33,14 @@ if ($status_f !== 'all' && in_array($status_f, PRODUCT_STATUSES, true)) {
     $params[]  = $status_f;
 }
 if ($category_f !== 'all' && $category_f !== '') {
-    $where[]   = 'category = ?';
+    $where[]   = product_category_exists_sql('products');
     $params[]  = $category_f;
 }
 if ($q !== '') {
-    $where[]   = '(name LIKE ? OR description LIKE ? OR category LIKE ?)';
+    // Search any assigned category, not just the primary one.
+    $where[]   = '(name LIKE ? OR description LIKE ?
+                   OR EXISTS (SELECT 1 FROM product_categories pcq
+                              WHERE pcq.product_id = products.id AND pcq.category LIKE ?))';
     $params[]  = '%' . $q . '%';
     $params[]  = '%' . $q . '%';
     $params[]  = '%' . $q . '%';
@@ -51,8 +54,12 @@ $products = $stmt->fetchAll();
 
 // Canonical list first, so a new category is filterable before any product uses
 // it; any stray DB-only values get appended so nothing becomes unreachable.
-$used_categories = $pdo->query("SELECT DISTINCT category FROM products ORDER BY category")->fetchAll(PDO::FETCH_COLUMN);
+$used_categories = $pdo->query("SELECT DISTINCT category FROM product_categories ORDER BY category")->fetchAll(PDO::FETCH_COLUMN);
 $all_categories  = product_filter_categories($used_categories);
+
+// Every assignment for the rows on screen, fetched in one query rather than
+// one per product.
+$cats_by_product = product_categories_for_many($pdo, array_column($products, 'id'));
 
 // Status counts (ignoring other filters so the tabs show total of each)
 $status_counts = array_fill_keys(PRODUCT_STATUSES, 0);
@@ -172,7 +179,10 @@ require __DIR__ . '/layout-top.php';
                     <td>
                         <div style="font-weight:600"><?php echo htmlspecialchars($product['name']); ?></div>
                     </td>
-                    <td><?php echo htmlspecialchars($product['category']); ?></td>
+                    <td><?php
+                        $row_cats = $cats_by_product[(int) $product['id']] ?? [];
+                        echo $row_cats ? htmlspecialchars(implode(', ', $row_cats)) : '—';
+                    ?></td>
                     <td>
                         <input type="number"
                                step="0.01" min="0"

@@ -2,6 +2,7 @@
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/product_categories.php';
 
 $id = (int) ($_GET['id'] ?? 0);
 if (!$id) {
@@ -36,6 +37,9 @@ $ins->execute([
     $source['image_path'],
 ]);
 $new_id = (int) $pdo->lastInsertId();
+
+// Carry over every category assignment, not just the primary one.
+save_product_categories($pdo, $new_id, product_categories_for($pdo, $id));
 
 // Copy gallery rows (reuses the same image paths — not a file copy).
 $imgs = $pdo->prepare("SELECT image_path, sort_order FROM product_images WHERE product_id = ? ORDER BY sort_order, id");

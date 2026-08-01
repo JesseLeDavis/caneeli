@@ -13,6 +13,9 @@ $product = $stmt->fetch();
 
 if (!$product) { header('Location: /pages/shop/'); exit; }
 
+require_once __DIR__ . '/../../includes/product_categories.php';
+$product_cats = product_categories_for($pdo, (int) $product['id']);
+
 // Record the view for the admin insights report (fire-and-forget).
 require_once __DIR__ . '/../../includes/tracking.php';
 track_product_view((int) $product['id'], $_SERVER['HTTP_REFERER'] ?? null);
@@ -70,7 +73,12 @@ $gallery = $img_stmt->fetchAll();
             </div>
 
             <div class="product-detail__info">
-                <p class="product-detail__category"><?php echo sanitize($product['category']); ?></p>
+                <p class="product-detail__category">
+                    <?php foreach ($product_cats as $i => $cat): ?>
+                        <?php if ($i > 0): ?><span class="product-detail__category-sep">·</span><?php endif; ?>
+                        <a href="/pages/shop/?category=<?php echo urlencode($cat); ?>"><?php echo sanitize($cat); ?></a>
+                    <?php endforeach; ?>
+                </p>
                 <h1 class="large_title"><?php echo sanitize($product['name']); ?></h1>
                 <p class="product-detail__price"><?php echo formatPrice($product['price']); ?></p>
                 <div class="product-detail__divider"></div>

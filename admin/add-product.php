@@ -74,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $description = trim($_POST['description'] ?? '');
     $price       = $_POST['price'] ?? '';
     $stock_qty   = intval($_POST['stock_qty'] ?? 1);
-    $category    = $_POST['category'] ?? '';
+    $selected_cats = sanitize_product_categories((array) ($_POST['categories'] ?? []));
     $status      = $_POST['status'] ?? 'active';
     if (!in_array($status, PRODUCT_STATUSES, true)) $status = 'active';
     $active      = product_active_for_status($status);
@@ -89,11 +89,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $all_signals = array_slice(array_map('strip_tags', $all_signals), 0, 5);
     $craft_signals_json = !empty($all_signals) ? json_encode($all_signals) : null;
 
-    if (!$error && !$name || !$price || !$category) {
-        $error = 'Name, price, and category are required.';
-    } elseif (!in_array($category, $categories)) {
-        $error = 'Invalid category.';
-    } else {
+    if (!$error && (!$name || !$price || !$selected_cats)) {
+        $error = 'Name, price, and at least one category are required.';
+    } elseif (!$error) {
         // Collect uploaded files from the multi-file input
         $uploaded = [];
         if (!empty($_FILES['images']['name'][0])) {
@@ -120,8 +118,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 INSERT INTO products (name, description, craft_signals, price, stock_qty, category, image_path, active, status)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
-            $stmt->execute([$name, $description, $craft_signals_json, $price, $stock_qty, $category, $featured_path, $active, $status]);
-            $product_id = $pdo->lastInsertId();
+            $stmt->execute([$name, $description, $craft_signals_json, $price, $stock_qty, $selected_cats[0], $featured_path, $active, $status]);
+            $product_id = (int) $pdo->lastInsertId();
+
+            save_product_categories($pdo, $product_id, $selected_cats);
 
             // Insert all images into the gallery table
             $img_stmt = $pdo->prepare("INSERT INTO product_images (product_id, image_path, sort_order) VALUES (?, ?, ?)");
@@ -183,15 +183,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <label>Stock Quantity</label>
             <input type="number" name="stock_qty" min="0" value="<?php echo htmlspecialchars($_POST['stock_qty'] ?? '1'); ?>">
 
-            <label>Category</label>
-            <select name="category" required>
-                <option value="">— Select —</option>
+            <label>Categories <span style="font-weight:400;font-size:12px;opacity:.6">(pick one or more — the first becomes the main one)</span></label>
+            <?php $checked_cats = sanitize_product_categories((array) ($_POST['categories'] ?? [])); ?>
+            <div class="category-checks">
                 <?php foreach ($categories as $cat): ?>
-                    <option value="<?php echo $cat; ?>" <?php echo (($_POST['category'] ?? '') === $cat) ? 'selected' : ''; ?>>
-                        <?php echo $cat; ?>
-                    </option>
+                    <label class="category-check">
+                        <input type="checkbox" name="categories[]" value="<?php echo htmlspecialchars($cat); ?>"
+                               <?php echo in_array($cat, $checked_cats, true) ? 'checked' : ''; ?>>
+                        <span><?php echo htmlspecialchars($cat); ?></span>
+                    </label>
                 <?php endforeach; ?>
-            </select>
+            </div>
 
             <span class="form-section-label">Photos</span>
 

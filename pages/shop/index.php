@@ -27,7 +27,9 @@ if ($min_price > $max_price) $min_price = $max_price;
 // Build query
 $where  = "WHERE active = 1 AND price >= ? AND price <= ?";
 $params = [$min_price, $max_price];
-if ($category) { $where .= " AND category = ?"; $params[] = $category; }
+// Match against the join table so a piece filed under several categories shows
+// up under each of them.
+if ($category) { $where .= " AND " . product_category_exists_sql('products'); $params[] = $category; }
 
 // Total count for pagination
 $count_stmt = $pdo->prepare("SELECT COUNT(*) FROM products $where");

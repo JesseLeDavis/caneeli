@@ -83,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $description = trim($_POST['description'] ?? '');
     $price       = $_POST['price'] ?? '';
     $stock_qty   = intval($_POST['stock_qty'] ?? 1);
-    $category    = $_POST['category'] ?? '';
+    $selected_cats = sanitize_product_categories((array) ($_POST['categories'] ?? []));
     $status      = $_POST['status'] ?? 'active';
     if (!in_array($status, PRODUCT_STATUSES, true)) $status = 'active';
     $active      = product_active_for_status($status);
@@ -98,11 +98,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $all_signals = array_slice(array_map('strip_tags', $all_signals), 0, 5);
     $craft_signals_json = !empty($all_signals) ? json_encode($all_signals) : null;
 
-    if (!$error && (!$name || !$price || !$category)) {
-        $error = 'Name, price, and category are required.';
-    } elseif (!in_array($category, $categories)) {
-        $error = 'Invalid category.';
-    } else {
+    if (!$error && (!$name || !$price || !$selected_cats)) {
+        $error = 'Name, price, and at least one category are required.';
+    } elseif (!$error) {
         // Process any new image uploads
         $new_paths = [];
         if (!empty($_FILES['new_images']['name'][0])) {
@@ -127,7 +125,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 SET name = ?, description = ?, craft_signals = ?, price = ?, stock_qty = ?,
                     category = ?, active = ?, status = ?
                 WHERE id = ?
-            ")->execute([$name, $description, $craft_signals_json, $price, $stock_qty, $category, $active, $status, $id]);
+            ")->execute([$name, $description, $craft_signals_json, $price, $stock_qty, $selected_cats[0], $active, $status, $id]);
+
+            save_product_categories($pdo, $id, $selected_cats);
 
             // Insert new gallery images
             if ($new_paths) {
@@ -156,6 +156,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
+// Current category assignments. Read after the POST block so a just-saved
+// change is reflected. May include a retired category the product still holds.
+$product_cats = product_categories_for($pdo, $id);
+$retired_cats = array_values(array_diff($product_cats, PRODUCT_CATEGORIES));
 
 // Fetch gallery images
 $gallery_stmt = $pdo->prepare("SELECT * FROM product_images WHERE product_id = ? ORDER BY sort_order, id");
@@ -262,15 +267,25 @@ $current_signals = json_decode($product['craft_signals'] ?? '[]', true) ?? [];
             <label>Stock Quantity</label>
             <input type="number" name="stock_qty" min="0" value="<?php echo htmlspecialchars($product['stock_qty']); ?>">
 
-            <label>Category</label>
-            <select name="category" required>
-                <option value="">— Select —</option>
+            <label>Categories <span style="font-weight:400;font-size:12px;opacity:.6">(pick one or more — the first becomes the main one)</span></label>
+            <?php $checked_cats = $_SERVER['REQUEST_METHOD'] === 'POST' && $error
+                ? sanitize_product_categories((array) ($_POST['categories'] ?? []))
+                : $product_cats; ?>
+            <div class="category-checks">
                 <?php foreach ($categories as $cat): ?>
-                    <option value="<?php echo $cat; ?>" <?php echo ($product['category'] === $cat) ? 'selected' : ''; ?>>
-                        <?php echo $cat; ?>
-                    </option>
+                    <label class="category-check">
+                        <input type="checkbox" name="categories[]" value="<?php echo htmlspecialchars($cat); ?>"
+                               <?php echo in_array($cat, $checked_cats, true) ? 'checked' : ''; ?>>
+                        <span><?php echo htmlspecialchars($cat); ?></span>
+                    </label>
                 <?php endforeach; ?>
-            </select>
+            </div>
+            <?php if ($retired_cats): ?>
+                <p class="category-retired">
+                    Also filed under <strong><?php echo htmlspecialchars(implode(', ', $retired_cats)); ?></strong>,
+                    which we no longer use. Saving this product will remove that.
+                </p>
+            <?php endif; ?>
 
             <span class="form-section-label">Photos</span>
 

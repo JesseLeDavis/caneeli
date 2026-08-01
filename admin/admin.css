@@ -232,6 +232,46 @@ input[type="file"] {
 
 input[type="checkbox"] { margin-right: 8px; accent-color: var(--rust); }
 
+/* Category multi-select. Checkboxes rather than a <select multiple>, which is
+   close to unusable on the iPad this panel is mostly driven from. */
+.category-checks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.category-check {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    margin-bottom: 0;
+    padding: 0 16px 0 12px;
+    border: 2px solid rgba(45, 45, 45, 0.15);
+    border-radius: 30px;
+    background: var(--neutral);
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.category-check:has(input:checked) {
+    border-color: var(--rust);
+    background: rgba(194, 91, 50, 0.08);
+    font-weight: 600;
+}
+
+.category-check input[type="checkbox"] { width: 18px; height: 18px; }
+
+.category-retired {
+    margin: -12px 0 20px;
+    padding: 10px 14px;
+    border-left: 3px solid var(--mustard);
+    background: rgba(212, 193, 75, 0.1);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
 .file-upload-area {
     border: 2px dashed rgba(194, 91, 50, 0.3);
     border-radius: 12px;
