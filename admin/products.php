@@ -3,6 +3,7 @@ require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/product_status.php';
+require_once __DIR__ . '/../includes/product_categories.php';
 
 $pdo = getDB();
 
@@ -36,7 +37,8 @@ if ($category_f !== 'all' && $category_f !== '') {
     $params[]  = $category_f;
 }
 if ($q !== '') {
-    $where[]   = '(name LIKE ? OR description LIKE ?)';
+    $where[]   = '(name LIKE ? OR description LIKE ? OR category LIKE ?)';
+    $params[]  = '%' . $q . '%';
     $params[]  = '%' . $q . '%';
     $params[]  = '%' . $q . '%';
 }
@@ -47,7 +49,10 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $products = $stmt->fetchAll();
 
-$all_categories = $pdo->query("SELECT DISTINCT category FROM products ORDER BY category")->fetchAll(PDO::FETCH_COLUMN);
+// Canonical list first, so a new category is filterable before any product uses
+// it; any stray DB-only values get appended so nothing becomes unreachable.
+$used_categories = $pdo->query("SELECT DISTINCT category FROM products ORDER BY category")->fetchAll(PDO::FETCH_COLUMN);
+$all_categories  = product_filter_categories($used_categories);
 
 // Status counts (ignoring other filters so the tabs show total of each)
 $status_counts = array_fill_keys(PRODUCT_STATUSES, 0);

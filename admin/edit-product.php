@@ -3,8 +3,9 @@ require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/product_status.php';
+require_once __DIR__ . '/../includes/product_categories.php';
 
-$categories = ['Chairs', 'Tables', 'Shelves', 'Wall Decor', 'Lighting', 'Other'];
+$categories = PRODUCT_CATEGORIES;
 $preset_signals = [
     'Ready to Ship',
     'Ships in 3–5 Days',
