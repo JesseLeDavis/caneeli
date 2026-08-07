@@ -94,8 +94,11 @@ if (($full_session->metadata->type ?? '') === 'custom_balance') {
             (int) $quote['order_id'],
         ]);
 
-        $pdo->prepare("UPDATE custom_quotes SET status = 'paid' WHERE id = ?")
-            ->execute([$quote_id]);
+        // Keep the balance's payment intent — Stripe doesn't link the two
+        // charges, so without this there's no way back to the balance payment
+        // from the admin (the order keeps the deposit's intent).
+        $pdo->prepare("UPDATE custom_quotes SET status = 'paid', balance_payment_intent = ? WHERE id = ?")
+            ->execute([$stripe_session->payment_intent ?? null, $quote_id]);
 
         $pdo->commit();
     } catch (\Throwable $e) {

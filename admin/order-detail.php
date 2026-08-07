@@ -64,6 +64,18 @@ if (!empty($order['stripe_payment_intent'])) {
     $stripe_dashboard = 'https://dashboard.stripe.com/search?query=' . urlencode($order['stripe_session_id']);
 }
 
+// A custom order's balance is a second, unlinked Stripe charge — the order row
+// only ever holds the deposit's intent, so the balance link comes off the quote.
+// Null for cart orders and for balances settled outside Stripe.
+$balanceDashboard = null;
+if ($quoteRow) {
+    if (!empty($quoteRow['balance_payment_intent'])) {
+        $balanceDashboard = 'https://dashboard.stripe.com/payments/' . urlencode($quoteRow['balance_payment_intent']);
+    } elseif (!empty($quoteRow['balance_session_id'])) {
+        $balanceDashboard = 'https://dashboard.stripe.com/search?query=' . urlencode($quoteRow['balance_session_id']);
+    }
+}
+
 $pageTitle = 'Order #' . $order['id'];
 $activeNav = 'orders';
 require __DIR__ . '/layout-top.php';
@@ -307,7 +319,21 @@ require __DIR__ . '/layout-top.php';
             <?php if ($stripe_dashboard): ?>
             <div class="order-card">
                 <h3 class="order-card__title">Stripe</h3>
-                <a href="<?php echo htmlspecialchars($stripe_dashboard); ?>" target="_blank" rel="noopener" class="btn btn-secondary" style="width:100%;text-align:center">Open in Stripe &rarr;</a>
+                <?php if ($balanceDashboard): ?>
+                    <p style="margin:0 0 10px;font-size:12px;color:rgba(45,45,45,0.55)">
+                        A custom order is two separate Stripe charges — Stripe doesn't link them, so both are here.
+                    </p>
+                    <a href="<?php echo htmlspecialchars($stripe_dashboard); ?>" target="_blank" rel="noopener"
+                       class="btn btn-secondary" style="width:100%;text-align:center;margin-bottom:8px">
+                        Deposit $<?php echo number_format((float) $quoteRow['deposit_amount'], 2); ?> &rarr;
+                    </a>
+                    <a href="<?php echo htmlspecialchars($balanceDashboard); ?>" target="_blank" rel="noopener"
+                       class="btn btn-secondary" style="width:100%;text-align:center">
+                        Balance $<?php echo number_format((float) $quoteRow['total'] - (float) $quoteRow['deposit_amount'], 2); ?> &rarr;
+                    </a>
+                <?php else: ?>
+                    <a href="<?php echo htmlspecialchars($stripe_dashboard); ?>" target="_blank" rel="noopener" class="btn btn-secondary" style="width:100%;text-align:center">Open in Stripe &rarr;</a>
+                <?php endif; ?>
                 <div style="margin-top:10px;font-size:11px;color:rgba(45,45,45,0.45);word-break:break-all">
                     <?php echo htmlspecialchars($order['stripe_session_id']); ?>
                 </div>

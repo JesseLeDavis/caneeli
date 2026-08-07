@@ -39,9 +39,13 @@ CREATE TABLE custom_quotes (
     deposit_email_sent_at TIMESTAMP NULL DEFAULT NULL,
     balance_email_sent_at TIMESTAMP NULL DEFAULT NULL,
 
-    -- Stripe sessions for each of the two payments.
-    deposit_session_id    VARCHAR(255) NULL,
-    balance_session_id    VARCHAR(255) NULL,
+    -- Stripe sessions for each of the two payments. Stripe has no link between
+    -- them — they're independent charges — so these are what let the admin get
+    -- back to both sides of a commission. The deposit's payment intent lives on
+    -- the order itself (orders.stripe_payment_intent); the balance's is here.
+    deposit_session_id     VARCHAR(255) NULL,
+    balance_session_id     VARCHAR(255) NULL,
+    balance_payment_intent VARCHAR(255) NULL,
 
     -- Set once the deposit converts this quote into a real order.
     order_id              INT NULL,
