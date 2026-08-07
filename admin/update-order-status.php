@@ -28,9 +28,17 @@ if ($status === 'fulfilled') {
     // the status dropdown instead of the "Mark as fulfilled" button, so bounce
     // it back rather than quietly leaving the customer un-notified. Orders with
     // no customer email are exempt — there's nobody to notify either way.
-    $existing = $pdo->prepare("SELECT customer_email, tracking_number FROM orders WHERE id = ?");
+    $existing = $pdo->prepare("SELECT customer_email, tracking_number, balance_due FROM orders WHERE id = ?");
     $existing->execute([$id]);
     $existing = $existing->fetch();
+
+    // Guard: a custom order with an outstanding balance must not ship. Annie
+    // chose "balance before it ships", and this is what makes that real rather
+    // than a policy she has to remember.
+    if ($existing && $existing['balance_due'] !== null && (float) $existing['balance_due'] > 0) {
+        header('Location: /admin/order-detail.php?id=' . $id . '&fulfill=balancedue');
+        exit;
+    }
 
     if ($existing
         && !empty($existing['customer_email'])

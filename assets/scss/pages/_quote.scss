@@ -1,0 +1,159 @@
+@use '../base/variables' as *;
+@use 'sass:color';
+
+// Public custom-order quote page (quote.php). One decision on the page —
+// pay the deposit — so everything else stays quiet and out of its way.
+.quote {
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 60px 0 100px;
+
+  &__eyebrow {
+    font-family: $font-body;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: color.adjust($dark, $lightness: 28%);
+    margin-bottom: 12px;
+  }
+
+  &__title {
+    font-family: $font-heading;
+    font-size: clamp(30px, 6vw, 42px);
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 14px;
+  }
+
+  &__lead {
+    display: inline-block;
+    font-family: $font-body;
+    font-size: 13px;
+    font-weight: 700;
+    color: $dark;
+    background: $mustard;
+    border-radius: 30px;
+    padding: 6px 16px;
+    margin-bottom: 22px;
+  }
+
+  &__desc {
+    font-size: 17px;
+    line-height: 1.7;
+    white-space: pre-line;
+    color: color.adjust($dark, $lightness: 10%);
+    margin-bottom: 32px;
+  }
+
+  &__card {
+    background: white;
+    border: 2px solid $dark;
+    border-radius: 18px;
+    padding: 28px;
+    filter: drop-shadow($blue-400 6px 6px);
+    margin-bottom: 30px;
+  }
+
+  &__row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    padding: 10px 0;
+    font-size: 15px;
+    color: color.adjust($dark, $lightness: 22%);
+
+    &--due {
+      color: $rust;
+      font-weight: 700;
+    }
+
+    &--total {
+      margin-top: 8px;
+      padding-top: 16px;
+      border-top: 2px solid $dark;
+      font-family: $font-heading;
+      font-size: 20px;
+      font-weight: 800;
+      color: $dark;
+    }
+  }
+
+  // Terms gate. The button stays visibly disabled until this is ticked, so
+  // there's no ambiguity about what was agreed to before paying.
+  &__terms {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 18px;
+    background: rgba($rust, 0.05);
+    border: 1px solid rgba($rust, 0.25);
+    border-radius: 12px;
+    margin-bottom: 22px;
+    font-size: 14px;
+    line-height: 1.6;
+    cursor: pointer;
+
+    input {
+      margin-top: 3px;
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      accent-color: $rust;
+    }
+  }
+
+  &__pay {
+    width: 100%;
+    font-size: 17px;
+    padding: 16px 28px;
+
+    &:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      filter: none;
+    }
+  }
+
+  &__reassurance {
+    margin-top: 16px;
+    text-align: center;
+    font-size: 13px;
+    color: color.adjust($dark, $lightness: 32%);
+
+    a { color: $rust; }
+  }
+
+  // Shown instead of the pay form once the deposit has been paid.
+  &__state {
+    background: white;
+    border: 2px solid $dark;
+    border-radius: 18px;
+    padding: 32px 28px;
+    text-align: center;
+    filter: drop-shadow($mustard 6px 6px);
+
+    h2 {
+      font-family: $font-heading;
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+
+    p {
+      font-size: 15px;
+      line-height: 1.7;
+      color: color.adjust($dark, $lightness: 18%);
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .quote {
+    padding: 36px 0 70px;
+
+    &__card { padding: 22px; filter: drop-shadow($blue-400 4px 4px); }
+    &__desc { font-size: 16px; }
+  }
+}

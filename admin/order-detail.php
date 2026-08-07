@@ -11,9 +11,10 @@ if (!$id) {
     exit;
 }
 
-// Set when a fulfil attempt was blocked for having no tracking number — see
-// update-order-status.php. Used to explain the bounce and open the right form.
+// Set when a fulfil attempt was blocked — see update-order-status.php. Used to
+// explain the bounce and open the right form.
 $needsTracking = ($_GET['fulfill'] ?? '') === 'notracking';
+$balanceDue    = ($_GET['fulfill'] ?? '') === 'balancedue';
 
 $stmt = $pdo->prepare("SELECT * FROM orders WHERE id = ?");
 $stmt->execute([$id]);
@@ -144,9 +145,23 @@ require __DIR__ . '/layout-top.php';
 
             <div class="order-card">
                 <h3 class="order-card__title">Status</h3>
-                <?php if ($needsTracking): ?>
+                <?php if ($balanceDue): ?>
+                    <div class="error" style="margin-bottom:12px">
+                        Not fulfilled — $<?php echo number_format((float) $order['balance_due'], 2); ?>
+                        is still outstanding on this custom order. Collect the balance before it ships.
+                    </div>
+                <?php elseif ($needsTracking): ?>
                     <div class="error" style="margin-bottom:12px">
                         Not fulfilled yet — add a tracking number below so the customer gets their shipping email.
+                    </div>
+                <?php endif; ?>
+
+                <?php if ($order['balance_due'] !== null && (float) $order['balance_due'] > 0): ?>
+                    <div style="margin-bottom:12px;padding:12px;background:rgba(194,91,50,0.07);border-left:3px solid #C25B32;border-radius:6px;font-size:13px">
+                        <strong>Custom order.</strong>
+                        $<?php echo number_format((float) $order['amount_paid'], 2); ?> deposit paid ·
+                        <strong style="color:#C25B32">$<?php echo number_format((float) $order['balance_due'], 2); ?> still due</strong>
+                        <div style="margin-top:4px;color:rgba(45,45,45,0.6)">Can't be fulfilled until the balance is collected.</div>
                     </div>
                 <?php endif; ?>
                 <form method="POST" action="/admin/update-order-status.php">
