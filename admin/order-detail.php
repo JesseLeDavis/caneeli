@@ -11,6 +11,10 @@ if (!$id) {
     exit;
 }
 
+// Set when a fulfil attempt was blocked for having no tracking number — see
+// update-order-status.php. Used to explain the bounce and open the right form.
+$needsTracking = ($_GET['fulfill'] ?? '') === 'notracking';
+
 $stmt = $pdo->prepare("SELECT * FROM orders WHERE id = ?");
 $stmt->execute([$id]);
 $order = $stmt->fetch();
@@ -140,6 +144,11 @@ require __DIR__ . '/layout-top.php';
 
             <div class="order-card">
                 <h3 class="order-card__title">Status</h3>
+                <?php if ($needsTracking): ?>
+                    <div class="error" style="margin-bottom:12px">
+                        Not fulfilled yet — add a tracking number below so the customer gets their shipping email.
+                    </div>
+                <?php endif; ?>
                 <form method="POST" action="/admin/update-order-status.php">
                     <?php echo csrf_field(); ?>
                     <input type="hidden" name="id" value="<?php echo $order['id']; ?>">
@@ -152,7 +161,7 @@ require __DIR__ . '/layout-top.php';
                 </form>
 
                 <?php if ($order['status'] !== 'fulfilled'): ?>
-                    <details style="margin-top:10px">
+                    <details style="margin-top:10px" <?php echo $needsTracking ? 'open' : ''; ?>>
                         <summary class="btn btn-mustard" style="width:100%;box-sizing:border-box;text-align:center;cursor:pointer;list-style:none">Mark as fulfilled</summary>
                         <form method="POST" action="/admin/update-order-status.php" style="margin-top:12px;padding:14px;background:rgba(194,91,50,0.05);border-radius:10px">
                             <?php echo csrf_field(); ?>

@@ -23,6 +23,24 @@ if (!$id || !in_array($status, $allowed, true)) {
 $pdo = getDB();
 
 if ($status === 'fulfilled') {
+    // Guard: fulfilling without a tracking number silently skips the shipping
+    // email (the send below requires one). That's almost always a mis-click on
+    // the status dropdown instead of the "Mark as fulfilled" button, so bounce
+    // it back rather than quietly leaving the customer un-notified. Orders with
+    // no customer email are exempt — there's nobody to notify either way.
+    $existing = $pdo->prepare("SELECT customer_email, tracking_number FROM orders WHERE id = ?");
+    $existing->execute([$id]);
+    $existing = $existing->fetch();
+
+    if ($existing
+        && !empty($existing['customer_email'])
+        && $tracking_number === ''
+        && empty($existing['tracking_number'])
+    ) {
+        header('Location: /admin/order-detail.php?id=' . $id . '&fulfill=notracking');
+        exit;
+    }
+
     // Marking fulfilled also captures the tracking number (the admin prompts
     // for it as part of this action) and triggers the shipping email.
     if ($tracking_number !== '') {
