@@ -59,7 +59,11 @@ CREATE TABLE custom_quotes (
 ALTER TABLE orders
     ADD COLUMN quote_id    INT           NULL AFTER id,
     ADD COLUMN amount_paid DECIMAL(10,2) NULL AFTER total,
-    ADD COLUMN balance_due DECIMAL(10,2) NULL AFTER amount_paid;
+    ADD COLUMN balance_due DECIMAL(10,2) NULL AFTER amount_paid,
+    -- Set when Annie marks a balance paid outside Stripe (cash or check at
+    -- pickup). Kept distinct from a Stripe-settled balance so "we have the
+    -- money" and "Stripe says we have the money" never look identical.
+    ADD COLUMN balance_paid_manually_at TIMESTAMP NULL DEFAULT NULL AFTER balance_due;
 
 -- New state: deposit received, balance still owed. Fulfillment is blocked
 -- while balance_due > 0.

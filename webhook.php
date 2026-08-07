@@ -61,6 +61,70 @@ if (!empty($shipping_details->address)) {
     ])));
 }
 
+// --- Custom-order balance -----------------------------------------------
+// Settles an existing order rather than creating one. Reaching balance_due 0
+// and status 'paid' is what releases the fulfillment gate.
+if (($full_session->metadata->type ?? '') === 'custom_balance') {
+    $quote_id = (int) ($full_session->metadata->quote_id ?? 0);
+
+    $qstmt = $pdo->prepare("SELECT * FROM custom_quotes WHERE id = ?");
+    $qstmt->execute([$quote_id]);
+    $quote = $qstmt->fetch();
+
+    if (!$quote || empty($quote['order_id'])) {
+        error_log('webhook: custom_balance for unknown/unconverted quote ' . $quote_id);
+        http_response_code(200);
+        exit;
+    }
+
+    try {
+        $pdo->beginTransaction();
+
+        // Guarded on balance_due > 0 so a redelivered event — or a balance
+        // already settled manually — can't double-apply.
+        $pdo->prepare("
+            UPDATE orders
+               SET amount_paid = total,
+                   balance_due = 0,
+                   status = 'paid',
+                   stripe_payment_intent = COALESCE(stripe_payment_intent, ?)
+             WHERE id = ? AND balance_due > 0
+        ")->execute([
+            $stripe_session->payment_intent ?? null,
+            (int) $quote['order_id'],
+        ]);
+
+        $pdo->prepare("UPDATE custom_quotes SET status = 'paid' WHERE id = ?")
+            ->execute([$quote_id]);
+
+        $pdo->commit();
+    } catch (\Throwable $e) {
+        $pdo->rollBack();
+        error_log('webhook: custom balance failed for quote ' . $quote_id . ': ' . $e->getMessage());
+        http_response_code(500);
+        exit;
+    }
+
+    try {
+        $sent = send_mail(
+            $quote['customer_email'],
+            $quote['customer_name'],
+            'Payment received — your ' . SITE_NAME . ' piece ships soon',
+            build_balance_receipt_email($quote),
+            '',
+            OWNER_EMAIL !== '' ? OWNER_EMAIL : null
+        );
+        if (!$sent) {
+            error_log('webhook: balance receipt not sent for quote ' . $quote_id);
+        }
+    } catch (\Throwable $e) {
+        error_log('webhook: balance receipt failed for quote ' . $quote_id . ': ' . $e->getMessage());
+    }
+
+    http_response_code(200);
+    exit;
+}
+
 // --- Custom-order deposit -----------------------------------------------
 // Must be handled before the cart path below: a deposit session has no `cart`
 // metadata, so it would otherwise fall through and create a junk empty order.

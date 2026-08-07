@@ -370,3 +370,60 @@ function build_deposit_receipt_email(array $quote)
 
     return email_wrap('Deposit received for your ' . SITE_NAME . ' commission', $body, EMAIL_RUST, EMAIL_MUSTARD);
 }
+
+/**
+ * The piece is finished — balance due before it ships.
+ * Accent: blue-400, shadow: rust.
+ *
+ * @param array  $quote custom_quotes row
+ * @param float  $balance amount still owed
+ * @param string $note  optional personal note from Annie
+ */
+function build_balance_due_email(array $quote, $balance, $note = '')
+{
+    $name  = htmlspecialchars($quote['customer_name'] ?: 'there');
+    $title = htmlspecialchars($quote['title']);
+    $url   = SITE_URL . '/quote.php?t=' . urlencode($quote['token']);
+
+    $noteBlock = '';
+    if (trim((string) $note) !== '') {
+        $noteBlock = '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:22px 0;">
+             <tr><td style="background:' . EMAIL_NEUTRAL . ';border-left:4px solid ' . EMAIL_MUSTARD . ';border-radius:8px;padding:18px 20px;">
+               <p style="margin:0;font-family:' . EMAIL_FONT_BODY . ';font-size:15px;line-height:1.65;white-space:pre-line;color:' . EMAIL_DARK . ';">'
+                . htmlspecialchars($note) . '</p>
+             </td></tr></table>';
+    }
+
+    $body = email_h1('Your piece is ready')
+        . email_p('Hi ' . $name . ' &mdash; <strong>' . $title . '</strong> is finished. Once the remaining balance is settled I&rsquo;ll get it packed up and on its way to you.')
+        . $noteBlock
+        . email_money_rows([
+            ['Deposit already paid', (float) $quote['deposit_amount'], 'muted'],
+            ['Balance due now', (float) $balance, 'accent'],
+            ['Total', (float) $quote['total'], 'total'],
+        ])
+        . email_button($url, 'Pay the balance', EMAIL_RUST)
+        . email_p('Once this is paid you&rsquo;ll get a shipping confirmation with tracking as soon as it&rsquo;s handed to the carrier.', '#7a756a', '13px');
+
+    return email_wrap('Your ' . SITE_NAME . ' piece is ready', $body, EMAIL_BLUE_400, EMAIL_RUST);
+}
+
+/**
+ * Balance settled — paid in full, shipping next. Accent: mustard, shadow: blue-400.
+ */
+function build_balance_receipt_email(array $quote)
+{
+    $name  = htmlspecialchars($quote['customer_name'] ?: 'there');
+    $title = htmlspecialchars($quote['title']);
+
+    $body = email_h1('Paid in full &mdash; thank you!')
+        . email_p('Thanks, ' . $name . '. Your balance for <strong>' . $title . '</strong> has been received and it&rsquo;s all settled.')
+        . email_money_rows([
+            ['Total paid', (float) $quote['total'], 'muted'],
+            ['Balance remaining', 0.0, 'muted'],
+        ])
+        . email_p('Your piece is being packed now. You&rsquo;ll get a separate email with tracking as soon as it ships.')
+        . email_p('Thank you for commissioning something one of a kind &mdash; it means a great deal.', '#7a756a', '13px');
+
+    return email_wrap('Payment received &mdash; your ' . SITE_NAME . ' piece ships soon', $body, EMAIL_MUSTARD, EMAIL_BLUE_400);
+}

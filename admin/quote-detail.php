@@ -46,18 +46,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             OWNER_EMAIL !== '' ? OWNER_EMAIL : null
         );
 
+        // Advance the state whether or not the email got out — otherwise a
+        // failed send leaves the quote in draft, where the customer link shows
+        // "not found", so Annie can't even share it manually as a fallback.
+        $pdo->prepare("
+            UPDATE custom_quotes
+               SET status = CASE WHEN status = 'draft' THEN 'sent' ELSE status END,
+                   quote_email_sent_at = CASE WHEN ? THEN CURRENT_TIMESTAMP ELSE quote_email_sent_at END
+             WHERE id = ?
+        ")->execute([$sent ? 1 : 0, $id]);
+
         if ($sent) {
-            $pdo->prepare("
-                UPDATE custom_quotes
-                   SET status = CASE WHEN status = 'draft' THEN 'sent' ELSE status END,
-                       quote_email_sent_at = CURRENT_TIMESTAMP
-                 WHERE id = ?
-            ")->execute([$id]);
             header('Location: /admin/quote-detail.php?id=' . $id . '&msg=' . urlencode('Quote sent to ' . $q['customer_email']));
             exit;
         }
 
-        header('Location: /admin/quote-detail.php?id=' . $id . '&err=' . urlencode("Couldn't send the email — check the SMTP settings. The link below still works if you'd rather send it yourself."));
+        header('Location: /admin/quote-detail.php?id=' . $id . '&err=' . urlencode("The quote is marked as sent, but the email couldn't go out — check the SMTP settings. The customer link below works now, so you can send it over yourself in the meantime."));
         exit;
     }
 

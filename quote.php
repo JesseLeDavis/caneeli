@@ -41,8 +41,24 @@ if ($quote && $quote['status'] === 'draft') {
     $total    = (float) $quote['total'];
     $deposit  = (float) $quote['deposit_amount'];
     $balance  = $total - $deposit;
-    $isOpen   = $quote['status'] === 'sent';
-    $isPaidUp = in_array($quote['status'], ['deposit_paid', 'balance_requested', 'paid'], true);
+    $isOpen    = $quote['status'] === 'sent';
+    $isBalance = $quote['status'] === 'balance_requested';
+    $isPaidUp  = in_array($quote['status'], ['deposit_paid', 'paid'], true);
+
+    // The order is the record of what's actually owed — a balance can be
+    // settled outside Stripe, which the quote row wouldn't know about.
+    if ($isBalance && !empty($quote['order_id'])) {
+        $ost = getDB()->prepare("SELECT balance_due FROM orders WHERE id = ?");
+        $ost->execute([(int) $quote['order_id']]);
+        $due = $ost->fetchColumn();
+        if ($due !== false) {
+            $balance = (float) $due;
+        }
+        if ($balance <= 0) {
+            $isBalance = false;
+            $isPaidUp  = true;
+        }
+    }
 ?>
 
     <div class="quote">
@@ -72,7 +88,38 @@ if ($quote && $quote['status'] === 'draft') {
             </div>
         </div>
 
-        <?php if ($isPaidUp): ?>
+        <?php if ($isBalance): ?>
+
+            <div class="quote__state" style="margin-bottom:26px">
+                <h2>Your piece is ready</h2>
+                <p>
+                    <?php echo htmlspecialchars($quote['title']); ?> is finished. Once the remaining
+                    balance is settled, Annie will get it packed up and on its way to you.
+                </p>
+            </div>
+
+            <form method="POST" action="<?php echo SITE_URL; ?>/quote-checkout.php">
+                <input type="hidden" name="token" value="<?php echo htmlspecialchars($quote['token']); ?>">
+                <input type="hidden" name="mode" value="balance">
+                <button type="submit" class="btn btn-primary quote__pay">
+                    Pay $<?php echo number_format($balance, 2); ?> balance
+                </button>
+                <p class="quote__reassurance">
+                    Secure payment through Stripe. Your piece ships once this clears.
+                </p>
+            </form>
+
+        <?php elseif ($isPaidUp && $quote['status'] === 'paid'): ?>
+
+            <div class="quote__state">
+                <h2>Paid in full — thank you!</h2>
+                <p>
+                    Everything's settled on <?php echo htmlspecialchars($quote['title']); ?>. Annie is
+                    getting it packed up, and you'll get a separate email with tracking as soon as it ships.
+                </p>
+            </div>
+
+        <?php elseif ($isPaidUp): ?>
 
             <div class="quote__state">
                 <h2>Your deposit is in — thank you!</h2>
