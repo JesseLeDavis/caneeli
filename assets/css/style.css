@@ -1810,6 +1810,16 @@ footer .container .info-container .tos-container {
   flex-shrink: 0;
   accent-color: #C25B32;
 }
+.quote__terms a {
+  color: #C25B32;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+}
+.quote__terms a:hover, .quote__terms a:focus-visible {
+  text-decoration-thickness: 2px;
+}
 .quote__pay {
   width: 100%;
   font-size: 17px;

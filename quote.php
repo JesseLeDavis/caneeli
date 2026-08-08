@@ -34,7 +34,7 @@ if ($quote && $quote['status'] === 'draft') {
         <div class="quote__eyebrow">Caneeli Designs</div>
         <h1 class="quote__title">We couldn't find that quote</h1>
         <p class="quote__desc">This link may have expired, or it might have a typo in it. If you were expecting a quote, just reply to Annie's email and she'll send a fresh link.</p>
-        <a href="<?php echo SITE_URL; ?>/pages/contact.php" class="btn btn-primary">Get in touch</a>
+        <a href="<?php echo SITE_URL; ?>/pages/contact.php" class="btn red-button">Get in touch</a>
     </div>
 
 <?php else:
@@ -101,7 +101,7 @@ if ($quote && $quote['status'] === 'draft') {
             <form method="POST" action="<?php echo SITE_URL; ?>/quote-checkout.php">
                 <input type="hidden" name="token" value="<?php echo htmlspecialchars($quote['token']); ?>">
                 <input type="hidden" name="mode" value="balance">
-                <button type="submit" class="btn btn-primary quote__pay">
+                <button type="submit" class="btn red-button quote__pay">
                     Pay $<?php echo number_format($balance, 2); ?> balance
                 </button>
                 <p class="quote__reassurance">
@@ -154,7 +154,7 @@ if ($quote && $quote['status'] === 'draft') {
                     </span>
                 </label>
 
-                <button type="submit" class="btn btn-primary quote__pay" id="pay-btn" disabled>
+                <button type="submit" class="btn red-button quote__pay" id="pay-btn" disabled>
                     Pay $<?php echo number_format($deposit, 2); ?> deposit
                 </button>
 

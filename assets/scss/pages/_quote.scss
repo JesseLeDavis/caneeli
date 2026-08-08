@@ -102,6 +102,22 @@
       flex-shrink: 0;
       accent-color: $rust;
     }
+
+    // The global reset strips colour and underline from every anchor, which
+    // left "full terms" looking like plain copy. Customers have to be able to
+    // see it's clickable before they agree to a non-refundable deposit.
+    a {
+      color: $rust;
+      font-weight: 700;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      text-decoration-thickness: 1px;
+
+      &:hover,
+      &:focus-visible {
+        text-decoration-thickness: 2px;
+      }
+    }
   }
 
   &__pay {
