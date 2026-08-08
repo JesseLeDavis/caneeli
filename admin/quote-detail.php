@@ -158,20 +158,24 @@ require __DIR__ . '/layout-top.php';
                 </div>
             <?php endif; ?>
 
-            <table style="width:100%;margin-top:20px">
-                <tr>
-                    <td style="padding:8px 0;color:rgba(45,45,45,0.6)">Deposit</td>
-                    <td style="padding:8px 0;text-align:right">$<?php echo number_format($deposit, 2); ?></td>
-                </tr>
-                <tr>
-                    <td style="padding:8px 0;color:rgba(45,45,45,0.6)">Balance</td>
-                    <td style="padding:8px 0;text-align:right">$<?php echo number_format($balance, 2); ?></td>
-                </tr>
-                <tr>
-                    <td style="padding:12px 0 0;border-top:2px solid #2D2D2D;font-family:'Syne',sans-serif;font-weight:800;font-size:17px">Total</td>
-                    <td style="padding:12px 0 0;border-top:2px solid #2D2D2D;font-family:'Syne',sans-serif;font-weight:800;font-size:17px;text-align:right">$<?php echo number_format($total, 2); ?></td>
-                </tr>
-            </table>
+            <?php // Flex rows, not a <table> — a bare table here inherits the global
+                  // admin table styles (white card + shadow, rust row dividers, hover
+                  // bar, and an overflow:hidden that clipped the Total row). Same
+                  // markup the orders page uses for its money rows. ?>
+            <div class="order-totals">
+                <div class="order-totals__row">
+                    <span>Deposit</span>
+                    <span>$<?php echo number_format($deposit, 2); ?></span>
+                </div>
+                <div class="order-totals__row">
+                    <span>Balance</span>
+                    <span>$<?php echo number_format($balance, 2); ?></span>
+                </div>
+                <div class="order-totals__row order-totals__row--grand">
+                    <span>Total</span>
+                    <span>$<?php echo number_format($total, 2); ?></span>
+                </div>
+            </div>
         </div>
 
         <div>
