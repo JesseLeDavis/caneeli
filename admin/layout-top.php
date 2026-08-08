@@ -2,7 +2,7 @@
 /**
  * Shared admin chrome (header + sub-nav).
  * Expects $pageTitle (string) to be set before include.
- * Expects $activeNav (string) — one of: 'dashboard', 'products', 'orders', 'customers', 'insights', 'discounts', 'signups', 'messages', ''.
+ * Expects $activeNav (string) — one of: 'dashboard', 'products', 'orders', 'custom', 'customers', 'insights', 'discounts', 'signups', 'messages', ''.
  */
 $activeNav = $activeNav ?? '';
 $pageTitle = $pageTitle ?? 'Admin';
@@ -41,6 +41,7 @@ if (function_exists('getDB')) {
         <a href="/admin/dashboard.php" class="admin-subnav__link <?php echo $activeNav === 'dashboard' ? 'is-active' : ''; ?>">Dashboard</a>
         <a href="/admin/products.php" class="admin-subnav__link <?php echo $activeNav === 'products' ? 'is-active' : ''; ?>">Products</a>
         <a href="/admin/orders.php" class="admin-subnav__link <?php echo $activeNav === 'orders' ? 'is-active' : ''; ?>">Orders</a>
+        <a href="/admin/custom-orders.php" class="admin-subnav__link <?php echo $activeNav === 'custom' ? 'is-active' : ''; ?>">Custom</a>
         <a href="/admin/customers.php" class="admin-subnav__link <?php echo $activeNav === 'customers' ? 'is-active' : ''; ?>">Customers</a>
         <a href="/admin/insights.php" class="admin-subnav__link <?php echo $activeNav === 'insights' ? 'is-active' : ''; ?>">Insights</a>
         <a href="/admin/discounts.php" class="admin-subnav__link <?php echo $activeNav === 'discounts' ? 'is-active' : ''; ?>">Discounts</a>

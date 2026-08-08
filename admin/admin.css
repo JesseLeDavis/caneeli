@@ -460,6 +460,26 @@ td img {
     border-color: rgba(229, 62, 62, 0.25);
 }
 
+/* Custom-order quote states. Draft is deliberately the quietest — an unsent
+   quote is a note to self, not something the customer has seen yet. */
+.badge-status--draft {
+    background: rgba(45, 45, 45, 0.06);
+    color: #6b6b6b;
+    border-color: rgba(45, 45, 45, 0.18);
+}
+
+.badge-status--deposit {
+    background: rgba(194, 91, 50, 0.12);
+    color: #a8461f;
+    border-color: rgba(194, 91, 50, 0.35);
+}
+
+.badge-status--balance {
+    background: rgba(194, 91, 50, 0.2);
+    color: #8c3a19;
+    border-color: rgba(194, 91, 50, 0.5);
+}
+
 /* ── Filter bar (products page) ─────────────────────────────────────────── */
 .filter-bar {
     display: flex;
@@ -1528,7 +1548,8 @@ select:focus {
     /* KPI + dashboard grids — single column */
     .kpi-grid,
     .dash-grid,
-    .order-grid {
+    .order-grid,
+    .quote-form-grid {
         grid-template-columns: 1fr !important;
     }
 

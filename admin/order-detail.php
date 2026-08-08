@@ -11,9 +11,14 @@ if (!$id) {
     exit;
 }
 
-// Set when a fulfil attempt was blocked for having no tracking number — see
-// update-order-status.php. Used to explain the bounce and open the right form.
+// Set when a fulfil attempt was blocked — see update-order-status.php. Used to
+// explain the bounce and open the right form.
 $needsTracking = ($_GET['fulfill'] ?? '') === 'notracking';
+$balanceDue    = ($_GET['fulfill'] ?? '') === 'balancedue';
+
+// Flash messages from the balance actions (admin/order-balance.php).
+$balanceFlash = (string) ($_GET['balance'] ?? '');
+$balanceError = (string) ($_GET['balance_err'] ?? '');
 
 $stmt = $pdo->prepare("SELECT * FROM orders WHERE id = ?");
 $stmt->execute([$id]);
@@ -26,6 +31,19 @@ if (!$order) {
     require __DIR__ . '/layout-top.php';
     echo '<div class="container"><p>Order not found. <a href="/admin/orders.php">Back to orders</a>.</p></div></body></html>';
     exit;
+}
+
+// Custom orders carry a quote — used for the balance actions below. Guarded so
+// a missing table (migration not yet run) can't break the whole order page.
+$quoteRow = null;
+if (!empty($order['quote_id'])) {
+    try {
+        $qs = $pdo->prepare("SELECT * FROM custom_quotes WHERE id = ?");
+        $qs->execute([(int) $order['quote_id']]);
+        $quoteRow = $qs->fetch() ?: null;
+    } catch (\Throwable $e) {
+        $quoteRow = null;
+    }
 }
 
 $items_stmt = $pdo->prepare("SELECT * FROM order_items WHERE order_id = ? ORDER BY id");
@@ -46,6 +64,18 @@ if (!empty($order['stripe_payment_intent'])) {
     $stripe_dashboard = 'https://dashboard.stripe.com/search?query=' . urlencode($order['stripe_session_id']);
 }
 
+// A custom order's balance is a second, unlinked Stripe charge — the order row
+// only ever holds the deposit's intent, so the balance link comes off the quote.
+// Null for cart orders and for balances settled outside Stripe.
+$balanceDashboard = null;
+if ($quoteRow) {
+    if (!empty($quoteRow['balance_payment_intent'])) {
+        $balanceDashboard = 'https://dashboard.stripe.com/payments/' . urlencode($quoteRow['balance_payment_intent']);
+    } elseif (!empty($quoteRow['balance_session_id'])) {
+        $balanceDashboard = 'https://dashboard.stripe.com/search?query=' . urlencode($quoteRow['balance_session_id']);
+    }
+}
+
 $pageTitle = 'Order #' . $order['id'];
 $activeNav = 'orders';
 require __DIR__ . '/layout-top.php';
@@ -60,8 +90,21 @@ require __DIR__ . '/layout-top.php';
                 Placed <?php echo date('M j, Y g:ia', strtotime($order['created_at'])); ?>
             </div>
         </div>
-        <span class="badge-status badge-status--<?php echo htmlspecialchars($order['status']); ?>" style="font-size:14px;padding:6px 16px"><?php echo ucfirst($order['status']); ?></span>
+        <?php
+        // 'deposit_paid' needs its own label + badge class; the rest map straight
+        // from the status name.
+        $badgeMod   = $order['status'] === 'deposit_paid' ? 'deposit' : $order['status'];
+        $badgeLabel = $order['status'] === 'deposit_paid' ? 'Deposit paid' : ucfirst($order['status']);
+        ?>
+        <span class="badge-status badge-status--<?php echo htmlspecialchars($badgeMod); ?>" style="font-size:14px;padding:6px 16px"><?php echo htmlspecialchars($badgeLabel); ?></span>
     </div>
+
+    <?php if ($balanceError): ?>
+        <p class="error"><?php echo htmlspecialchars($balanceError); ?></p>
+    <?php endif; ?>
+    <?php if ($balanceFlash): ?>
+        <p class="success"><?php echo htmlspecialchars($balanceFlash); ?></p>
+    <?php endif; ?>
 
     <div class="order-grid">
         <div class="order-card">
@@ -144,10 +187,68 @@ require __DIR__ . '/layout-top.php';
 
             <div class="order-card">
                 <h3 class="order-card__title">Status</h3>
-                <?php if ($needsTracking): ?>
+                <?php if ($balanceDue): ?>
+                    <div class="error" style="margin-bottom:12px">
+                        Not fulfilled — $<?php echo number_format((float) $order['balance_due'], 2); ?>
+                        is still outstanding on this custom order. Collect the balance before it ships.
+                    </div>
+                <?php elseif ($needsTracking): ?>
                     <div class="error" style="margin-bottom:12px">
                         Not fulfilled yet — add a tracking number below so the customer gets their shipping email.
                     </div>
+                <?php endif; ?>
+
+                <?php if ($order['balance_due'] !== null && (float) $order['balance_due'] > 0): ?>
+                    <div style="margin-bottom:12px;padding:12px;background:rgba(194,91,50,0.07);border-left:3px solid #C25B32;border-radius:6px;font-size:13px">
+                        <strong>Custom order.</strong>
+                        $<?php echo number_format((float) $order['amount_paid'], 2); ?> deposit paid ·
+                        <strong style="color:#C25B32">$<?php echo number_format((float) $order['balance_due'], 2); ?> still due</strong>
+                        <div style="margin-top:4px;color:rgba(45,45,45,0.6)">Can't be fulfilled until the balance is collected.</div>
+                    </div>
+
+                    <details style="margin-bottom:10px">
+                        <summary class="btn btn-mustard" style="width:100%;box-sizing:border-box;text-align:center;cursor:pointer;list-style:none">Request balance</summary>
+                        <form method="POST" action="/admin/order-balance.php" style="margin-top:12px;padding:14px;background:rgba(194,91,50,0.05);border-radius:10px">
+                            <?php echo csrf_field(); ?>
+                            <input type="hidden" name="id" value="<?php echo (int) $order['id']; ?>">
+                            <input type="hidden" name="action" value="request">
+                            <label style="display:block;font-size:12px;color:rgba(45,45,45,0.6);margin-bottom:4px">Add a note <span style="font-weight:400;opacity:.7">(optional)</span></label>
+                            <textarea name="note" rows="3" placeholder="It's finished and I'm really happy with how the grain came out…"
+                                      style="width:100%;margin-bottom:10px;font-family:inherit"></textarea>
+                            <p style="margin:0 0 12px;font-size:12px;color:rgba(45,45,45,0.55)">
+                                Emails <?php echo htmlspecialchars($order['customer_email']); ?> a link to pay
+                                $<?php echo number_format((float) $order['balance_due'], 2); ?>.
+                            </p>
+                            <button type="submit" class="btn btn-primary" style="width:100%">Send balance request</button>
+                        </form>
+                    </details>
+
+                    <?php if ($quoteRow && !empty($quoteRow['balance_email_sent_at'])): ?>
+                        <p style="margin:0 0 10px;font-size:12px;color:rgba(45,45,45,0.55)">
+                            Balance requested <?php echo date('M j, Y g:ia', strtotime($quoteRow['balance_email_sent_at'])); ?>
+                        </p>
+                    <?php endif; ?>
+
+                    <details style="margin-bottom:10px">
+                        <summary class="btn btn-secondary" style="width:100%;box-sizing:border-box;text-align:center;cursor:pointer;list-style:none">Mark balance as paid</summary>
+                        <form method="POST" action="/admin/order-balance.php" style="margin-top:12px;padding:14px;background:rgba(45,45,45,0.04);border-radius:10px"
+                              onsubmit="return confirm('Record $<?php echo number_format((float) $order['balance_due'], 2); ?> as paid? Stripe won\'t be charged — only use this if you already have the money.')">
+                            <?php echo csrf_field(); ?>
+                            <input type="hidden" name="id" value="<?php echo (int) $order['id']; ?>">
+                            <input type="hidden" name="action" value="manual">
+                            <label style="display:block;font-size:12px;color:rgba(45,45,45,0.6);margin-bottom:4px">How was it paid?</label>
+                            <input type="text" name="how" placeholder="Cash at pickup" autocomplete="off" style="width:100%;margin-bottom:10px">
+                            <p style="margin:0 0 12px;font-size:12px;color:rgba(45,45,45,0.55)">
+                                For money collected outside Stripe — cash or a check. Records the payment and unlocks fulfillment.
+                            </p>
+                            <button type="submit" class="btn btn-primary" style="width:100%">Record as paid</button>
+                        </form>
+                    </details>
+                <?php elseif (!empty($order['balance_paid_manually_at'])): ?>
+                    <p style="margin:0 0 10px;font-size:12px;color:rgba(45,45,45,0.55)">
+                        Balance recorded as paid outside Stripe on
+                        <?php echo date('M j, Y', strtotime($order['balance_paid_manually_at'])); ?>.
+                    </p>
                 <?php endif; ?>
                 <form method="POST" action="/admin/update-order-status.php">
                     <?php echo csrf_field(); ?>
@@ -218,7 +319,21 @@ require __DIR__ . '/layout-top.php';
             <?php if ($stripe_dashboard): ?>
             <div class="order-card">
                 <h3 class="order-card__title">Stripe</h3>
-                <a href="<?php echo htmlspecialchars($stripe_dashboard); ?>" target="_blank" rel="noopener" class="btn btn-secondary" style="width:100%;text-align:center">Open in Stripe &rarr;</a>
+                <?php if ($balanceDashboard): ?>
+                    <p style="margin:0 0 10px;font-size:12px;color:rgba(45,45,45,0.55)">
+                        A custom order is two separate Stripe charges — Stripe doesn't link them, so both are here.
+                    </p>
+                    <a href="<?php echo htmlspecialchars($stripe_dashboard); ?>" target="_blank" rel="noopener"
+                       class="btn btn-secondary" style="width:100%;text-align:center;margin-bottom:8px">
+                        Deposit $<?php echo number_format((float) $quoteRow['deposit_amount'], 2); ?> &rarr;
+                    </a>
+                    <a href="<?php echo htmlspecialchars($balanceDashboard); ?>" target="_blank" rel="noopener"
+                       class="btn btn-secondary" style="width:100%;text-align:center">
+                        Balance $<?php echo number_format((float) $quoteRow['total'] - (float) $quoteRow['deposit_amount'], 2); ?> &rarr;
+                    </a>
+                <?php else: ?>
+                    <a href="<?php echo htmlspecialchars($stripe_dashboard); ?>" target="_blank" rel="noopener" class="btn btn-secondary" style="width:100%;text-align:center">Open in Stripe &rarr;</a>
+                <?php endif; ?>
                 <div style="margin-top:10px;font-size:11px;color:rgba(45,45,45,0.45);word-break:break-all">
                     <?php echo htmlspecialchars($order['stripe_session_id']); ?>
                 </div>

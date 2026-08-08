@@ -8,7 +8,7 @@ include __DIR__ . '/../includes/header.php';
         <div class="legal">
 
             <h1 class="legal__title">Terms of Service</h1>
-            <p class="legal__updated">Last updated: March 2, 2026</p>
+            <p class="legal__updated">Last updated: August 6, 2026</p>
 
             <div class="legal__section">
                 <h2>Welcome</h2>
@@ -37,8 +37,9 @@ include __DIR__ . '/../includes/header.php';
             <div class="legal__section">
                 <h2>Commissions and Custom Orders</h2>
                 <p>Annie accepts a limited number of custom commissions. If you're interested in a custom piece, reach out through the <a href="/pages/contact.php">contact page</a> to start the conversation.</p>
-                <p>Custom orders require a non-refundable deposit (typically 50%) before work begins. The remaining balance is due before the piece ships. Timelines vary depending on complexity and current workload — a realistic timeline will always be communicated upfront.</p>
-                <p>Because custom pieces are made specifically for you, they cannot be returned or refunded once work has begun.</p>
+                <p>Custom orders require a deposit before work begins. The deposit amount is stated on your quote and is <strong>non-refundable from the moment it is paid</strong> — it reserves your place in the production schedule and covers materials ordered specifically for your piece. The remaining balance is due before the piece ships. Timelines vary depending on complexity and current workload — a realistic timeline will always be communicated upfront.</p>
+                <p>Because custom pieces are made specifically for you, they cannot be returned or refunded.</p>
+                <p>Once your piece is finished, you'll be notified and invoiced for the remaining balance. If that balance isn't paid within 30 days of the completion notice, the order may be cancelled, the deposit is forfeited, and Caneeli Designs may sell the piece to another buyer. If something comes up and you need more time, just reach out — this is here to cover the rare case where someone stops responding entirely, not to catch anyone out.</p>
             </div>
 
             <div class="legal__section">
