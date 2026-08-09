@@ -87,7 +87,7 @@ function email_wrap($title, $body, $accent = EMAIL_RUST, $shadow = EMAIL_BLUE_20
   <tr>
     <td style="padding:24px 36px;background:' . EMAIL_NEUTRAL . ';border-top:2px solid ' . EMAIL_DARK . ';font-family:' . $bf . ';font-size:12px;color:#7a756a;text-align:center;line-height:1.7;">
       <span style="font-family:' . $hf . ';font-weight:700;color:' . EMAIL_DARK . ';letter-spacing:1px;">' . $site . '</span><br>
-      Handmade furniture &amp; decor, made to order<br>
+      Handmade ceramics, lighting &amp; decor, made to order<br>
       <a href="' . $url . '" style="color:' . EMAIL_RUST . ';text-decoration:none;font-weight:600;">' . preg_replace('#^https?://#', '', $url) . '</a><br>
       <span style="color:#a59f93;">&copy; ' . $year . ' ' . $site . '</span>
     </td>

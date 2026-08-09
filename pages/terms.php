@@ -12,12 +12,12 @@ include __DIR__ . '/../includes/header.php';
 
             <div class="legal__section">
                 <h2>Welcome</h2>
-                <p>Thanks for shopping at Caneeli Designs. This site is run by Annie, a one-person handmade furniture and home decor studio. By placing an order or using this site, you're agreeing to the terms below. If you have questions about anything here, just reach out.</p>
+                <p>Thanks for shopping at Caneeli Designs. This site is run by Annie, a one-person handmade ceramics, lighting, and home decor studio. By placing an order or using this site, you're agreeing to the terms below. If you have questions about anything here, just reach out.</p>
             </div>
 
             <div class="legal__section">
                 <h2>Products</h2>
-                <p>Everything in the Caneeli shop is handmade by Annie. Because each piece is made by hand — often from natural materials — you should expect slight variations in color, texture, grain, and dimensions from piece to piece and from product photos. These aren't flaws; they're part of what makes handmade work what it is. Product photos are as accurate as possible, but screens vary and natural materials vary. If you have questions about a specific item before purchasing, feel free to ask.</p>
+                <p>Everything in the Caneeli shop is handmade by Annie. Because each piece is made by hand — often from natural materials — you should expect slight variations in color, texture, finish, and dimensions from piece to piece and from product photos. These aren't flaws; they're part of what makes handmade work what it is. Product photos are as accurate as possible, but screens vary and natural materials vary. If you have questions about a specific item before purchasing, feel free to ask.</p>
             </div>
 
             <div class="legal__section">

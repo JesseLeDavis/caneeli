@@ -13,8 +13,9 @@
  */
 
 const PRODUCT_CATEGORIES = [
-    'Wall Decor',
+    'Ceramics',
     'Lighting',
+    'Wall Decor',
     'Stained Glass',
     'Other',
 ];

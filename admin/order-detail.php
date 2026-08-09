@@ -213,7 +213,7 @@ require __DIR__ . '/layout-top.php';
                             <input type="hidden" name="id" value="<?php echo (int) $order['id']; ?>">
                             <input type="hidden" name="action" value="request">
                             <label style="display:block;font-size:12px;color:rgba(45,45,45,0.6);margin-bottom:4px">Add a note <span style="font-weight:400;opacity:.7">(optional)</span></label>
-                            <textarea name="note" rows="3" placeholder="It's finished and I'm really happy with how the grain came out…"
+                            <textarea name="note" rows="3" placeholder="It's finished and I'm really happy with how the glaze came out…"
                                       style="width:100%;margin-bottom:10px;font-family:inherit"></textarea>
                             <p style="margin:0 0 12px;font-size:12px;color:rgba(45,45,45,0.55)">
                                 Emails <?php echo htmlspecialchars($order['customer_email']); ?> a link to pay

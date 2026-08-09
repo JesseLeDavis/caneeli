@@ -20,7 +20,7 @@ include __DIR__ . '/../includes/header.php';
             <p>Not long after, I landed a job at a creative agency, where I spent three years working as a 3D generalist, focusing mostly on product renderings, animated ads, and social media campaigns. While the work was creative, I began to feel stuck and knew I needed a change.</p>
             <p>So my partner, our 3 dogs and I packed up and moved across the country to Oregon, without much of a plan.</p>
             <p>I joined a creative coworking space, hoping to reconnect with hands-on work. With access to woodworking, metalworking, ceramics, and more, I found myself unexpectedly drawn to the stained glass studio. Before long, I was spending nearly all my free time there. Working with glass came naturally.</p>
-            <p>Soon after, I transformed my garage into a studio for stained glass and woodworking. I realized that sitting behind a computer, creating work dictated by others, was no longer the future I wanted. Instead, I found a renewed sense of purpose in building playful, functional pieces and sharing them with others.</p>
+            <p>Soon after, I transformed my garage into a studio for stained glass and ceramics. I realized that sitting behind a computer, creating work dictated by others, was no longer the future I wanted. Instead, I found a renewed sense of purpose in making playful, functional pieces and sharing them with others.</p>
             <p>I love working with my hands, creating pieces that spark curiosity, and connecting with people through shared creativity. It's my hope to spend the rest of my life doing exactly that.</p>
         </article>
     </div>

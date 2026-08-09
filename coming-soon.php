@@ -18,12 +18,12 @@ require_once __DIR__ . '/includes/db.php';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Coming Soon — Caneeli Designs</title>
-    <meta name="description" content="Handmade furniture and décor, crafted with care. Caneeli Designs launches May 1, 2026. Sign up to be first through the door.">
+    <meta name="description" content="Handmade ceramics, lighting, and décor, crafted with care. Caneeli Designs launches May 1, 2026. Sign up to be first through the door.">
     <meta name="robots" content="noindex, nofollow">
 
     <!-- Open Graph -->
     <meta property="og:title"       content="Coming Soon — Caneeli Designs">
-    <meta property="og:description" content="Something beautiful is almost here. Handmade furniture and décor, launching May 1.">
+    <meta property="og:description" content="Something beautiful is almost here. Handmade ceramics, lighting, and décor, launching May 1.">
     <meta property="og:type"        content="website">
     <meta property="og:url"         content="<?php echo SITE_URL; ?>/coming-soon.php">
 
