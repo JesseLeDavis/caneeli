@@ -1,14 +1,29 @@
 RewriteEngine On
 
-# ── Block access to sensitive files and directories ─────────────────
-<FilesMatch "^\.env$">
-    Order allow,deny
-    Deny from all
-</FilesMatch>
+# ── Force HTTPS ─────────────────────────────────────────────────────
+# Hostinger's CDN already 301s http -> https ahead of us, and HSTS below
+# covers repeat visitors. This is only a backstop for if that ever stops.
+#
+# Deliberately requires X-Forwarded-Proto to say "http" rather than just
+# testing %{HTTPS} != on. Behind the CDN the origin request can arrive as
+# plain HTTP even when the visitor is on TLS, so redirecting on that alone
+# would loop forever. Absent header = do nothing.
+RewriteCond %{HTTPS} !=on
+RewriteCond %{HTTP:X-Forwarded-Proto} =http
+RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
 
-<FilesMatch "\.(sql|sh|log|bak|ini)$">
-    Order allow,deny
-    Deny from all
+# ── Block access to sensitive files and directories ─────────────────
+# Apache 2.4 syntax, with a 2.2 fallback. The previous version used only
+# `Order allow,deny`, which 2.4 ignores outright unless mod_access_compat
+# happens to be loaded — meaning .env may have been served in the clear.
+<FilesMatch "^\.(env|DS_Store|gitignore|htaccess)$|\.(sql|sh|log|bak|ini|lock|zip|tar|gz|md|pdf|map)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
 </FilesMatch>
 
 RewriteRule ^config/ - [F,L]
@@ -16,12 +31,32 @@ RewriteRule ^includes/ - [F,L]
 RewriteRule ^database/ - [F,L]
 RewriteRule ^vendor/ - [F,L]
 
+# Deployment notes carry the live DB name and user — never serve them.
+RewriteRule ^HOSTINGER_UPLOAD\.txt - [F,L]
+
+# Directory listings leak file names even where no index exists.
+Options -Indexes
+
 # ── Security headers ───────────────────────────────────────────────
 <IfModule mod_headers.c>
     Header set X-Content-Type-Options "nosniff"
     Header set X-Frame-Options "DENY"
     Header set X-XSS-Protection "1; mode=block"
     Header set Referrer-Policy "strict-origin-when-cross-origin"
+
+    # Tell browsers to refuse plain HTTP for a year. Only takes effect over
+    # HTTPS. Start with a short max-age if you ever need to fall back.
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains" "expr=%{HTTPS} == 'on'"
+
+    # Allowlist, host by host:
+    #   js.stripe.com      — Checkout/Elements script + its frames
+    #   cdn.jsdelivr.net   — Chart.js on the admin dashboard, SortableJS on
+    #                        the product pages (drag-to-reorder). Dropping
+    #                        this silently breaks both.
+    #   fonts.googleapis   — the @font-face CSS; fonts.gstatic the font files
+    # 'unsafe-inline' is required while pages still carry inline
+    # <style>/<script> blocks; removing it means moving those to files first.
+    Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; frame-src https://js.stripe.com https://hooks.stripe.com; connect-src 'self' https://api.stripe.com; base-uri 'self'; form-action 'self' https://checkout.stripe.com; object-src 'none'"
 </IfModule>
 
 # ── Redirect .php URLs to clean versions (external redirect) ──────────

@@ -16,9 +16,10 @@ Thumbs.db
 # Environment
 .env
 
-# Uploads
+# Uploads — the images are user data, but the hardening rules must ship
 assets/uploads/*
 !assets/uploads/.gitkeep
+!assets/uploads/.htaccess
 
 # Archives / backups — never commit zips of the project
 *.zip

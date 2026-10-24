@@ -1,0 +1,42 @@
+# Uploaded files are user-supplied data, never code.
+#
+# add-product.php / edit-product.php already validate hard (finfo MIME check,
+# extension whitelist, getimagesize, random filename), so nothing executable
+# should reach this directory. This is the second lock: if a future code path
+# ever lets a .php through, it still cannot run.
+
+# Primary guard — portable across mod_php, PHP-FPM and LiteSpeed.
+<FilesMatch "\.(php|phtml|phps|phar|php[0-9]|inc|cgi|pl|py|sh|htaccess)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# Belt and braces for mod_php. Guarded by IfModule because `php_flag` is an
+# unknown directive under PHP-FPM/LiteSpeed and would 500 the whole directory.
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php7.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php8.c>
+    php_flag engine off
+</IfModule>
+
+# Strip any inherited handler that might map extensions to an interpreter.
+<IfModule mod_mime.c>
+    RemoveHandler .php .phtml .phar .php3 .php4 .php5 .php7 .php8
+    RemoveType .php .phtml .phar
+</IfModule>
+
+# Never let a browser second-guess the declared type of an uploaded file.
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+</IfModule>
+
+Options -Indexes -ExecCGI

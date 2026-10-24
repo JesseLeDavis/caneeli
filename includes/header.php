@@ -8,6 +8,9 @@ if (session_status() === PHP_SESSION_NONE) {
     session_set_cookie_params([
         'httponly'  => true,
         'samesite'  => 'Lax',
+        // Only over HTTPS in production; plain-HTTP localhost would otherwise
+        // never receive the cookie and the cart would silently reset.
+        'secure'    => is_https(),
     ]);
     session_start();
 }
