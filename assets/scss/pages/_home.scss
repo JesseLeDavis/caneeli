@@ -305,6 +305,10 @@
     position: absolute;
     z-index: 5;
     inset: -60% -100% 0;
+    // This oversized layer would otherwise sit over the headline buttons when
+    // the hero stacks on narrow screens and swallow taps. Only the lamps
+    // themselves take pointer events.
+    pointer-events: none;
     -webkit-mask: $tub-mask 0 0 / 100% 100% no-repeat;
             mask: $tub-mask 0 0 / 100% 100% no-repeat;
   }
@@ -332,6 +336,7 @@
     transform: translateX(-50%) rotate(var(--tilt)) translateY(calc(var(--sink) - var(--lift)));
     transition: transform .55s cubic-bezier(.34, 1.56, .64, 1); // overshoot = little spring
     cursor: pointer;
+    pointer-events: auto;
     z-index: 5;
     animation: lamp-bob 4.2s ease-in-out infinite;
     animation-delay: var(--d);
