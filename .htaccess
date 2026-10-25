@@ -26,6 +26,10 @@ RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
     </IfModule>
 </FilesMatch>
 
+# Hostinger's Git deploy leaves the repo's .git folder in public_html;
+# served, it hands out the full source and history.
+RewriteRule (^|/)\.git(/|$) - [F,L]
+
 RewriteRule ^config/ - [F,L]
 RewriteRule ^includes/ - [F,L]
 RewriteRule ^database/ - [F,L]
