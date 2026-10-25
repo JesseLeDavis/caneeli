@@ -11,6 +11,9 @@
   min-height: 100vh;
   display: flex;
   align-items: center;
+  // The lamp mask layer is 3× the tub's width; without this it adds a sideways
+  // scrollbar. `clip` (not `hidden`) so lamps can still lean up out of the box.
+  overflow-x: clip;
 
   .container {
     padding-top: 80px;
@@ -248,4 +251,162 @@
       transform: scale(1.35);
     }
   }
+}
+
+// ── Hero art: lamps in a tub of rolling water ───────────────────────
+// Markup in includes/hero_lamps.php, behaviour in main.js. Everything is
+// drawn in one 600×630 space, so the mask below lines up with the SVGs.
+.home-hero .container {
+  width: 100%; // .home-hero is flex; otherwise the 600px tub stretches this past a phone screen
+
+  @media (min-width: 960px) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 20px;
+  }
+}
+
+.lamp-tub {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  aspect-ratio: 600 / 630;
+  margin: 40px auto 0;
+
+  @media (min-width: 960px) { margin-top: 0; }
+
+  &__layer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  &__water--back  { z-index: 1; }
+  &__water--front { z-index: 20; pointer-events: none; }
+
+  &__ink {
+    fill: none;
+    stroke: $dark;
+    stroke-width: 3;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+
+  // Lamps are masked to the tub with flared walls above it: they can lean
+  // out over the rim, but nothing shows below or beside the water. A CSS
+  // mask rather than an SVG clip-path url(), which Safari handles badly.
+  // The layer is 3× wide and 1.6× tall so leaning lamps aren't cut off;
+  // __inner puts them back on the tub's own box.
+  &__lamps {
+    $tub-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-600 -378 1800 1008' preserveAspectRatio='none'%3E%3Cpath d='M-500 -600 L1100 -600 L570 440 A270 178 0 0 1 30 440 Z'/%3E%3C/svg%3E");
+    position: absolute;
+    z-index: 5;
+    inset: -60% -100% 0;
+    -webkit-mask: $tub-mask 0 0 / 100% 100% no-repeat;
+            mask: $tub-mask 0 0 / 100% 100% no-repeat;
+  }
+
+  &__inner {
+    position: absolute;
+    left: 33.3333%;
+    width: 33.3333%;
+    top: 37.5%;
+    height: 62.5%;
+  }
+
+  // Each lamp pivots from a point down in the water, so rotating fans them
+  // out and translating along their own axis "pops" them up.
+  &__lamp {
+    --tilt: 0deg;
+    --sink: 0%;
+    --lift: 0%;
+    position: absolute;
+    bottom: 10%;
+    left: var(--x);
+    width: 15%;   // hit area ≈ the lamp's column
+    height: 78%;
+    transform-origin: 50% 100%;
+    transform: translateX(-50%) rotate(var(--tilt)) translateY(calc(var(--sink) - var(--lift)));
+    transition: transform .55s cubic-bezier(.34, 1.56, .64, 1); // overshoot = little spring
+    cursor: pointer;
+    z-index: 5;
+    animation: lamp-bob 4.2s ease-in-out infinite;
+    animation-delay: var(--d);
+
+    &:hover,
+    &:focus-visible,
+    &.is-up {
+      --lift: 24%;
+      z-index: 10;
+      animation-play-state: paused;
+    }
+
+    &:focus-visible { outline: none; }
+  }
+
+  // The drawing is a stencil filled with the lamp's colour (set in main.js).
+  &__art {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    height: 100%;
+    aspect-ratio: 900 / 1337;
+    transform: translateX(-58.7%); // glass centre sits 58.7% across the drawing
+    background: var(--ink, $dark);
+    // mask-image itself is set inline in hero_lamps.php (see the note there).
+    -webkit-mask-size: 100% 100%;
+            mask-size: 100% 100%;
+    -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+    pointer-events: none;
+    user-select: none;
+
+    .is-pop > & { animation: lamp-wiggle .5s ease-out; }
+  }
+
+  &__splash {
+    position: absolute;
+    inset: 0;
+    z-index: 25;
+    pointer-events: none;
+  }
+
+  &__drop {
+    position: absolute;
+    width: 2.4%;
+    aspect-ratio: 1;
+    margin: -1.2% 0 0 -1.2%;
+    border-radius: 50%;
+    background: $blue-200;
+    border: 2px solid $dark;
+    animation: lamp-drop .7s cubic-bezier(.2, .7, .4, 1) forwards;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &__lamp { animation: none; transition: none; }
+    &__art { animation: none !important; }
+    &__drop { display: none; }
+  }
+}
+
+@keyframes lamp-bob {
+  0%, 100% { translate: 0 0; }
+  50%      { translate: 0 -1.5%; }
+}
+
+@keyframes lamp-wiggle {
+  0%   { rotate: 0deg; }
+  25%  { rotate: -4deg; }
+  55%  { rotate: 3deg; }
+  80%  { rotate: -1deg; }
+  100% { rotate: 0deg; }
+}
+
+@keyframes lamp-drop {
+  0%   { transform: translate(0, 0) scale(.4); }
+  45%  { transform: translate(calc(var(--dx) * .6), var(--dy)) scale(1); }
+  100% { transform: translate(var(--dx), 18px) scale(.6); opacity: 0; }
 }

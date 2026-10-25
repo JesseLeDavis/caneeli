@@ -14,13 +14,16 @@ $featured = $stmt->fetchAll();
 <!-- Hero Section -->
 <section class="hero home-hero">
     <div class="container">
-        <h1 class="large_title">Make a Space Thats Actually Yours</h1>
-        <p>Handmade pieces that turn "fine, I guess" into "wait, I love it here"</p>
-        <div class="button-container">
-            <a href="/pages/shop/"><div class="blue-button btn">SHOP NOW</div></a>
-            <a href="/pages/about.php"><div class="red-button btn">ABOUT</div></a>
-            <a href="/pages/contact.php"><div class="yellow-button btn">COMMISSION A PIECE</div></a>
+        <div class="home-hero__copy">
+            <h1 class="large_title">Make a Space Thats Actually Yours</h1>
+            <p>Handmade pieces that turn "fine, I guess" into "wait, I love it here"</p>
+            <div class="button-container">
+                <a href="/pages/shop/"><div class="blue-button btn">SHOP NOW</div></a>
+                <a href="/pages/about.php"><div class="red-button btn">ABOUT</div></a>
+                <a href="/pages/contact.php"><div class="yellow-button btn">COMMISSION A PIECE</div></a>
+            </div>
         </div>
+        <?php include 'includes/hero_lamps.php'; ?>
     </div>
 </section>
 
