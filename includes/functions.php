@@ -44,3 +44,17 @@ function is_https(): bool {
     }
     return (int) ($_SERVER['SERVER_PORT'] ?? 0) === 443;
 }
+
+/**
+ * Root-relative URL for a local asset, stamped with its modified time.
+ *
+ * The CDN tells browsers to keep CSS/JS for a week, so without the stamp a
+ * deploy goes unseen by returning visitors (new markup, stale styles).
+ * Root-relative rather than SITE_URL so www and the bare domain both load
+ * it as same-origin — the CSP only allows 'self'.
+ */
+function asset(string $path): string {
+    $path = ltrim($path, '/');
+    $file = __DIR__ . '/../' . $path;
+    return '/' . $path . (is_file($file) ? '?v=' . filemtime($file) : '');
+}

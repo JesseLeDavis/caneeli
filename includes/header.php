@@ -28,9 +28,9 @@ if (session_status() === PHP_SESSION_NONE) {
     <link rel="icon" href="<?php echo SITE_URL; ?>/assets/images/favicon-96x96.png" type="image/png" sizes="96x96">
     <link rel="icon" href="<?php echo SITE_URL; ?>/assets/images/favicon.ico" sizes="32x32">
     <link rel="apple-touch-icon" href="<?php echo SITE_URL; ?>/assets/images/apple-touch-icon.png">
-    <link rel="manifest" href="<?php echo SITE_URL; ?>/site.webmanifest">
+    <link rel="manifest" href="/site.webmanifest">
     <meta name="theme-color" content="#C25B32">
-    <link rel="stylesheet" href="<?php echo SITE_URL; ?>/assets/css/style.css">
+    <link rel="stylesheet" href="<?php echo asset('assets/css/style.css'); ?>">
 </head>
 <body>
     <header>

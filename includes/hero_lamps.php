@@ -34,9 +34,9 @@ $heroLamps = [
         </defs>
         <g clip-path="url(#lamp-tub-back)">
             <g clip-path="url(#lamp-tub-below-back)"><rect x="0" y="340" width="600" height="290" fill="#C1E1FA"/></g>
-            <path class="lamp-tub__ink" d="M-330.00 418 Q-285.00 388 -240.00 418 T-150.00 418 T-60.00 418 T30.00 418 T120.00 418 T210.00 418 T300.00 418 T390.00 418 T480.00 418 T570.00 418 T660.00 418 T750.00 418 T840.00 418 T930.00 418 T1020.00 418 T1110.00 418"><animateTransform attributeName="transform" type="translate" from="180.0000 0" to="0 0" dur="12s" repeatCount="indefinite"/></path>
+            <path class="lamp-tub__ink" fill="none" stroke="#2D2D2D" stroke-width="3" d="M-330.00 418 Q-285.00 388 -240.00 418 T-150.00 418 T-60.00 418 T30.00 418 T120.00 418 T210.00 418 T300.00 418 T390.00 418 T480.00 418 T570.00 418 T660.00 418 T750.00 418 T840.00 418 T930.00 418 T1020.00 418 T1110.00 418"><animateTransform attributeName="transform" type="translate" from="180.0000 0" to="0 0" dur="12s" repeatCount="indefinite"/></path>
         </g>
-        <g clip-path="url(#lamp-tub-below-back)"><path class="lamp-tub__ink" d="M570 360 V440 A270 178 0 0 1 30 440 V360"/></g>
+        <g clip-path="url(#lamp-tub-below-back)"><path class="lamp-tub__ink" fill="none" stroke="#2D2D2D" stroke-width="3" d="M570 360 V440 A270 178 0 0 1 30 440 V360"/></g>
     </svg>
 
     <div class="lamp-tub__lamps">
@@ -58,10 +58,10 @@ $heroLamps = [
         </defs>
         <g clip-path="url(#lamp-tub-front)">
             <g clip-path="url(#lamp-tub-below)"><rect x="0" y="360" width="600" height="270" fill="#6497D6"/></g>
-            <path class="lamp-tub__ink" d="M-278.57 440 Q-240.00 404 -201.43 440 T-124.29 440 T-47.14 440 T30.00 440 T107.14 440 T184.29 440 T261.43 440 T338.57 440 T415.71 440 T492.86 440 T570.00 440 T647.14 440 T724.29 440 T801.43 440 T878.57 440 T955.71 440 T1032.86 440 T1110.00 440"><animateTransform attributeName="transform" type="translate" from="0 0" to="154.2857 0" dur="9s" repeatCount="indefinite"/></path>
+            <path class="lamp-tub__ink" fill="none" stroke="#2D2D2D" stroke-width="3" d="M-278.57 440 Q-240.00 404 -201.43 440 T-124.29 440 T-47.14 440 T30.00 440 T107.14 440 T184.29 440 T261.43 440 T338.57 440 T415.71 440 T492.86 440 T570.00 440 T647.14 440 T724.29 440 T801.43 440 T878.57 440 T955.71 440 T1032.86 440 T1110.00 440"><animateTransform attributeName="transform" type="translate" from="0 0" to="154.2857 0" dur="9s" repeatCount="indefinite"/></path>
         </g>
         <!-- Walls + bottom at the same weight as the surface, ending where the surface meets them. -->
-        <g clip-path="url(#lamp-tub-below)"><path class="lamp-tub__ink" d="M570 360 V440 A270 178 0 0 1 30 440 V360"/></g>
+        <g clip-path="url(#lamp-tub-below)"><path class="lamp-tub__ink" fill="none" stroke="#2D2D2D" stroke-width="3" d="M570 360 V440 A270 178 0 0 1 30 440 V360"/></g>
     </svg>
 
     <div class="lamp-tub__splash"></div>
