@@ -21,6 +21,8 @@ BEFORE YOU UPLOAD:
   FILES TO UPLOAD
 ---------------------------------------------
 
+  .htaccess            ← hidden file! Security rules live here. In Finder
+                         press Cmd+Shift+. to see it before uploading.
   cart.php
   checkout.php
   coming-soon.php
@@ -41,13 +43,16 @@ BEFORE YOU UPLOAD:
   .idea/
   node_modules/
   assets/scss/
+  assets/uploads/      ← live product photos live here on the server;
+                         only ever upload assets/uploads/.htaccess
+  design/              ← original sketch scans, not needed on the site
   database/
   package.json
   package-lock.json
   CLAUDE.md
   HOSTINGER_UPLOAD.txt
   *.pdf
-  *.png
+  (favicon / apple-touch-icon .png files in assets/images ARE needed)
 
 ---------------------------------------------
   AFTER UPLOADING — CREATE .env ON SERVER
