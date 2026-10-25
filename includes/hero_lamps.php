@@ -57,7 +57,22 @@ $heroLamps = [
             <clipPath id="lamp-tub-below"><path d="M-278.57 440 Q-240.00 404 -201.43 440 T-124.29 440 T-47.14 440 T30.00 440 T107.14 440 T184.29 440 T261.43 440 T338.57 440 T415.71 440 T492.86 440 T570.00 440 T647.14 440 T724.29 440 T801.43 440 T878.57 440 T955.71 440 T1032.86 440 T1110.00 440 V700 H-278.57 Z"><animateTransform attributeName="transform" type="translate" from="0 0" to="154.2857 0" dur="9s" repeatCount="indefinite"/></path></clipPath>
         </defs>
         <g clip-path="url(#lamp-tub-front)">
-            <g clip-path="url(#lamp-tub-below)"><rect x="0" y="360" width="600" height="270" fill="#6497D6"/></g>
+            <g clip-path="url(#lamp-tub-below)">
+                <rect x="0" y="360" width="600" height="270" fill="#6497D6"/>
+                <!-- Glint: light catching the inside of the bowl, following its curve
+                     (an ellipse inset from the tub's 270×178), broken into a long
+                     stroke and a short one. -->
+                <path class="lamp-tub__shine" fill="none" stroke="#C1E1FA" stroke-width="6" stroke-linecap="round"
+                      d="M78.2 489.9 A236 146 0 0 0 174.9 563.8 M204 573.4 A236 146 0 0 0 234.9 580.3 M259 583.8 h.1"/>
+                <!-- A smaller, fainter glint mirrored high on the right wall. -->
+                <path class="lamp-tub__shine lamp-tub__shine--faint" fill="none" stroke="#C1E1FA" stroke-width="4" stroke-linecap="round"
+                      d="M504.4 513 A236 146 0 0 0 524.4 485.1"/>
+                <!-- Soft ripples that bob a little, in two groups so they drift out of step. -->
+                <path class="lamp-tub__ripple" fill="none" stroke="#C1E1FA" stroke-width="4" stroke-linecap="round"
+                      d="M392 512 q10 -7 20 0 q10 7 20 0 M436 554 q8 -6 16 0"/>
+                <path class="lamp-tub__ripple lamp-tub__ripple--late" fill="none" stroke="#C1E1FA" stroke-width="4" stroke-linecap="round"
+                      d="M232 526 q9 -6 18 0 q9 6 18 0 M318 592 q7 -5 14 0"/>
+            </g>
             <path class="lamp-tub__ink" fill="none" stroke="#2D2D2D" stroke-width="3" d="M-278.57 440 Q-240.00 404 -201.43 440 T-124.29 440 T-47.14 440 T30.00 440 T107.14 440 T184.29 440 T261.43 440 T338.57 440 T415.71 440 T492.86 440 T570.00 440 T647.14 440 T724.29 440 T801.43 440 T878.57 440 T955.71 440 T1032.86 440 T1110.00 440"><animateTransform attributeName="transform" type="translate" from="0 0" to="154.2857 0" dur="9s" repeatCount="indefinite"/></path>
         </g>
         <!-- Walls + bottom at the same weight as the surface, ending where the surface meets them. -->
