@@ -78,7 +78,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const tub = document.querySelector('.lamp-tub');
         if (!tub) return;
 
-        const splash = tub.querySelector('.lamp-tub__splash');
         const lamps  = tub.querySelectorAll('.lamp-tub__lamp');
         const calm   = matchMedia('(prefers-reduced-motion: reduce)').matches;
         if (calm) tub.querySelectorAll('svg').forEach(function(svg) { svg.pauseAnimations(); });
@@ -92,35 +91,12 @@ document.addEventListener('DOMContentLoaded', function() {
             lamp.style.setProperty('--ink', prev);
         });
 
-        // Throw a few droplets from where the lamp crosses the water surface.
-        // The surface sits at y=440 of the 600×630 drawing; lamps pivot 10% up.
-        const SURFACE = 440 / 630;
-        function splashAt(lamp) {
-            if (calm) return;
-            const W = tub.clientWidth, H = tub.clientHeight;
-            const tilt = parseFloat(lamp.style.getPropertyValue('--tilt')) * Math.PI / 180;
-            const pivotX = parseFloat(lamp.style.getPropertyValue('--x')) / 100 * W;
-            const x = pivotX + (0.90 - SURFACE) * H * Math.tan(tilt);
-            for (let i = 0; i < 5; i++) {
-                const d = document.createElement('span');
-                d.className = 'lamp-tub__drop';
-                d.style.left = (x / W * 100) + '%';
-                d.style.top  = (SURFACE * 100) + '%';
-                d.style.setProperty('--dx', ((Math.random() - .5) * 80 + Math.sin(tilt) * 30) + 'px');
-                d.style.setProperty('--dy', (-25 - Math.random() * 45) + 'px');
-                d.style.animationDelay = (i * 25) + 'ms';
-                splash.appendChild(d);
-                d.addEventListener('animationend', function() { d.remove(); });
-            }
-        }
-
         // Touch has no hover, so a tap toggles the lamp up; the wiggle replays on every pop.
         lamps.forEach(function(lamp) {
             function pop() {
                 lamp.classList.remove('is-pop');
                 void lamp.offsetWidth;
                 lamp.classList.add('is-pop');
-                splashAt(lamp);
             }
             lamp.addEventListener('mouseenter', pop);
             lamp.addEventListener('click', function() { lamp.classList.toggle('is-up'); pop(); });

@@ -1,11 +1,11 @@
 <?php
 /**
  * Homepage hero art: seven sketched sea-creature lava lamps poking out of a
- * tub of rolling water. Hover (or tap) a lamp and it pops up with a splash.
+ * tub of rolling water. Hover (or tap) a lamp and it pops up with a wiggle.
  *
  * Everything is drawn in one 600×630 coordinate space so the water shapes,
- * the lamp mask (in _home.scss) and the splash maths (main.js) line up at any
- * size. If you change the tub outline, change it in all three places.
+ * and the lamp mask (in _home.scss) line up at any size. If you change the
+ * tub outline, change it in both places.
  *
  * Lamp art lives in /assets/images/hero/*.webp — transparent pencil line
  * work used as a mask, so main.js can fill each one with a site colour.
@@ -64,5 +64,4 @@ $heroLamps = [
         <g clip-path="url(#lamp-tub-below)"><path class="lamp-tub__ink" fill="none" stroke="#2D2D2D" stroke-width="3" d="M570 360 V440 A270 178 0 0 1 30 440 V360"/></g>
     </svg>
 
-    <div class="lamp-tub__splash"></div>
 </div>
