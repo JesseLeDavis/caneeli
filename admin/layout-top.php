@@ -12,9 +12,14 @@ $pageTitle = $pageTitle ?? 'Admin';
 $unreadMessages = 0;
 if (function_exists('getDB')) {
     try {
-        $unreadMessages = (int) getDB()->query("SELECT COUNT(*) FROM contact_messages WHERE is_read = 0")->fetchColumn();
+        $unreadMessages = (int) getDB()->query("SELECT COUNT(*) FROM contact_messages WHERE is_read = 0 AND is_spam = 0")->fetchColumn();
     } catch (\Throwable $e) {
-        $unreadMessages = 0;
+        // Before migrate_contact_spam.sql there's no is_spam column.
+        try {
+            $unreadMessages = (int) getDB()->query("SELECT COUNT(*) FROM contact_messages WHERE is_read = 0")->fetchColumn();
+        } catch (\Throwable $e) {
+            $unreadMessages = 0;
+        }
     }
 }
 ?>
