@@ -73,34 +73,12 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     })();
-    // Homepage hero: lamps in a tub of water (markup: includes/hero_lamps.php)
+    // Homepage hero video: hold on the first frame for reduced-motion visitors.
     (function() {
-        const tub = document.querySelector('.lamp-tub');
-        if (!tub) return;
-
-        const lamps  = tub.querySelectorAll('.lamp-tub__lamp');
-        const calm   = matchMedia('(prefers-reduced-motion: reduce)').matches;
-        if (calm) tub.querySelectorAll('svg').forEach(function(svg) { svg.pauseAnimations(); });
-
-        // Each lamp gets a random site colour per visit, never the same as its neighbour.
-        const inks = ['#C25B32', '#6497D6', '#D4C14B', '#2D2D2D'];
-        let prev = null;
-        lamps.forEach(function(lamp) {
-            const pick = inks.filter(function(c) { return c !== prev; });
-            prev = pick[Math.floor(Math.random() * pick.length)];
-            lamp.style.setProperty('--ink', prev);
-        });
-
-        // Touch has no hover, so a tap toggles the lamp up; the wiggle replays on every pop.
-        lamps.forEach(function(lamp) {
-            function pop() {
-                lamp.classList.remove('is-pop');
-                void lamp.offsetWidth;
-                lamp.classList.add('is-pop');
-            }
-            lamp.addEventListener('mouseenter', pop);
-            lamp.addEventListener('click', function() { lamp.classList.toggle('is-up'); pop(); });
-        });
+        const video = document.querySelector('.hero-fish');
+        if (!video || !matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        video.removeAttribute('autoplay');
+        video.pause();
     })();
 
     const menuToggle = document.querySelector('.menu-toggle');

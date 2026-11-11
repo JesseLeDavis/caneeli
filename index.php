@@ -23,7 +23,15 @@ $featured = $stmt->fetchAll();
                 <a href="/pages/contact.php"><div class="yellow-button btn">COMMISSION A PIECE</div></a>
             </div>
         </div>
-        <?php include 'includes/hero_lamps.php'; ?>
+        <?php /* Procreate animation with a transparent background. Safari only
+                 keeps the transparency in HEVC (.mov); Chrome and Firefox get
+                 VP9 WebM. The .mov must come first: its video/quicktime type is
+                 one only Safari claims, so other browsers skip to the WebM. */ ?>
+        <video class="hero-fish" autoplay muted loop playsinline preload="auto"
+               poster="/assets/images/hero/hero_fish.webp" aria-hidden="true">
+            <source src="/assets/images/hero/hero_fish.mov" type='video/quicktime; codecs="hvc1"'>
+            <source src="/assets/images/hero/hero_fish.webm" type="video/webm">
+        </video>
     </div>
 </section>
 
