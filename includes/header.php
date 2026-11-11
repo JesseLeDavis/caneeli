@@ -20,7 +20,21 @@ if (session_status() === PHP_SESSION_NONE) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo isset($pageTitle) ? $pageTitle . ' | ' . SITE_NAME : SITE_NAME; ?></title>
+    <?php
+    // <title>, description, canonical, link-preview tags, structured data.
+    // Pages set these variables before including this file; see includes/seo.php.
+    require_once __DIR__ . '/seo.php';
+    seo_head([
+        'pageTitle'       => $pageTitle ?? null,
+        'fullTitle'       => $fullTitle ?? null,
+        'pageDescription' => $pageDescription ?? null,
+        'pageImage'       => $pageImage ?? null,
+        'pageType'        => $pageType ?? null,
+        'canonicalPath'   => $canonicalPath ?? null,
+        'noindex'         => $noindex ?? false,
+        'structuredData'  => $structuredData ?? null,
+    ]);
+    ?>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400..800&family=Urbanist:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">

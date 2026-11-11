@@ -1,5 +1,6 @@
 <?php
 $pageTitle = "Checkout Canceled";
+$noindex = true; // private or transactional: keep out of search results
 include __DIR__ . '/includes/header.php';
 include __DIR__ . '/includes/db.php';
 

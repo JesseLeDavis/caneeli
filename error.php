@@ -1,5 +1,6 @@
 <?php
 $pageTitle = "Something Went Wrong";
+$noindex = true; // private or transactional: keep out of search results
 include __DIR__ . '/includes/header.php';
 
 $reason = $_GET['reason'] ?? '';

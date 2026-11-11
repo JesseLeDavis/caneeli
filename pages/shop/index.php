@@ -1,6 +1,6 @@
 <?php
-$pageTitle = "Shop";
-include __DIR__ . '/../../includes/header.php';
+require_once __DIR__ . '/../../config/config.php';
+require_once __DIR__ . '/../../includes/functions.php';
 include __DIR__ . '/../../includes/db.php';
 require_once __DIR__ . '/../../includes/product_categories.php';
 
@@ -55,6 +55,16 @@ function shop_url($overrides = []) {
     if ($max_price < $bound_max)  $p['max_price'] = $max_price;
     return '?' . http_build_query(array_merge($p, $overrides));
 }
+
+// Each category is its own indexable page ("Ceramics | Shop"); price-slider
+// filters aren't, so they're left out of the canonical URL.
+$pageTitle       = $category ? "$category | Shop" : 'Shop';
+$pageDescription = $category
+    ? 'Handmade ' . ($category === 'Other' ? 'pieces' : strtolower($category)) . ' by Caneeli Designs. One-of-a-kind stained glass and ceramic work, made by Annie in Oregon.'
+    : 'Shop handmade stained glass, ceramics, lighting and wall decor by Caneeli Designs. Small batches, made by hand in Oregon — no two pieces alike.';
+$canon = array_filter(['category' => $category ?: null, 'page' => $page > 1 ? $page : null]);
+$canonicalPath = '/pages/shop/' . ($canon ? '?' . http_build_query($canon) : '');
+include __DIR__ . '/../../includes/header.php';
 ?>
 
 <section class="hero shop-page">

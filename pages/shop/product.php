@@ -20,12 +20,46 @@ if (!$product) { header('Location: /pages/shop/'); exit; }
 require_once __DIR__ . '/../../includes/product_categories.php';
 $product_cats = product_categories_for($pdo, (int) $product['id']);
 
-$pageTitle = sanitize($product['name']);
+$pageTitle = $product['name'];
 
 // Fetch gallery images
 $img_stmt = $pdo->prepare("SELECT * FROM product_images WHERE product_id = ? ORDER BY sort_order, id");
 $img_stmt->execute([$id]);
 $gallery = $img_stmt->fetchAll();
+
+// Search/link-preview tags (see includes/seo.php).
+require_once __DIR__ . '/../../includes/seo.php';
+$is_sold_out     = ($product['status'] ?? 'active') === 'sold_out' || $product['stock_qty'] <= 0;
+$canonicalPath   = '/pages/shop/product?id=' . (int) $product['id'];
+$pageType        = 'product';
+$pageDescription = trim($product['description'] ?? '') !== ''
+    ? $product['description']
+    : 'Handmade ' . ($product['category'] ?: 'piece') . ' by Caneeli Designs, made by Annie in Oregon.';
+$photos = array_values(array_unique(array_filter(array_merge(
+    [$product['image_path'] ?? null],
+    array_column($gallery, 'image_path')
+))));
+$pageImage = $photos[0] ?? null;
+// Lets Google show price and availability in results.
+$structuredData = [
+    '@context'    => 'https://schema.org',
+    '@type'       => 'Product',
+    'name'        => $product['name'],
+    'description' => seo_snippet($pageDescription, 500),
+    'sku'         => (string) $product['id'],
+    'brand'       => ['@type' => 'Brand', 'name' => SEO_BRAND],
+    'offers'      => [
+        '@type'         => 'Offer',
+        'url'           => seo_url($canonicalPath),
+        'priceCurrency' => 'USD',
+        'price'         => number_format((float) $product['price'], 2, '.', ''),
+        'availability'  => $is_sold_out ? 'https://schema.org/SoldOut' : 'https://schema.org/InStock',
+        'itemCondition' => 'https://schema.org/NewCondition',
+    ],
+];
+if ($photos) {
+    $structuredData['image'] = array_map('seo_url', $photos);
+}
 
 include __DIR__ . '/../../includes/header.php';
 
@@ -111,9 +145,6 @@ track_product_view((int) $product['id'], $_SERVER['HTTP_REFERER'] ?? null);
                 </div>
                 <?php endif; ?>
 
-                <?php
-                $is_sold_out = ($product['status'] ?? 'active') === 'sold_out' || $product['stock_qty'] <= 0;
-                ?>
                 <?php if (!$is_sold_out): ?>
                     <form method="POST" action="/cart.php">
                         <input type="hidden" name="action" value="add">

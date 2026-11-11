@@ -43,6 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $pageTitle = "Contact";
+$pageDescription = "Commission a custom stained glass or ceramic piece, or ask Annie a question. Tell her what you have in mind, your timeline and budget.";
 include __DIR__ . '/../includes/header.php';
 
 // Keep what they typed when there's an error; blank after a send.

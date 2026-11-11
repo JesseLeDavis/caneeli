@@ -1,5 +1,6 @@
 <?php
 $pageTitle = "Terms of Service";
+$pageDescription = "Caneeli Designs terms: shipping within the U.S., custom order deposits, and returns on handmade pieces.";
 include __DIR__ . '/../includes/header.php';
 ?>
 

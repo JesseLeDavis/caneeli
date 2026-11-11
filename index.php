@@ -3,7 +3,18 @@ if (time() < strtotime('2026-05-01 18:00:00 America/Los_Angeles')) {
     header('Location: /coming-soon.php');
     exit;
 }
+require_once __DIR__ . '/config/config.php'; // SITE_URL, used below before header.php loads it
 $pageTitle = "Home";
+$fullTitle = 'Caneeli Designs | Handmade Stained Glass & Ceramics';
+// Lets Google show the brand name and logo for the site.
+$structuredData = [
+    '@context' => 'https://schema.org',
+    '@type'    => 'Organization',
+    'name'     => 'Caneeli Designs',
+    'url'      => rtrim(SITE_URL, '/') . '/',
+    'logo'     => rtrim(SITE_URL, '/') . '/assets/images/favicon-512.png',
+    'sameAs'   => ['https://www.tiktok.com/@caneeli.designs'],
+];
 include 'includes/header.php';
 include 'includes/db.php';
 

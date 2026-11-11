@@ -1,5 +1,6 @@
 <?php
 $pageTitle = "Privacy Policy";
+$pageDescription = "How Caneeli Designs collects, uses and protects your information when you shop or get in touch.";
 include __DIR__ . '/../includes/header.php';
 ?>
 

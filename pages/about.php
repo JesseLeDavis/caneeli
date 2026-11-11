@@ -1,5 +1,6 @@
 <?php
-$pageTitle = "About";
+$pageTitle = "About Annie";
+$pageDescription = "Meet Annie, the artist behind Caneeli Designs: a former 3D animator now making playful stained glass and ceramics in her Oregon studio.";
 include __DIR__ . '/../includes/header.php';
 ?>
 

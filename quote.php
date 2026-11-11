@@ -7,6 +7,7 @@
  * non-refundable terms — ticking the box is what records terms_accepted_at.
  */
 $pageTitle = "Your Quote";
+$noindex = true; // private or transactional: keep out of search results
 include __DIR__ . '/includes/header.php';
 require_once __DIR__ . '/includes/db.php';
 require_once __DIR__ . '/includes/quotes.php';

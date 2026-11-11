@@ -67,6 +67,10 @@ Options -Indexes
     Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; frame-src https://js.stripe.com https://hooks.stripe.com; connect-src 'self' https://api.stripe.com; base-uri 'self'; form-action 'self' https://checkout.stripe.com; object-src 'none'"
 </IfModule>
 
+# ── robots.txt / sitemap.xml are generated (they need SITE_URL) ──────
+RewriteRule ^robots\.txt$  robots.php  [L]
+RewriteRule ^sitemap\.xml$ sitemap.php [L]
+
 # ── Redirect .php URLs to clean versions (external redirect) ──────────
 # Skip directory index files (index.php should stay as-is)
 RewriteCond %{THE_REQUEST} /index\.php[\s?] [NC]
