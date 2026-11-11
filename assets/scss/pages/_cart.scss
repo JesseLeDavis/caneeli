@@ -271,22 +271,6 @@
     color: #e53e3e;
   }
 
-  &__shipping-note {
-    font-size: 13px;
-    font-weight: 600;
-    color: color.adjust($dark, $lightness: 15%);
-    padding: 8px 12px;
-    background: color.adjust($neutral, $lightness: -4%);
-    border-radius: 10px;
-    line-height: 1.5;
-  }
-
-  &__note {
-    font-size: 13px;
-    color: color.adjust($dark, $lightness: 25%);
-    line-height: 1.5;
-  }
-
   &__stripe-note {
     display: flex;
     align-items: center;

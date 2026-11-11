@@ -1,5 +1,6 @@
 <?php
 $pageTitle = "Cart";
+$noindex = true; // private or transactional: keep out of search results
 include __DIR__ . '/includes/header.php';
 include __DIR__ . '/includes/db.php';
 require_once __DIR__ . '/includes/tracking.php';
@@ -210,15 +211,6 @@ unset($_SESSION['cart_flash']);
 
                 <div class="cart__summary">
                     <p class="cart__summary-title">Order Summary</p>
-                    <?php
-                        $free_shipping_threshold = 200;
-                        $remaining = $free_shipping_threshold - $subtotal;
-                    ?>
-                    <?php if ($remaining > 0): ?>
-                        <p class="cart__shipping-note">Add <?php echo formatPrice($remaining); ?> more for free shipping!</p>
-                    <?php else: ?>
-                        <p class="cart__shipping-note">Free shipping applied!</p>
-                    <?php endif; ?>
                     <div class="cart__subtotal">
                         <span class="cart__subtotal-label">Subtotal</span>
                         <span class="cart__subtotal-price"><?php echo formatPrice($subtotal); ?></span>
@@ -256,7 +248,6 @@ unset($_SESSION['cart_flash']);
                         </form>
                     <?php endif; ?>
 
-                    <p class="cart__note">Taxes calculated at checkout.</p>
                     <a href="/checkout.php" class="btn blue-button">Checkout</a>
                     <p class="cart__stripe-note">🔒 Secure checkout via Stripe</p>
                     <a href="/pages/shop/" class="cart__continue">← Continue Shopping</a>
