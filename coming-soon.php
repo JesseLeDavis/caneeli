@@ -143,17 +143,13 @@ require_once __DIR__ . '/includes/db.php';
                      src="/assets/images/tiktok.svg"
                      alt="TikTok">
             </a>
-            <a href="#"
+            <a href="https://www.instagram.com/caneelidesigns/"
+               target="_blank"
+               rel="noopener noreferrer"
                aria-label="Instagram">
                 <img class="cs-footer__icon"
                      src="/assets/images/instagram.svg"
                      alt="Instagram">
-            </a>
-            <a href="#"
-               aria-label="Facebook">
-                <img class="cs-footer__icon"
-                     src="/assets/images/facebook.svg"
-                     alt="Facebook">
             </a>
         </div>
         <p class="cs-footer__copy">© 2026 Caneeli Designs — Handmade with care.</p>

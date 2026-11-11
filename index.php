@@ -13,7 +13,7 @@ $structuredData = [
     'name'     => 'Caneeli Designs',
     'url'      => rtrim(SITE_URL, '/') . '/',
     'logo'     => rtrim(SITE_URL, '/') . '/assets/images/favicon-512.png',
-    'sameAs'   => ['https://www.tiktok.com/@caneeli.designs'],
+    'sameAs'   => ['https://www.instagram.com/caneelidesigns/', 'https://www.tiktok.com/@caneeli.designs'],
 ];
 include 'includes/header.php';
 include 'includes/db.php';

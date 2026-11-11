@@ -2,9 +2,8 @@
     <footer>
         <div class="container">
             <div class="socials-container">
-                <a href="https://www.tiktok.com/@caneeli.designs" target="_blank"><img class="hover-grow" src="/assets/images/tiktok.svg"></a>
-                <img class="hover-grow" src="/assets/images/instagram.svg">
-                <img class="hover-grow" src="/assets/images/facebook.svg">
+                <a href="https://www.instagram.com/caneelidesigns/" target="_blank" rel="noopener" aria-label="Instagram"><img class="hover-grow" src="/assets/images/instagram.svg" alt="Instagram"></a>
+                <a href="https://www.tiktok.com/@caneeli.designs" target="_blank" rel="noopener" aria-label="TikTok"><img class="hover-grow" src="/assets/images/tiktok.svg" alt="TikTok"></a>
             </div>
             <div class="bottom-nav">
                 <a class="hover-grow" href="/">Home</a>
