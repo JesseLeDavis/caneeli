@@ -15,6 +15,9 @@
   .container {
     padding-top: 80px;
     padding-bottom: 80px;
+
+    // The fish sits on top when stacked and its drawing has its own headroom.
+    @media (max-width: 959px) { padding-top: 16px; }
   }
 
   .large_title {
@@ -254,6 +257,12 @@
 .home-hero .container {
   width: 100%; // .home-hero is flex; otherwise the art stretches this past a phone screen
 
+  // Phones/tablets: stacked, with the fish above the headline (see .hero-fish order).
+  @media (max-width: 959px) {
+    display: flex;
+    flex-direction: column;
+  }
+
   @media (min-width: 960px) {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -264,17 +273,22 @@
 
 .hero-fish {
   display: block;
-  width: min(100%, 420px);
-  height: auto;
-  max-height: 80vh;
+  pointer-events: none;
   aspect-ratio: 848 / 1220; // the export's size, so nothing jumps while it loads
   object-fit: contain;
-  margin: 40px auto 0;
-  pointer-events: none;
+
+  // Stacked: sized by height so the headline still fits on screen below it.
+  @media (max-width: 959px) {
+    order: -1;
+    height: min(38vh, 340px);
+    width: auto;
+    margin: 0 auto 28px;
+  }
 
   @media (min-width: 960px) {
     width: min(100%, 520px);
+    height: auto;
     max-height: 85vh;
-    margin-top: 0;
+    margin: 0 auto;
   }
 }
