@@ -1,6 +1,10 @@
 <?php
-$pageTitle = "Product";
-include __DIR__ . '/../../includes/header.php';
+// Everything up to the header include runs before any HTML is sent, so the
+// redirects below actually work and the <title> is the product's name.
+// (header.php used to be included first: every product page was titled
+// "Product | Caneeli" and a bad id gave a broken page instead of the shop.)
+require_once __DIR__ . '/../../config/config.php';
+require_once __DIR__ . '/../../includes/functions.php';
 include __DIR__ . '/../../includes/db.php';
 
 $id = intval($_GET['id'] ?? 0);
@@ -16,16 +20,19 @@ if (!$product) { header('Location: /pages/shop/'); exit; }
 require_once __DIR__ . '/../../includes/product_categories.php';
 $product_cats = product_categories_for($pdo, (int) $product['id']);
 
-// Record the view for the admin insights report (fire-and-forget).
-require_once __DIR__ . '/../../includes/tracking.php';
-track_product_view((int) $product['id'], $_SERVER['HTTP_REFERER'] ?? null);
-
-$pageTitle = sanitize($product['name']) . ' — Caneeli Designs';
+$pageTitle = sanitize($product['name']);
 
 // Fetch gallery images
 $img_stmt = $pdo->prepare("SELECT * FROM product_images WHERE product_id = ? ORDER BY sort_order, id");
 $img_stmt->execute([$id]);
 $gallery = $img_stmt->fetchAll();
+
+include __DIR__ . '/../../includes/header.php';
+
+// Record the view for the admin insights report (fire-and-forget). After the
+// header include: it reads the session id, which header.php starts.
+require_once __DIR__ . '/../../includes/tracking.php';
+track_product_view((int) $product['id'], $_SERVER['HTTP_REFERER'] ?? null);
 ?>
 
 <section class="hero">

@@ -1,105 +1,21 @@
 <?php
 $pageTitle = "Order Confirmed";
 include __DIR__ . '/includes/header.php';
-require_once __DIR__ . '/vendor/autoload.php';
-require_once __DIR__ . '/config/config.php';
-require_once __DIR__ . '/includes/db.php';
-
-\Stripe\Stripe::setApiKey(STRIPE_SECRET_KEY);
+require_once __DIR__ . '/includes/fulfillment.php';
 
 $session_id = $_GET['session_id'] ?? '';
-$order_saved = false;
 
-if ($session_id && !empty($_SESSION['cart'])) {
+// Save the order now if Stripe's webhook hasn't yet (it usually lands within
+// a second or two either way). Same code path as webhook.php, built from what
+// Stripe says was paid, not from this browser's cart.
+if ($session_id !== '') {
     try {
-        $stripe_session = \Stripe\Checkout\Session::retrieve($session_id);
-
-        if ($stripe_session->payment_status === 'paid') {
-            $pdo = getDB();
-
-            // Check we haven't already saved this order
-            $check = $pdo->prepare("SELECT id FROM orders WHERE stripe_session_id = ?");
-            $check->execute([$session_id]);
-
-            if (!$check->fetch()) {
-                $shipping = null;
-                $shipping_details = $stripe_session->collected_information->shipping_details
-                    ?? $stripe_session->shipping_details
-                    ?? null;
-                if (!empty($shipping_details->address)) {
-                    $addr = $shipping_details->address;
-                    $shipping = trim(implode("\n", array_filter([
-                        $shipping_details->name ?? '',
-                        $addr->line1 ?? '',
-                        $addr->line2 ?? '',
-                        trim(($addr->city ?? '') . ', ' . ($addr->state ?? '') . ' ' . ($addr->postal_code ?? ''), ', '),
-                        $addr->country ?? '',
-                    ])));
-                }
-
-                $discount_code   = $stripe_session->metadata->discount_code ?? null;
-                $discount_amount = isset($stripe_session->total_details->amount_discount)
-                    ? $stripe_session->total_details->amount_discount / 100
-                    : null;
-
-                $pdo->prepare("
-                    INSERT INTO orders (stripe_session_id, stripe_payment_intent, customer_name, customer_email, status, total, shipping_address, discount_code, discount_amount)
-                    VALUES (?, ?, ?, ?, 'paid', ?, ?, ?, ?)
-                ")->execute([
-                    $session_id,
-                    $stripe_session->payment_intent ?? null,
-                    $stripe_session->customer_details->name,
-                    $stripe_session->customer_details->email,
-                    $stripe_session->amount_total / 100,
-                    $shipping,
-                    $discount_code,
-                    $discount_amount,
-                ]);
-
-                $order_id = $pdo->lastInsertId();
-
-                // Save order items and decrement stock
-                $ids          = array_keys($_SESSION['cart']);
-                $placeholders = implode(',', array_fill(0, count($ids), '?'));
-                $stmt         = $pdo->prepare("SELECT * FROM products WHERE id IN ($placeholders)");
-                $stmt->execute($ids);
-                $products = $stmt->fetchAll();
-
-                foreach ($products as $product) {
-                    $qty = $_SESSION['cart'][$product['id']];
-
-                    $pdo->prepare("
-                        INSERT INTO order_items (order_id, product_id, product_name, quantity, price_at_purchase)
-                        VALUES (?, ?, ?, ?, ?)
-                    ")->execute([
-                        $order_id,
-                        $product['id'],
-                        $product['name'],
-                        $qty,
-                        $product['price'],
-                    ]);
-
-                    // Decrement stock
-                    $pdo->prepare("
-                        UPDATE products SET stock_qty = GREATEST(0, stock_qty - ?)
-                        WHERE id = ?
-                    ")->execute([$qty, $product['id']]);
-
-                    // Flip to sold_out if stock hit 0 (keeps the product visible
-                    // in the shop but blocks add-to-cart via the status check).
-                    $pdo->prepare("
-                        UPDATE products SET status = 'sold_out'
-                        WHERE id = ? AND stock_qty = 0 AND status = 'active'
-                    ")->execute([$product['id']]);
-                }
-            }
-
-            // Clear the cart + any applied discount.
+        if (fulfill_checkout_session(getDB(), $session_id)) {
             unset($_SESSION['cart'], $_SESSION['discount_code_id']);
-            $order_saved = true;
         }
-    } catch (\Stripe\Exception\ApiErrorException $e) {
-        // Session retrieval failed — still show success but don't process
+    } catch (\Throwable $e) {
+        // The webhook will still save it; show the generic confirmation.
+        error_log('success page: ' . $e->getMessage());
     }
 }
 

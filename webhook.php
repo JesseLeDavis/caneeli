@@ -8,6 +8,7 @@ require_once __DIR__ . '/config/config.php';
 require_once __DIR__ . '/includes/db.php';
 require_once __DIR__ . '/includes/mailer.php';
 require_once __DIR__ . '/includes/emails/templates.php';
+require_once __DIR__ . '/includes/fulfillment.php';
 require_once __DIR__ . '/vendor/autoload.php';
 
 \Stripe\Stripe::setApiKey(STRIPE_SECRET_KEY);
@@ -214,111 +215,15 @@ if (($full_session->metadata->type ?? '') === 'custom_deposit') {
     exit;
 }
 
+// --- Shop order -----------------------------------------------------------
+// Shared with success.php; whichever runs first saves the order and sends
+// the confirmation, the other is a no-op. See includes/fulfillment.php.
 try {
-    $pdo->beginTransaction();
-
-    $discount_code   = $full_session->metadata->discount_code ?? null;
-    $discount_amount = isset($full_session->total_details->amount_discount)
-        ? $full_session->total_details->amount_discount / 100
-        : null;
-
-    $pdo->prepare("
-        INSERT INTO orders
-            (stripe_session_id, stripe_payment_intent, customer_name, customer_email, status, total, shipping_address, discount_code, discount_amount)
-        VALUES (?, ?, ?, ?, 'paid', ?, ?, ?, ?)
-    ")->execute([
-        $stripe_session->id,
-        $stripe_session->payment_intent ?? null,
-        $full_session->customer_details->name ?? '',
-        $full_session->customer_details->email ?? '',
-        $stripe_session->amount_total / 100,
-        $shipping,
-        $discount_code,
-        $discount_amount,
-    ]);
-
-    $order_id = (int) $pdo->lastInsertId();
-
-    // Prefer our own cart snapshot (has product_id) over Stripe's line_items.
-    $cart_json = $full_session->metadata->cart ?? null;
-    $cart      = $cart_json ? json_decode($cart_json, true) : null;
-
-    $item_stmt = $pdo->prepare("
-        INSERT INTO order_items (order_id, product_id, product_name, quantity, price_at_purchase)
-        VALUES (?, ?, ?, ?, ?)
-    ");
-    $stock_stmt    = $pdo->prepare("UPDATE products SET stock_qty = GREATEST(0, stock_qty - ?) WHERE id = ?");
-    $sold_out_stmt = $pdo->prepare("UPDATE products SET status = 'sold_out' WHERE id = ? AND stock_qty = 0 AND status = 'active'");
-
-    if (is_array($cart) && $cart) {
-        foreach ($cart as $item) {
-            $item_stmt->execute([
-                $order_id,
-                $item['product_id'] ?? null,
-                $item['name'] ?? '',
-                (int) ($item['qty'] ?? 1),
-                (float) ($item['price'] ?? 0),
-            ]);
-            if (!empty($item['product_id'])) {
-                $stock_stmt->execute([(int) ($item['qty'] ?? 1), (int) $item['product_id']]);
-                $sold_out_stmt->execute([(int) $item['product_id']]);
-            }
-        }
-    } elseif (!empty($full_session->line_items->data)) {
-        // Fallback: reconstruct from Stripe line items if metadata is missing.
-        foreach ($full_session->line_items->data as $li) {
-            $item_stmt->execute([
-                $order_id,
-                null,
-                $li->description ?? '',
-                (int) $li->quantity,
-                ($li->amount_total / max(1, $li->quantity)) / 100,
-            ]);
-        }
-    }
-
-    // Bump usage counter for the applied discount code (if any).
-    $applied_code = $full_session->metadata->discount_code ?? null;
-    if ($applied_code) {
-        $pdo->prepare("UPDATE discount_codes SET times_used = times_used + 1 WHERE code = ?")
-            ->execute([$applied_code]);
-    }
-
-    $pdo->commit();
+    fulfill_checkout_session($pdo, $stripe_session->id);
 } catch (\Throwable $e) {
-    $pdo->rollBack();
-    http_response_code(500);
+    error_log('webhook: order failed for session ' . $stripe_session->id . ': ' . $e->getMessage());
+    http_response_code(500); // Stripe retries
     exit;
-}
-
-// Send the order confirmation email. Isolated from the DB work above: a mail
-// failure must never turn a successful order into a 500 (Stripe would retry and
-// the dedup check would just skip re-insertion anyway).
-try {
-    $order_stmt = $pdo->prepare("SELECT * FROM orders WHERE id = ?");
-    $order_stmt->execute([$order_id]);
-    $order = $order_stmt->fetch();
-
-    $line_stmt = $pdo->prepare("SELECT * FROM order_items WHERE order_id = ? ORDER BY id");
-    $line_stmt->execute([$order_id]);
-    $line_items = $line_stmt->fetchAll();
-
-    if ($order && !empty($order['customer_email']) && empty($order['confirmation_email_sent_at'])) {
-        $sent = send_mail(
-            $order['customer_email'],
-            $order['customer_name'] ?? '',
-            'Your ' . SITE_NAME . ' order #' . $order['id'],
-            build_order_confirmation_email($order, $line_items),
-            '',
-            OWNER_EMAIL !== '' ? OWNER_EMAIL : null
-        );
-        if ($sent) {
-            $pdo->prepare("UPDATE orders SET confirmation_email_sent_at = CURRENT_TIMESTAMP WHERE id = ?")
-                ->execute([$order_id]);
-        }
-    }
-} catch (\Throwable $e) {
-    error_log('webhook: confirmation email failed for order ' . $order_id . ': ' . $e->getMessage());
 }
 
 http_response_code(200);

@@ -20,9 +20,31 @@ $stmt         = getDB()->prepare("SELECT * FROM products WHERE id IN ($placehold
 $stmt->execute($ids);
 $products     = $stmt->fetchAll();
 
+// Re-check every line against live stock. The cart can go stale: a piece
+// sells out, or stock drops below what's in the cart. If anything changed,
+// fix the cart and send them back to see it rather than charging for
+// something that isn't there.
+$found = array_column($products, null, 'id');
+$changed = false;
+foreach ($_SESSION['cart'] as $pid => $qty) {
+    $p = $found[$pid] ?? null;
+    if (!$p || (int) $p['stock_qty'] <= 0) {
+        unset($_SESSION['cart'][$pid]);
+        $changed = true;
+    } elseif ($qty > (int) $p['stock_qty'] || $qty < 1) {
+        $_SESSION['cart'][$pid] = max(1, min((int) $qty, (int) $p['stock_qty']));
+        $changed = true;
+    }
+}
+if ($changed) {
+    $_SESSION['cart_flash'] = 'Something in your cart just sold out or has less stock left, so your cart was updated. Have a look, then check out again.';
+    header('Location: /cart.php');
+    exit;
+}
+
 $line_items = [];
 foreach ($products as $product) {
-    $qty = $_SESSION['cart'][$product['id']];
+    $qty = (int) $_SESSION['cart'][$product['id']];
 
     $line_items[] = [
         'price_data' => [
@@ -34,21 +56,15 @@ foreach ($products as $product) {
                 'images'      => $product['image_path']
                     ? [SITE_URL . $product['image_path']]
                     : [],
+                // How the order gets tied back to our product (and its stock)
+                // in includes/fulfillment.php. Per-item, so there's no size
+                // limit, unlike the old whole-cart JSON in session metadata
+                // (Stripe caps a metadata value at 500 chars, which a cart of
+                // five or six pieces could blow through, failing checkout).
+                'metadata'    => ['product_id' => (string) $product['id']],
             ],
         ],
         'quantity' => $qty,
-    ];
-}
-
-// Snapshot cart (product_id => qty) + current prices so the webhook can
-// persist line items back to the order_items table after payment succeeds.
-$cart_snapshot = [];
-foreach ($products as $product) {
-    $cart_snapshot[] = [
-        'product_id' => (int) $product['id'],
-        'name'       => $product['name'],
-        'price'      => (float) $product['price'],
-        'qty'        => (int) $_SESSION['cart'][$product['id']],
     ];
     track_cart_event((int) $product['id'], 'checkout_start');
 }
@@ -88,8 +104,10 @@ try {
         'shipping_address_collection' => [
             'allowed_countries' => ['US'],
         ],
+        // Stock isn't held while they're on Stripe's page, so keep that window
+        // short (30 min is Stripe's minimum; the default is 24 hours).
+        'expires_at' => time() + 30 * 60,
         'metadata' => [
-            'cart'          => json_encode($cart_snapshot),
             'discount_code' => $applied_code,
         ],
     ];

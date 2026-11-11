@@ -31,17 +31,20 @@ checkout.php
     customer to Stripe's hosted payment page. No payment UI is built
     here — Stripe handles all of that.
 
+includes/fulfillment.php
+    The ONE place a paid checkout becomes an order: saves the order and
+    its items (from what Stripe says was paid), decrements stock, marks
+    sold-out pieces, counts the discount use, and sends the confirmation
+    email (Annie BCC'd) exactly once. Called by both files below.
+
 success.php
-    The page Stripe redirects to after a successful payment. Verifies
-    the payment with Stripe, saves the order to the database, decrements
-    stock, auto-hides sold-out items, then clears the cart.
+    The page Stripe redirects to after payment. Calls fulfillment (a no-op
+    if the webhook got there first), clears the cart, shows the order.
 
 webhook.php
-    A backup handler that Stripe calls directly (server-to-server) after
-    payment. Register this URL in your Stripe dashboard. It handles the
-    same order-saving logic as success.php but is triggered by Stripe,
-    not the browser — more reliable since it fires even if the customer
-    closes the tab before success.php loads.
+    Stripe calls this directly (server-to-server) after payment, so the
+    order is saved even if the customer closes the tab. Register it in
+    the Stripe dashboard. Calls the same fulfillment code.
 
 
 HOW THE SESSION CART WORKS
@@ -123,18 +126,16 @@ SUCCESS PAGE FLOW
 After payment, Stripe redirects to:
     /success.php?session_id=cs_xxx
 
-The success page:
-1. Retrieves the session from Stripe using the session_id to verify
-   the payment actually went through (status === 'paid')
-2. Checks the orders table to prevent duplicate processing
-   (in case the customer refreshes the success page)
-3. Saves the order to the orders table
-4. Saves each cart item to order_items (with a snapshot of the price
-   at the time of purchase)
-5. Decrements stock_qty for each product
-6. Auto-sets active = 0 for any product that reaches stock_qty = 0
-   (so sold-out items disappear from the shop automatically)
-7. Clears $_SESSION['cart']
+The success page calls fulfill_checkout_session() in
+includes/fulfillment.php, which:
+1. Retrieves the session from Stripe and checks it's actually paid
+2. Returns the existing order if one was already saved for it
+3. Saves the order, and its line items from Stripe's own record of what
+   was paid (each line item carries our product_id in its metadata)
+4. Decrements stock_qty, flipping status to 'sold_out' at 0
+5. Counts the discount code use
+6. Sends the confirmation email, once
+Then the page clears $_SESSION['cart'].
 
 
 WEBHOOK — WHY IT EXISTS
@@ -149,8 +150,11 @@ The webhook solves this. Stripe calls your webhook URL directly
 customer's browser does. It's a backup that makes sure every
 successful payment gets recorded.
 
-Both success.php and webhook.php check for duplicate orders before
-saving, so if both fire (the normal case), only one order gets saved.
+Both call the same fulfillment code. If both fire at once (the normal
+case), the unique index on orders.stripe_session_id lets only one insert
+through and the other returns that same order. (Before Nov 2026 each had
+its own copy of the logic, and when success.php won the race no
+confirmation email was sent and discount uses weren't counted.)
 
 To set up the webhook:
 1. Go to dashboard.stripe.com → Developers → Webhooks
@@ -191,20 +195,22 @@ lets you make payments with fake card numbers without charging anyone.
 
 STOCK MANAGEMENT
 ----------------
-Stock is decremented when a successful payment is confirmed (in
-success.php). It is NOT decremented when a product is added to the
-cart — only on actual payment.
+Stock is decremented when a payment is confirmed (in fulfillment.php),
+not when something is added to the cart. The cart and checkout both cap
+quantities at live stock, and checkout.php sends the customer back to
+the cart if anything sold out in the meantime.
 
-This means two customers could theoretically both add the last item
-to their carts and try to check out. Whoever pays first gets it.
-For a small handmade shop this is an acceptable trade-off and avoids
-holding stock for abandoned carts.
+Stock is not held while someone is on Stripe's payment page, so two
+people CAN both pay for the last piece if they check out at the same
+time. To keep that window small, checkout sessions expire after 30
+minutes. If it happens anyway, the second order gets a
+"⚠ OVERSOLD" note in the admin so Annie can refund or arrange a remake.
 
 If a product reaches stock_qty = 0 after an order:
-    - active is set to 0 automatically
-    - The product disappears from the shop
-    - The product page shows "Sold Out"
-    - You can re-activate it in the admin panel if more stock arrives
+    - status is set to 'sold_out' automatically
+    - It stays visible in the shop, but shows "Sold Out" and can't be
+      added to the cart
+    - You can set it back to active in the admin if more stock arrives
 
 
 WHAT'S STILL TO BUILD

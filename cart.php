@@ -11,7 +11,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $product_id = intval($_POST['product_id'] ?? 0);
 
     if ($action === 'add' && $product_id) {
-        $qty = intval($_POST['quantity'] ?? 1);
+        // Never trust the posted number: a negative one would shrink the cart
+        // (and its total) below zero.
+        $qty = max(1, intval($_POST['quantity'] ?? 1));
 
         // Verify product exists, is active, and has stock. Sold-out products stay
         // visible in the shop but can't be added to the cart.
@@ -31,13 +33,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    if ($action === 'update' && $product_id) {
+    if ($action === 'update' && $product_id && isset($_SESSION['cart'][$product_id])) {
         $qty = intval($_POST['quantity'] ?? 0);
         if ($qty <= 0) {
             unset($_SESSION['cart'][$product_id]);
             track_cart_event($product_id, 'remove');
         } else {
-            $_SESSION['cart'][$product_id] = $qty;
+            // Capped at live stock. The page's +/- buttons already stop at the
+            // max, but the server has to enforce it or anyone could order 50
+            // of a one-off piece.
+            $stmt = getDB()->prepare("SELECT stock_qty FROM products WHERE id = ? AND active = 1 AND status = 'active'");
+            $stmt->execute([$product_id]);
+            $stock = (int) $stmt->fetchColumn();
+            if ($stock > 0) {
+                $_SESSION['cart'][$product_id] = min($qty, $stock);
+            } else {
+                unset($_SESSION['cart'][$product_id]);
+            }
         }
         header('Location: /cart.php');
         exit;
@@ -72,7 +84,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Load cart products from DB
-$cart_items = [];
+$cart_items   = [];
+$cart_changed = false;
 $subtotal   = 0;
 
 if (!empty($_SESSION['cart'])) {
@@ -83,10 +96,31 @@ if (!empty($_SESSION['cart'])) {
     $products   = $stmt->fetchAll();
 
     foreach ($products as $product) {
+        // Stock can drop after something's added (another order, an admin
+        // edit). Fix the cart quietly here; checkout.php re-checks too.
+        $stock = ($product['status'] ?? 'active') === 'active' ? (int) $product['stock_qty'] : 0;
+        if ($stock <= 0) {
+            unset($_SESSION['cart'][$product['id']]);
+            $cart_changed = true;
+            continue;
+        }
+        if ($_SESSION['cart'][$product['id']] > $stock) {
+            $_SESSION['cart'][$product['id']] = $stock;
+            $cart_changed = true;
+        }
         $qty          = $_SESSION['cart'][$product['id']];
         $line_total   = $product['price'] * $qty;
         $subtotal    += $line_total;
         $cart_items[] = array_merge($product, ['qty' => $qty, 'line_total' => $line_total]);
+    }
+
+    // Products that were deleted or hidden since being added.
+    $loaded = array_column($products, 'id');
+    foreach (array_keys($_SESSION['cart']) as $pid) {
+        if (!in_array($pid, $loaded)) {
+            unset($_SESSION['cart'][$pid]);
+            $cart_changed = true;
+        }
     }
 }
 
@@ -108,11 +142,21 @@ $total_after_discount = max(0, $subtotal - $discount_value);
 
 $discount_flash = $_SESSION['discount_flash'] ?? null;
 unset($_SESSION['discount_flash']);
+
+// Set by checkout.php when it had to fix the cart, or just now above.
+$cart_flash = $_SESSION['cart_flash'] ?? ($cart_changed
+    ? 'Something in your cart sold out or has less stock left, so your cart was updated.'
+    : null);
+unset($_SESSION['cart_flash']);
 ?>
 
 <section class="hero">
     <div class="container">
         <h1 class="large_title">Your Cart</h1>
+
+        <?php if ($cart_flash): ?>
+            <p class="cart__discount-flash cart__discount-flash--error"><?php echo htmlspecialchars($cart_flash); ?></p>
+        <?php endif; ?>
 
         <?php if (empty($cart_items)): ?>
             <div class="cart-empty">
