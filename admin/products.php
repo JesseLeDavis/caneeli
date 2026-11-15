@@ -132,7 +132,7 @@ require __DIR__ . '/layout-top.php';
             <option value="stock_asc"  <?php echo $sort === 'stock_asc' ? 'selected' : ''; ?>>Stock low–high</option>
             <option value="stock_desc" <?php echo $sort === 'stock_desc' ? 'selected' : ''; ?>>Stock high–low</option>
         </select>
-        <button type="submit" class="btn btn-secondary" style="padding:10px 18px">Apply</button>
+        <button type="submit" class="btn btn-secondary">Apply</button>
         <?php if ($q || $category_f !== 'all' || $sort !== 'manual'): ?>
             <a href="/admin/products.php?status=<?php echo htmlspecialchars($status_f); ?>" class="filter-bar__clear">Clear</a>
         <?php endif; ?>
@@ -149,7 +149,7 @@ require __DIR__ . '/layout-top.php';
     <?php endif; ?>
 
     <?php if (empty($products)): ?>
-        <p style="margin-top:20px">No products match these filters.</p>
+        <p>No products match these filters.</p>
     <?php else: ?>
 
     <form method="POST" action="/admin/bulk-action.php" id="bulk-form">
@@ -168,10 +168,10 @@ require __DIR__ . '/layout-top.php';
                 <option value="unfeature">Unfeature</option>
                 <option value="delete">Delete permanently</option>
             </select>
-            <button type="submit" class="btn btn-secondary" style="padding:8px 16px">Apply</button>
+            <button type="submit" class="btn btn-primary btn-sm">Apply</button>
         </div>
 
-        <table>
+        <table class="table--products">
             <thead>
                 <tr>
                     <?php if ($drag_enabled): ?><th style="width:28px"><span class="visually-hidden">Reorder</span></th><?php endif; ?>
@@ -192,20 +192,20 @@ require __DIR__ . '/layout-top.php';
                     <?php if ($drag_enabled): ?>
                         <td class="drag-cell"><span class="drag-handle" title="Drag to reorder" aria-label="Drag to reorder" role="img"></span></td>
                     <?php endif; ?>
-                    <td><input type="checkbox" name="ids[]" value="<?php echo $product['id']; ?>" class="bulk-check"></td>
-                    <td>
+                    <td class="cell-check"><input type="checkbox" name="ids[]" aria-label="Select <?php echo htmlspecialchars($product['name']); ?>" value="<?php echo $product['id']; ?>" class="bulk-check"></td>
+                    <td class="cell-img">
                         <?php if ($product['image_path']): ?>
                             <img src="<?php echo htmlspecialchars($product['image_path']); ?>" alt="">
                         <?php else: ?>—<?php endif; ?>
                     </td>
-                    <td>
-                        <div style="font-weight:600"><?php echo htmlspecialchars($product['name']); ?></div>
+                    <td class="cell-name">
+                        <a href="/admin/edit-product.php?id=<?php echo $product['id']; ?>" class="product-name"><?php echo htmlspecialchars($product['name']); ?></a>
                     </td>
-                    <td><?php
+                    <td class="cell-cat"><?php
                         $row_cats = $cats_by_product[(int) $product['id']] ?? [];
                         echo $row_cats ? htmlspecialchars(implode(', ', $row_cats)) : '—';
                     ?></td>
-                    <td>
+                    <td class="cell-price" data-label="Price">
                         <input type="number"
                                step="0.01" min="0"
                                value="<?php echo $product['price']; ?>"
@@ -213,7 +213,7 @@ require __DIR__ . '/layout-top.php';
                                data-id="<?php echo $product['id']; ?>"
                                data-field="price">
                     </td>
-                    <td>
+                    <td class="cell-stock" data-label="Stock">
                         <input type="number"
                                min="0"
                                value="<?php echo $product['stock_qty']; ?>"
@@ -221,7 +221,7 @@ require __DIR__ . '/layout-top.php';
                                data-id="<?php echo $product['id']; ?>"
                                data-field="stock_qty">
                     </td>
-                    <td>
+                    <td class="cell-status" data-label="Status">
                         <select class="inline-edit inline-status"
                                 data-id="<?php echo $product['id']; ?>"
                                 data-field="status">
@@ -232,7 +232,7 @@ require __DIR__ . '/layout-top.php';
                             <?php endforeach; ?>
                         </select>
                     </td>
-                    <td>
+                    <td class="cell-star">
                         <button type="button"
                                 class="btn-star <?php echo $product['featured'] ? 'btn-star--on' : ''; ?>"
                                 data-id="<?php echo $product['id']; ?>"
@@ -241,12 +241,11 @@ require __DIR__ . '/layout-top.php';
                             <?php echo $product['featured'] ? '★' : '☆'; ?>
                         </button>
                     </td>
-                    <td>
+                    <td class="cell-actions">
                         <div class="td-actions">
-                            <a href="/admin/edit-product.php?id=<?php echo $product['id']; ?>" class="btn btn-secondary" style="padding:8px 14px;font-size:12px">Edit</a>
+                            <a href="/admin/edit-product.php?id=<?php echo $product['id']; ?>" class="btn btn-secondary btn-sm">Edit</a>
                             <a href="/admin/duplicate-product.php?id=<?php echo $product['id']; ?>"
-                               class="btn btn-secondary"
-                               style="padding:8px 14px;font-size:12px"
+                               class="btn btn-secondary btn-sm"
                                onclick="return confirm('Duplicate this product?')">Duplicate</a>
                         </div>
                     </td>

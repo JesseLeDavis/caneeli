@@ -61,12 +61,12 @@ require __DIR__ . '/layout-top.php';
 
     <form method="GET" class="filter-bar">
         <input type="text" name="q" value="<?php echo htmlspecialchars($q); ?>" placeholder="Search by name or email…" class="filter-bar__search">
-        <button type="submit" class="btn btn-secondary" style="padding:10px 18px">Search</button>
+        <button type="submit" class="btn btn-secondary">Search</button>
         <?php if ($q): ?><a href="/admin/customers.php" class="filter-bar__clear">Clear</a><?php endif; ?>
     </form>
 
     <?php if (!$customers): ?>
-        <p style="margin-top:20px">No customers yet. Once someone orders, they'll show up here.</p>
+        <p>No customers yet. Once someone orders, they'll show up here.</p>
     <?php else: ?>
     <table class="table--cards">
         <thead>
@@ -100,7 +100,7 @@ require __DIR__ . '/layout-top.php';
                     <td data-label="First order"><?php echo date('M j, Y', strtotime($c['first_order'])); ?></td>
                     <td data-label="Latest"><?php echo date('M j, Y', strtotime($c['latest_order'])); ?></td>
                     <td class="cell-actions">
-                        <a href="/admin/orders.php?status=all&q=<?php echo urlencode($c['customer_email']); ?>" class="btn btn-secondary" style="padding:8px 14px;font-size:12px">Orders</a>
+                        <a href="/admin/orders.php?status=all&q=<?php echo urlencode($c['customer_email']); ?>" class="btn btn-secondary btn-sm">View orders</a>
                     </td>
                 </tr>
             <?php endforeach; ?>

@@ -113,7 +113,7 @@ require __DIR__ . '/layout-top.php';
     <?php endif; ?>
 
     <?php if (!$orders): ?>
-        <p style="margin-top:20px">No <?php echo $filter === 'all' ? '' : $filter . ' '; ?>orders<?php echo $q ? ' matching that search' : ''; ?>.</p>
+        <p>No <?php echo $filter === 'all' ? '' : $filter . ' '; ?>orders<?php echo $q ? ' matching that search' : ''; ?>.</p>
     <?php else: ?>
     <table class="table--cards">
         <thead>
@@ -140,7 +140,7 @@ require __DIR__ . '/layout-top.php';
                 <td data-label="Total">$<?php echo number_format((float) $o['total'], 2); ?></td>
                 <td data-label="Status"><span class="badge-status badge-status--<?php echo htmlspecialchars($o['status']); ?>"><?php echo ucfirst($o['status']); ?></span></td>
                 <td class="cell-actions">
-                    <a href="/admin/order-detail.php?id=<?php echo $o['id']; ?>" class="btn btn-secondary" style="padding:8px 14px;font-size:13px">View</a>
+                    <a href="/admin/order-detail.php?id=<?php echo $o['id']; ?>" class="btn btn-secondary btn-sm">View</a>
                 </td>
             </tr>
             <?php endforeach; ?>

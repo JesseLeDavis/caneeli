@@ -218,7 +218,7 @@ require __DIR__ . '/layout-top.php';
         <?php if (!$most_viewed_rows): ?>
             <p style="color:rgba(45,45,45,0.55)">No product views in this window yet.</p>
         <?php else: ?>
-            <table style="box-shadow:none;border-radius:0">
+            <table>
                 <thead>
                     <tr>
                         <th>Product</th>
@@ -264,7 +264,7 @@ require __DIR__ . '/layout-top.php';
         <?php if (!$cart_funnel_rows): ?>
             <p style="color:rgba(45,45,45,0.55)">No cart activity yet.</p>
         <?php else: ?>
-            <table style="box-shadow:none;border-radius:0">
+            <table>
                 <thead>
                     <tr>
                         <th>Product</th>
@@ -305,7 +305,7 @@ require __DIR__ . '/layout-top.php';
         <p style="font-size:13px;color:rgba(45,45,45,0.55);margin-bottom:12px">
             People are looking at these, but they're sold out or out of stock. Candidates to restock.
         </p>
-        <table style="box-shadow:none;border-radius:0">
+        <table>
             <thead>
                 <tr>
                     <th>Product</th>

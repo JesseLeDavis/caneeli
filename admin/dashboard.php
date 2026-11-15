@@ -215,8 +215,8 @@ require __DIR__ . '/layout-top.php';
         <div class="dash-col">
             <div class="order-card">
                 <div class="dash-card-header">
-                    <h3 class="order-card__title" style="margin:0;padding:0;border:none">Revenue (30d)</h3>
-                    <span style="font-size:13px;color:rgba(45,45,45,0.55)">$<?php echo number_format($stats_30d['revenue'], 2); ?></span>
+                    <h3 class="order-card__title">Revenue (30d)</h3>
+                    <span style="font-size:14px;font-weight:600">$<?php echo number_format($stats_30d['revenue'], 2); ?></span>
                 </div>
                 <div style="position:relative;height:220px;margin-top:12px">
                     <canvas id="revenue-chart"></canvas>
@@ -228,13 +228,13 @@ require __DIR__ . '/layout-top.php';
 
             <div class="order-card">
                 <div class="dash-card-header">
-                    <h3 class="order-card__title" style="margin:0;padding:0;border:none">Recent orders</h3>
-                    <a href="/admin/orders.php" style="font-size:13px">View all &rarr;</a>
+                    <h3 class="order-card__title">Recent orders</h3>
+                    <a href="/admin/orders.php">View all &rarr;</a>
                 </div>
                 <?php if (!$recent_orders): ?>
                     <p style="color:rgba(45,45,45,0.55);margin-top:12px">No orders yet. Your first one will show up here.</p>
                 <?php else: ?>
-                    <table style="box-shadow:none;border-radius:0;margin-top:12px">
+                    <table>
                         <thead>
                             <tr>
                                 <th>Order</th>
@@ -262,12 +262,12 @@ require __DIR__ . '/layout-top.php';
 
             <div class="order-card">
                 <div class="dash-card-header">
-                    <h3 class="order-card__title" style="margin:0;padding:0;border:none">Top sellers (30d)</h3>
+                    <h3 class="order-card__title">Top sellers (30d)</h3>
                 </div>
                 <?php if (!$top_sellers): ?>
                     <p style="color:rgba(45,45,45,0.55);margin-top:12px">No sales in the last 30 days yet.</p>
                 <?php else: ?>
-                    <table style="box-shadow:none;border-radius:0;margin-top:12px">
+                    <table>
                         <thead>
                             <tr>
                                 <th>Product</th>
@@ -299,7 +299,7 @@ require __DIR__ . '/layout-top.php';
         <div class="dash-col">
             <div class="order-card">
                 <div class="dash-card-header">
-                    <h3 class="order-card__title" style="margin:0;padding:0;border:none">Activity</h3>
+                    <h3 class="order-card__title">Activity</h3>
                 </div>
                 <?php if (!$activity): ?>
                     <p style="color:rgba(45,45,45,0.55);margin-top:12px;font-size:14px">Nothing to show yet — it'll fill up as people find you.</p>
@@ -322,8 +322,8 @@ require __DIR__ . '/layout-top.php';
 
             <div class="order-card">
                 <div class="dash-card-header">
-                    <h3 class="order-card__title" style="margin:0;padding:0;border:none">Inventory</h3>
-                    <a href="/admin/products.php" style="font-size:13px">Manage &rarr;</a>
+                    <h3 class="order-card__title">Inventory</h3>
+                    <a href="/admin/products.php">Manage &rarr;</a>
                 </div>
                 <div class="inv-stats">
                     <div class="inv-stats__row">
@@ -371,8 +371,8 @@ require __DIR__ . '/layout-top.php';
 
             <div class="order-card">
                 <div class="dash-card-header">
-                    <h3 class="order-card__title" style="margin:0;padding:0;border:none">Email signups</h3>
-                    <a href="/admin/email-signups.php" style="font-size:13px">View &rarr;</a>
+                    <h3 class="order-card__title">Email signups</h3>
+                    <a href="/admin/email-signups.php">View &rarr;</a>
                 </div>
                 <div class="inv-stats">
                     <div class="inv-stats__row">

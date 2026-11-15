@@ -134,28 +134,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <title>Add Product | Caneeli Admin</title>
-    <link rel="stylesheet" href="/admin/admin.css">
-</head>
-<body>
-
-<div class="admin-header">
-    <div class="admin-header__brand">
-        <img src="/assets/images/logowi.svg" alt="Caneeli Designs" class="admin-header__logo">
-        <span class="admin-header__admin-label">Admin</span>
-    </div>
-    <a href="/admin/logout.php" class="admin-header__logout">Log Out</a>
-</div>
+<?php
+$pageTitle = 'Add Product';
+$activeNav = 'products';
+require __DIR__ . '/layout-top.php';
+?>
 
 <div class="container">
     <div class="page-header">
         <h1>Add Product</h1>
-        <a href="/admin/dashboard.php" class="btn btn-secondary">← Back</a>
+        <a href="/admin/products.php" class="btn btn-secondary">← All products</a>
     </div>
 
     <?php if ($error): ?>

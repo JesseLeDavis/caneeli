@@ -105,13 +105,13 @@ require __DIR__ . '/layout-top.php';
 
     <?php if ($hasSpam): ?>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:18px">
-            <a href="/admin/messages.php" class="btn <?php echo $view === 'inbox' ? 'btn-primary' : 'btn-secondary'; ?>" style="padding:8px 16px;font-size:13px">Inbox</a>
-            <a href="/admin/messages.php?view=spam" class="btn <?php echo $view === 'spam' ? 'btn-primary' : 'btn-secondary'; ?>" style="padding:8px 16px;font-size:13px">Spam<?php echo $spamCount ? ' (' . $spamCount . ')' : ''; ?></a>
+            <a href="/admin/messages.php" class="btn <?php echo $view === 'inbox' ? 'btn-primary' : 'btn-secondary'; ?> btn-sm">Inbox</a>
+            <a href="/admin/messages.php?view=spam" class="btn <?php echo $view === 'spam' ? 'btn-primary' : 'btn-secondary'; ?> btn-sm">Spam<?php echo $spamCount ? ' (' . $spamCount . ')' : ''; ?></a>
             <?php if ($view === 'spam' && $spamCount): ?>
                 <form method="POST" style="margin-left:auto" onsubmit="return confirm('Permanently delete all <?php echo $spamCount; ?> spam messages?')">
                     <?php echo csrf_field(); ?>
                     <input type="hidden" name="action" value="empty_spam">
-                    <button type="submit" class="btn btn-danger" style="padding:8px 16px;font-size:13px">Delete all spam</button>
+                    <button type="submit" class="btn btn-danger btn-sm">Delete all spam</button>
                 </form>
             <?php endif; ?>
         </div>
@@ -168,7 +168,7 @@ require __DIR__ . '/layout-top.php';
 
                 <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
                     <details style="flex:1 1 100%">
-                        <summary class="btn btn-primary" style="padding:8px 16px;font-size:13px;display:inline-block;cursor:pointer;list-style:none"><?php echo !empty($m['replied_at']) ? 'Reply again' : 'Reply'; ?></summary>
+                        <summary class="btn btn-primary btn-sm" style="display:inline-flex;width:auto"><?php echo !empty($m['replied_at']) ? 'Reply again' : 'Reply'; ?></summary>
                         <form method="POST" style="margin-top:12px;padding:16px;background:rgba(194,91,50,0.04);border-radius:12px">
                             <?php echo csrf_field(); ?>
                             <input type="hidden" name="id" value="<?php echo $m['id']; ?>">
@@ -185,7 +185,7 @@ require __DIR__ . '/layout-top.php';
                         <input type="hidden" name="id" value="<?php echo $m['id']; ?>">
                             <input type="hidden" name="view" value="<?php echo $view; ?>">
                         <input type="hidden" name="action" value="<?php echo $m['is_read'] ? 'unread' : 'read'; ?>">
-                        <button type="submit" class="btn btn-secondary" style="padding:8px 16px;font-size:13px"><?php echo $m['is_read'] ? 'Mark unread' : 'Mark read'; ?></button>
+                        <button type="submit" class="btn btn-secondary btn-sm"><?php echo $m['is_read'] ? 'Mark unread' : 'Mark read'; ?></button>
                     </form>
                     <?php if ($hasSpam): ?>
                     <form method="POST">
@@ -193,7 +193,7 @@ require __DIR__ . '/layout-top.php';
                         <input type="hidden" name="id" value="<?php echo $m['id']; ?>">
                         <input type="hidden" name="view" value="<?php echo $view; ?>">
                         <input type="hidden" name="action" value="<?php echo $view === 'spam' ? 'not_spam' : 'spam'; ?>">
-                        <button type="submit" class="btn btn-secondary" style="padding:8px 16px;font-size:13px"><?php echo $view === 'spam' ? 'Not spam' : 'Spam'; ?></button>
+                        <button type="submit" class="btn btn-secondary btn-sm"><?php echo $view === 'spam' ? 'Not spam' : 'Spam'; ?></button>
                     </form>
                     <?php endif; ?>
                     <form method="POST" onsubmit="return confirm('Delete this message?')">
@@ -201,7 +201,7 @@ require __DIR__ . '/layout-top.php';
                         <input type="hidden" name="id" value="<?php echo $m['id']; ?>">
                             <input type="hidden" name="view" value="<?php echo $view; ?>">
                         <input type="hidden" name="action" value="delete">
-                        <button type="submit" class="btn btn-danger" style="padding:8px 16px;font-size:13px">Delete</button>
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                     </form>
                 </div>
             </div>

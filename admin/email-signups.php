@@ -65,7 +65,7 @@ require __DIR__ . '/layout-top.php';
                     <form method="POST" onsubmit="return confirm('Remove this email?')">
                         <?php echo csrf_field(); ?>
                         <input type="hidden" name="delete_id" value="<?php echo $signup['id']; ?>">
-                        <button type="submit" class="btn btn-danger" style="padding:8px 14px;font-size:13px">Remove</button>
+                        <button type="submit" class="btn btn-danger btn-sm">Remove</button>
                     </form>
                 </td>
             </tr>

@@ -67,14 +67,14 @@ require __DIR__ . '/layout-top.php';
     <?php if ($flash): ?><p class="success"><?php echo $flash; ?></p><?php endif; ?>
 
     <div class="form-card" style="margin-bottom:24px">
-        <h3 style="font-family:'Syne',sans-serif;margin-bottom:16px"><?php echo $editing ? 'Edit code' : 'New code'; ?></h3>
+        <h3 style="font-size:17px;margin-bottom:18px"><?php echo $editing ? 'Edit code' : 'New code'; ?></h3>
         <form method="POST">
             <?php echo csrf_field(); ?>
             <?php if ($editing): ?>
                 <input type="hidden" name="id" value="<?php echo (int) $editing['id']; ?>">
             <?php endif; ?>
 
-            <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:14px;margin-bottom:12px">
+            <div class="form-grid form-grid--discount">
                 <div>
                     <label>Code</label>
                     <input type="text" name="code" required maxlength="40"
@@ -106,7 +106,7 @@ require __DIR__ . '/layout-top.php';
                 Active
             </label>
 
-            <div style="display:flex;gap:10px">
+            <div class="form-actions">
                 <button type="submit" class="btn btn-primary"><?php echo $editing ? 'Save' : 'Create code'; ?></button>
                 <?php if ($editing): ?>
                     <a href="/admin/discounts.php" class="btn btn-secondary">Cancel</a>
@@ -118,7 +118,7 @@ require __DIR__ . '/layout-top.php';
     <?php if (!$codes): ?>
         <p>No codes yet.</p>
     <?php else: ?>
-    <table>
+    <table class="table--cards">
         <thead>
             <tr>
                 <th>Code</th>
@@ -131,28 +131,28 @@ require __DIR__ . '/layout-top.php';
         <tbody>
             <?php foreach ($codes as $c): ?>
             <tr>
-                <td style="font-family:'Syne',sans-serif;font-weight:700"><?php echo htmlspecialchars($c['code']); ?></td>
-                <td>
+                <td data-label="Code" style="font-weight:700;letter-spacing:0.02em"><?php echo htmlspecialchars($c['code']); ?></td>
+                <td data-label="Discount">
                     <?php echo $c['type'] === 'percent' ? ((float) $c['value']) . '% off' : '$' . number_format($c['value'], 2) . ' off'; ?>
                 </td>
-                <td>
+                <td data-label="Uses">
                     <?php echo (int) $c['times_used']; ?>
                     <?php echo $c['max_uses'] !== null ? ' / ' . (int) $c['max_uses'] : ''; ?>
                 </td>
-                <td>
+                <td data-label="Status">
                     <?php if ($c['active']): ?>
                         <span class="badge-active">Active</span>
                     <?php else: ?>
                         <span class="badge-inactive">Disabled</span>
                     <?php endif; ?>
                 </td>
-                <td>
+                <td class="cell-actions">
                     <div class="td-actions">
-                        <a href="/admin/discounts.php?edit=<?php echo $c['id']; ?>" class="btn btn-secondary" style="padding:8px 14px;font-size:12px">Edit</a>
+                        <a href="/admin/discounts.php?edit=<?php echo $c['id']; ?>" class="btn btn-secondary btn-sm">Edit</a>
                         <form method="POST" action="/admin/discount-delete.php" onsubmit="return confirm('Delete this code?')">
                             <?php echo csrf_field(); ?>
                             <input type="hidden" name="id" value="<?php echo $c['id']; ?>">
-                            <button type="submit" class="btn btn-danger" style="padding:8px 14px;font-size:12px">Delete</button>
+                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                         </form>
                     </div>
                 </td>

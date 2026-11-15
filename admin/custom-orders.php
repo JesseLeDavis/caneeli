@@ -97,7 +97,7 @@ require __DIR__ . '/layout-top.php';
     <?php if ($flash): ?><p class="success"><?php echo htmlspecialchars($flash); ?></p><?php endif; ?>
 
     <details class="form-card" style="margin-bottom:24px" <?php echo ($editing || $errors) ? 'open' : ''; ?>>
-        <summary style="cursor:pointer;font-family:'Syne',sans-serif;font-weight:700;font-size:17px;list-style:none">
+        <summary>
             <?php echo $editing ? 'Edit quote' : '+ New quote'; ?>
         </summary>
 
@@ -107,7 +107,7 @@ require __DIR__ . '/layout-top.php';
                 <input type="hidden" name="id" value="<?php echo (int) $editing['id']; ?>">
             <?php endif; ?>
 
-            <div class="quote-form-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+            <div class="quote-form-grid" style="grid-template-columns:1fr 1fr">
                 <div>
                     <label>Customer name</label>
                     <input type="text" name="customer_name" required maxlength="255"
@@ -136,7 +136,7 @@ require __DIR__ . '/layout-top.php';
                           placeholder="Solid black walnut, 72&quot; x 38&quot;, hand-rubbed oil finish, breadboard ends."><?php echo htmlspecialchars($editing['description'] ?? ($_POST['description'] ?? '')); ?></textarea>
             </div>
 
-            <div class="quote-form-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:16px">
+            <div class="quote-form-grid" style="grid-template-columns:1fr 1fr 1fr">
                 <div>
                     <label>Total price</label>
                     <input type="number" name="total" step="0.01" min="0.01" required
@@ -188,7 +188,7 @@ require __DIR__ . '/layout-top.php';
             <tr>
                 <td data-label="Piece">
                     <a href="/admin/quote-detail.php?id=<?php echo (int) $q['id']; ?>"
-                       style="font-family:'Syne',sans-serif;font-weight:700"><?php echo htmlspecialchars($q['title']); ?></a>
+                       style="font-weight:700"><?php echo htmlspecialchars($q['title']); ?></a>
                     <?php if (!empty($q['lead_time'])): ?>
                         <div style="font-size:12px;color:rgba(45,45,45,0.55)"><?php echo htmlspecialchars($q['lead_time']); ?></div>
                     <?php endif; ?>
@@ -214,7 +214,7 @@ require __DIR__ . '/layout-top.php';
                     <span class="badge-status badge-status--<?php echo $mod; ?>"><?php echo $label; ?></span>
                 </td>
                 <td data-label="Actions" class="cell-actions">
-                    <a href="/admin/quote-detail.php?id=<?php echo (int) $q['id']; ?>" class="btn btn-secondary" style="padding:6px 14px">Open</a>
+                    <a href="/admin/quote-detail.php?id=<?php echo (int) $q['id']; ?>" class="btn btn-secondary btn-sm">Open</a>
                 </td>
             </tr>
             <?php endforeach; ?>

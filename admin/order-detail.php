@@ -85,7 +85,7 @@ require __DIR__ . '/layout-top.php';
     <div class="page-header">
         <div>
             <a href="/admin/orders.php" style="font-size:13px;color:rgba(45,45,45,0.55)">&larr; All orders</a>
-            <h1 style="margin-top:4px">Order #<?php echo $order['id']; ?></h1>
+            <h1 style="margin-top:6px">Order #<?php echo $order['id']; ?></h1>
             <div style="margin-top:4px;color:rgba(45,45,45,0.55);font-size:14px">
                 Placed <?php echo date('M j, Y g:ia', strtotime($order['created_at'])); ?>
             </div>
@@ -112,13 +112,13 @@ require __DIR__ . '/layout-top.php';
             <?php if (!$items): ?>
                 <p style="color:rgba(45,45,45,0.55)">No line items recorded for this order.</p>
             <?php else: ?>
-                <table style="box-shadow:none;border-radius:0">
+                <table>
                     <thead>
                         <tr>
-                            <th style="background:none;color:var(--dark);border-bottom:1px solid rgba(194,91,50,0.2)">Product</th>
-                            <th style="background:none;color:var(--dark);border-bottom:1px solid rgba(194,91,50,0.2)">Qty</th>
-                            <th style="background:none;color:var(--dark);border-bottom:1px solid rgba(194,91,50,0.2)">Price</th>
-                            <th style="background:none;color:var(--dark);border-bottom:1px solid rgba(194,91,50,0.2)">Line</th>
+                            <th>Product</th>
+                            <th>Qty</th>
+                            <th>Price</th>
+                            <th>Line</th>
                         </tr>
                     </thead>
                     <tbody>
