@@ -55,6 +55,38 @@ $structuredData = [
         'price'         => number_format((float) $product['price'], 2, '.', ''),
         'availability'  => $is_sold_out ? 'https://schema.org/SoldOut' : 'https://schema.org/InStock',
         'itemCondition' => 'https://schema.org/NewCondition',
+        // Shipping and returns, from pages/terms.php. Search Console flags
+        // product listings without these. Keep them in step with the terms
+        // page and checkout.php: checkout charges no shipping, so the rate is
+        // $0. In-stock items ship in 5–10 business days, U.S. only.
+        'shippingDetails' => [
+            '@type'        => 'OfferShippingDetails',
+            'shippingRate' => [
+                '@type'    => 'MonetaryAmount',
+                'value'    => '0.00',
+                'currency' => 'USD',
+            ],
+            'shippingDestination' => [
+                '@type'          => 'DefinedRegion',
+                'addressCountry' => 'US',
+            ],
+            'deliveryTime' => [
+                '@type'        => 'ShippingDeliveryTime',
+                'handlingTime' => [
+                    '@type'    => 'QuantitativeValue',
+                    'minValue' => 5,
+                    'maxValue' => 10,
+                    'unitCode' => 'DAY',
+                ],
+            ],
+        ],
+        // Returns are only for production defects, handled one by one, so
+        // the general policy is "no returns".
+        'hasMerchantReturnPolicy' => [
+            '@type'                => 'MerchantReturnPolicy',
+            'applicableCountry'    => 'US',
+            'returnPolicyCategory' => 'https://schema.org/MerchantReturnNotPermitted',
+        ],
     ],
 ];
 if ($photos) {
