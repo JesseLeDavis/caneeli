@@ -54,10 +54,9 @@ $keep = function (string $field): string {
 
 <div class="contact container">
     <div class="content">
-        <h1 class="large_title">Have something in mind?</h1>
-        <h2 class="large_title">Let's <span>Talk</span>.</h2>
-        <p>Tell me what you're looking for — what it is, your timeline, and your budget. I get back to people within a day or two.</p>
-        <p>-Annie</p>
+        <h1 class="large_title">Have something in mind? Let's talk.</h1>
+        <p>Tell me what you're looking for: what it is, your timeline, and your budget. Commissions, questions about a piece, or just saying hi. I get back to people within a day or two.</p>
+        <p class="contact-sign">Annie</p>
     </div>
     <form class="contact-form" action="" method="POST">
         <?php if ($contactStatus): ?>
@@ -69,10 +68,19 @@ $keep = function (string $field): string {
             <label>Leave this empty<input type="text" name="<?= CONTACT_HONEYPOT_FIELD ?>" tabindex="-1" autocomplete="off"></label>
         </div>
         <input type="hidden" name="<?= CONTACT_TIME_FIELD ?>" value="<?= time() ?>">
-        <input type="text" name="name" placeholder="Name" required maxlength="<?= CONTACT_MAX_NAME ?>" value="<?= $keep('name') ?>">
-        <input type="email" name="email" placeholder="Email" required maxlength="255" value="<?= $keep('email') ?>">
-        <textarea name="message" placeholder="What are you thinking?" required maxlength="<?= CONTACT_MAX_MESSAGE ?>"><?= $keep('message') ?></textarea>
-        <button type="submit" class="btn blue-button">SEND IT</button>
+        <label class="contact-field">
+            <span>Your name</span>
+            <input type="text" name="name" required maxlength="<?= CONTACT_MAX_NAME ?>" autocomplete="name" value="<?= $keep('name') ?>">
+        </label>
+        <label class="contact-field">
+            <span>Email</span>
+            <input type="email" name="email" required maxlength="255" autocomplete="email" value="<?= $keep('email') ?>">
+        </label>
+        <label class="contact-field">
+            <span>What are you thinking?</span>
+            <textarea name="message" required maxlength="<?= CONTACT_MAX_MESSAGE ?>" placeholder="A lamp for my reading corner, blues and greens, around $150…"><?= $keep('message') ?></textarea>
+        </label>
+        <button type="submit" class="btn red-button">Send message</button>
     </form>
 </div>
 

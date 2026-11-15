@@ -51,7 +51,7 @@
     border: 2px solid $dark;
     border-radius: 18px;
     padding: 28px;
-    filter: drop-shadow($blue-400 6px 6px);
+    filter: none;
     margin-bottom: 30px;
   }
 
@@ -148,7 +148,7 @@
     border-radius: 18px;
     padding: 32px 28px;
     text-align: center;
-    filter: drop-shadow($mustard 6px 6px);
+    filter: none;
 
     h2 {
       font-family: $font-heading;
@@ -169,7 +169,7 @@
   .quote {
     padding: 36px 0 70px;
 
-    &__card { padding: 22px; filter: drop-shadow($blue-400 4px 4px); }
+    &__card { padding: 22px; filter: none; }
     &__desc { font-size: 16px; }
   }
 }

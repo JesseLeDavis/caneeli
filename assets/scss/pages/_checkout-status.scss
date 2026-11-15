@@ -42,16 +42,17 @@
 
   // Card (order summary / cart preview / contact)
   &__card {
-    background: white;
-    border-radius: 20px;
+    background: $paper-2;
+    border-radius: $radius;
+    @include color-shadow($mustard, 5px);
     padding: 28px;
     display: flex;
     flex-direction: column;
     gap: 18px;
-    filter: drop-shadow($blue-400 5px 5px);
+    filter: none;
 
     &--empty {
-      filter: drop-shadow($mustard 5px 5px);
+      filter: none;
       p {
         font-size: 15px;
         line-height: 1.6;
@@ -61,7 +62,7 @@
     }
 
     &--contact {
-      filter: drop-shadow($mustard 5px 5px);
+      filter: none;
       align-items: flex-start;
       gap: 8px;
     }
@@ -242,7 +243,6 @@
   // Actions
   &__cta {
     justify-self: start;
-    display: inline-block;
   }
 
   &__actions {
@@ -264,12 +264,12 @@
 
   // Per-variant accents on the lede + card shadow
   &--cancel {
-    .checkout-status__card { filter: drop-shadow($mustard 5px 5px); }
+    .checkout-status__card { filter: none; }
     .checkout-status__eyebrow { color: color.adjust($rust, $lightness: -5%); }
   }
 
   &--error {
-    .checkout-status__card { filter: drop-shadow($rust 5px 5px); }
+    .checkout-status__card { filter: none; }
     .checkout-status__eyebrow { color: $rust; }
   }
 }

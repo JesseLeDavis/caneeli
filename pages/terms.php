@@ -44,7 +44,7 @@ include __DIR__ . '/../includes/header.php';
             </div>
 
             <div class="legal__section">
-                <h2>Returns and Refunds</h2>
+                <h2 id="returns">Returns and Refunds</h2>
                 <p><strong>Custom and made-to-order pieces:</strong> All sales are final. These items are made specifically for you and cannot be returned.</p>
                 <p><strong>In-stock items:</strong> If your item arrives defective or damaged due to a production issue (not carrier damage), contact Annie within 7 days of delivery with photos of the item and packaging. Cases are handled individually — options may include a replacement, repair, or partial refund. Items must be unused.</p>
                 <p>Returns are not accepted for buyer's remorse, incorrect size choices, or color variation within the normal range of handmade work. Shipping costs are non-refundable.</p>

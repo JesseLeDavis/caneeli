@@ -1,45 +1,69 @@
 @use 'variables' as *;
 
-footer{
-  background-color: $neutral;
-  padding: 20px;
-  .container{
+// Footer: ink ground, like the lead that holds every pane together.
+.site-footer {
+  margin-top: 0;
+  background: $dark;
+  color: rgba($neutral, 0.82);
+  font-size: 15px;
+
+  a { color: $neutral; transition: color 150ms; }
+  a:hover { color: $mustard; }
+
+  &__inner {
+    display: grid;
+    gap: 40px;
+    padding-top: 64px;
+    padding-bottom: 48px;
+
+    @media (min-width: 640px)  { grid-template-columns: 1fr 1fr; }
+    @media (min-width: 1000px) { grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px; }
+  }
+
+  &__brand p { max-width: 30ch; margin-top: 18px; line-height: 1.55; }
+  &__logo img { width: 150px; height: auto; display: block; }
+
+  &__col {
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    border-top: 2px solid $rust;
+    align-items: flex-start;
+    gap: 10px;
+  }
 
-    .socials-container{
-      padding: 20px 0 10px;
-      display: flex;
-      flex-direction: row;
-      justify-content: center;
-      gap: 12px;
-    }
+  &__heading {
+    margin-bottom: 4px;
+    font-family: $font-body;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0;
+    color: $mustard;
+  }
 
-    .bottom-nav{
-      padding: 8px 0 10px;
-      display: flex;
-      flex-direction: row;
-      justify-content: center;
-      gap: 12px;
-      font-family: $font-body;
-      font-weight: 500;
-      color: $rust;
-    }
+  &__social {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
 
-    .info-container{
-      display: flex;
-      flex-direction: row;
-      font-family: $font-body;
-      font-size: 12px;
-      color: $rust;
-      align-items: end;
-      justify-content: space-between;
-      .tos-container{
-        display: flex;
-        flex-direction: column;
-      }
-    }
+    img { width: 20px; height: 20px; filter: brightness(0) invert(0.93) sepia(0.15); }
+  }
+
+  &__base {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 12px 24px;
+    padding-top: 20px;
+    padding-bottom: 28px;
+    border-top: 1px solid rgba($neutral, 0.18);
+    font-size: 14px;
+    color: rgba($neutral, 0.65);
+  }
+
+  &__legal {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+
+    a { color: rgba($neutral, 0.75); }
   }
 }

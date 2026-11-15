@@ -47,11 +47,14 @@ if (session_status() === PHP_SESSION_NONE) {
     <link rel="stylesheet" href="<?php echo asset('assets/css/style.css'); ?>">
 </head>
 <body>
+    <?php if (defined('APP_ENV') && APP_ENV === 'test'): ?>
+    <div style="position:fixed;left:12px;bottom:12px;z-index:9999;padding:6px 12px;border:2px solid #2D2D2D;border-radius:999px;background:#D4C14B;color:#2D2D2D;font:700 13px/1.2 Urbanist,system-ui,sans-serif;box-shadow:3px 3px 0 #2D2D2D;pointer-events:none">Test site: sample data</div>
+<?php endif; ?>
     <header>
         <div class="container header_container">
             <a href="<?php echo SITE_URL; ?>" class="logo"><img src="<?php echo SITE_URL; ?>/assets/images/logoni.svg" alt="Caneeli Designs"></a>
 
-            <button class="menu-toggle" aria-label="Toggle menu">
+            <button class="menu-toggle" aria-label="Menu" aria-expanded="false">
                 <span></span>
                 <span></span>
                 <span></span>
@@ -61,9 +64,10 @@ if (session_status() === PHP_SESSION_NONE) {
                 <a href="<?php echo SITE_URL; ?>" class="nav-logo"><img src="<?php echo SITE_URL; ?>/assets/images/logoni.svg" alt="Caneeli Designs"></a>
                 <ul>
                     <li><a class="nav_title <?php echo isActivePage('/pages/shop'); ?>" href="<?php echo SITE_URL; ?>/pages/shop/">Shop</a></li>
-                    <li><a class="nav_title <?php echo isActivePage('/pages/about'); ?>" href="<?php echo SITE_URL; ?>/pages/about.php">About Me</a></li>
-                    <li><a class="nav_title <?php echo isActivePage('/pages/contact'); ?>" href="<?php echo SITE_URL; ?>/pages/contact.php">Contact me</a></li>
-                    <li><a class="nav_title <?php echo isActivePage('/cart'); ?>" href="<?php echo SITE_URL; ?>/cart.php">Cart <?php if (!empty($_SESSION['cart'])): ?>(<?php echo array_sum($_SESSION['cart']); ?>)<?php endif; ?></a></li>
+                    <li><a class="nav_title <?php echo isActivePage('/pages/about'); ?>" href="<?php echo SITE_URL; ?>/pages/about.php">About</a></li>
+                    <li><a class="nav_title <?php echo isActivePage('/pages/contact'); ?>" href="<?php echo SITE_URL; ?>/pages/contact.php">Contact</a></li>
+                    <?php $cartCount = !empty($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0; ?>
+                    <li><a class="nav_title nav_cart <?php echo isActivePage('/cart'); ?>" href="<?php echo SITE_URL; ?>/cart.php"<?php echo $cartCount ? ' aria-label="Cart, ' . $cartCount . ' item' . ($cartCount === 1 ? '' : 's') . '"' : ''; ?>>Cart<?php if ($cartCount): ?> <span class="nav_cart__count" aria-hidden="true"><?php echo $cartCount; ?></span><?php endif; ?></a></li>
                 </ul>
             </nav>
         </div>

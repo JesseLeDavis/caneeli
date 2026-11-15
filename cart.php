@@ -151,9 +151,9 @@ $cart_flash = $_SESSION['cart_flash'] ?? ($cart_changed
 unset($_SESSION['cart_flash']);
 ?>
 
-<section class="hero">
+<section class="hero cart-page">
     <div class="container">
-        <h1 class="large_title">Your Cart</h1>
+        <h1 class="large_title">Your cart</h1>
 
         <?php if ($cart_flash): ?>
             <p class="cart__discount-flash cart__discount-flash--error"><?php echo htmlspecialchars($cart_flash); ?></p>
@@ -161,10 +161,9 @@ unset($_SESSION['cart_flash']);
 
         <?php if (empty($cart_items)): ?>
             <div class="cart-empty">
-                <div class="cart-empty__icon">🛒</div>
                 <p class="cart-empty__heading">Your cart is empty</p>
-                <p class="cart-empty__text">You haven't added anything yet. Browse the shop and find a piece you love.</p>
-                <a href="/pages/shop/" class="btn red-button">Go Find Something You Love</a>
+                <p class="cart-empty__text">Pieces you add will wait here while you look around.</p>
+                <a href="/pages/shop/" class="btn red-button">Browse the shop</a>
             </div>
         <?php else: ?>
             <div class="cart">
@@ -189,11 +188,11 @@ unset($_SESSION['cart_flash']);
                             <input type="hidden" name="action" value="update">
                             <input type="hidden" name="product_id" value="<?php echo $item['id']; ?>">
                             <div class="qty-stepper qty-stepper--small">
-                                <button type="button" class="qty-stepper__btn" data-dir="-1">−</button>
+                                <button type="button" class="qty-stepper__btn" data-dir="-1" aria-label="One fewer">−</button>
                                 <input type="number" name="quantity" value="<?php echo $item['qty']; ?>"
                                        min="0" max="<?php echo $item['stock_qty']; ?>"
                                        class="qty-stepper__input" readonly>
-                                <button type="button" class="qty-stepper__btn" data-dir="1">+</button>
+                                <button type="button" class="qty-stepper__btn" data-dir="1" aria-label="One more">+</button>
                             </div>
                         </form>
 
@@ -210,7 +209,7 @@ unset($_SESSION['cart_flash']);
                 </div>
 
                 <div class="cart__summary">
-                    <p class="cart__summary-title">Order Summary</p>
+                    <h2 class="cart__summary-title">Summary</h2>
                     <div class="cart__subtotal">
                         <span class="cart__subtotal-label">Subtotal</span>
                         <span class="cart__subtotal-price"><?php echo formatPrice($subtotal); ?></span>
@@ -236,7 +235,7 @@ unset($_SESSION['cart_flash']);
                                 <button type="submit" class="cart__discount-remove" aria-label="Remove discount">✕</button>
                             </form>
                         </div>
-                        <div class="cart__subtotal" style="padding-top:8px;border-top:1px solid rgba(0,0,0,.08)">
+                        <div class="cart__subtotal cart__subtotal--total">
                             <span class="cart__subtotal-label">Total</span>
                             <span class="cart__subtotal-price"><?php echo formatPrice($total_after_discount); ?></span>
                         </div>
@@ -248,9 +247,9 @@ unset($_SESSION['cart_flash']);
                         </form>
                     <?php endif; ?>
 
-                    <a href="/checkout.php" class="btn blue-button">Checkout</a>
-                    <p class="cart__stripe-note">🔒 Secure checkout via Stripe</p>
-                    <a href="/pages/shop/" class="cart__continue">← Continue Shopping</a>
+                    <a href="/checkout.php" class="btn red-button">Check out</a>
+                    <p class="cart__stripe-note">Payment is handled securely by Stripe. Shipping within the U.S. is included.</p>
+                    <a href="/pages/shop/" class="cart__continue">Keep shopping</a>
                 </div>
             </div>
         <?php endif; ?>

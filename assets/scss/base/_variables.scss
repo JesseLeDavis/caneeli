@@ -1,18 +1,49 @@
-// Colors
-$neutral: #F2ECDE;
-$dark: #2D2D2D;
-$rust: #C25B32;
-$mustard: #D4C14B;
-$blue-200: #C1E1FA;
-$blue-400: #6497D6;
+// ── Color ──────────────────────────────────────────────────────────────
+// Hex values from the Caneeli brand guideline sheet (Kate Riniker Design).
+// The palette is the glass: paper is the light behind it, ink is the lead
+// came between pieces, and rust / blue / mustard are the colored panes.
+$neutral:  #F1ECDE;   // paper
+$paper-2:  #E9E0CC;   // a shade deeper, for panels on paper
+$dark:     #282828;   // ink
+$rust:     #C25B32;
+$rust-dk:  #A84B27;   // rust text on paper (AA at body size)
+$mustard:  #D0C25F;
+$blue-200: #C6E0F7;
+$blue-400: #6F96D1;
+$muted:    #625C53;   // secondary text on paper
 
-// Fonts
+// ── Type ───────────────────────────────────────────────────────────────
+// Syne is display only (32px and up); everything smaller is Urbanist.
 $font-body: 'Urbanist', sans-serif;
 $font-heading: 'Syne', sans-serif;
 
-// Spacing
-$container-width: 1400px;
+// Scale (≈ perfect fourth from 16px)
+$fs-sm:   14px;
+$fs-base: 17px;
+$fs-md:   20px;
+$fs-lg:   24px;
+$fs-xl:   32px;
+$fs-2xl:  44px;
+$fs-3xl:  64px;
+
+// ── Layout ─────────────────────────────────────────────────────────────
+$container-width: 1320px;
 $padding: 20px;
+$gutter-lg: 40px;
+
+// ── Lines & corners ────────────────────────────────────────────────────
+$line: 1.5px solid $dark;               // outline on pills and inputs
+$hairline: 1px solid rgba(#282828, 0.14); // dividers, image edges
+$radius: 6px;
+$radius-pill: 999px;
+
+// Colored offset shadow: the brand's signature. Always a brand color, never
+// black, and never paired with an outline (the two clash).
+$shadow-off: 4px;
+@mixin color-shadow($color, $off: $shadow-off) {
+  border: none;
+  box-shadow: $off $off 0 $color;
+}
 
 // Buttons
-$button-padding: 12px 20px;
+$button-padding: 0 26px;

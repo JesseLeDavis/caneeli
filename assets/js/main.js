@@ -85,22 +85,22 @@ document.addEventListener('DOMContentLoaded', function() {
     const navLinks = document.querySelectorAll('.nav a');
 
     // Toggle menu
+    function setMenu(open) {
+        document.body.classList.toggle('menu-open', open);
+        menuToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
     menuToggle.addEventListener('click', function() {
-        document.body.classList.toggle('menu-open');
+        setMenu(!document.body.classList.contains('menu-open'));
     });
 
     // Close menu when a link is clicked
     navLinks.forEach(link => {
-        link.addEventListener('click', function() {
-            document.body.classList.remove('menu-open');
-        });
+        link.addEventListener('click', function() { setMenu(false); });
     });
 
     // Close menu on escape key
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            document.body.classList.remove('menu-open');
-        }
+        if (e.key === 'Escape') setMenu(false);
     });
 
     // Quantity steppers

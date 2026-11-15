@@ -1,6 +1,29 @@
 @use 'variables' as *;
 
-h1, h2, h3, h4, h5, h6 {
+// Display headings in Syne; small headings stay in Urbanist so they read
+// cleanly (Syne's wide forms smear below ~30px).
+// Brand sheet: Syne ExtraBold for titles, Syne Bold for headings,
+// Urbanist SemiBold for subheadings, Urbanist Regular for body.
+h1, h2 {
     font-family: $font-heading;
-    line-height: 1.2;
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+}
+h2 { font-weight: 700; }
+
+h3, h4, h5, h6 {
+    font-family: $font-body;
+    font-weight: 600;
+    line-height: 1.25;
+}
+
+p { text-wrap: pretty; }
+h1, h2, h3 { text-wrap: balance; }
+
+::selection { background: $mustard; color: $dark; }
+
+:focus-visible {
+    outline: 3px solid $blue-400;
+    outline-offset: 3px;
 }

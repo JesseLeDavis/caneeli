@@ -146,15 +146,8 @@ track_product_view((int) $product['id'], $_SERVER['HTTP_REFERER'] ?? null);
             </div>
 
             <div class="product-detail__info">
-                <p class="product-detail__category">
-                    <?php foreach ($product_cats as $i => $cat): ?>
-                        <?php if ($i > 0): ?><span class="product-detail__category-sep">·</span><?php endif; ?>
-                        <a href="/pages/shop/?category=<?php echo urlencode($cat); ?>"><?php echo sanitize($cat); ?></a>
-                    <?php endforeach; ?>
-                </p>
                 <h1 class="large_title"><?php echo sanitize($product['name']); ?></h1>
                 <p class="product-detail__price"><?php echo formatPrice($product['price']); ?></p>
-                <div class="product-detail__divider"></div>
                 <p class="product-detail__description"><?php echo nl2br(sanitize($product['description'])); ?></p>
 
                 <?php
@@ -182,27 +175,47 @@ track_product_view((int) $product['id'], $_SERVER['HTTP_REFERER'] ?? null);
                         <input type="hidden" name="action" value="add">
                         <input type="hidden" name="product_id" value="<?php echo $product['id']; ?>">
                         <div class="product-detail__qty">
-                            <label>Quantity</label>
+                            <label for="qty-input">Quantity</label>
                             <div class="qty-stepper">
-                                <button type="button" class="qty-stepper__btn" data-dir="-1">−</button>
-                                <input type="number" name="quantity" value="1"
+                                <button type="button" class="qty-stepper__btn" data-dir="-1" aria-label="One fewer">−</button>
+                                <input type="number" name="quantity" value="1" id="qty-input"
                                        min="1" max="<?php echo $product['stock_qty']; ?>"
                                        class="qty-stepper__input" readonly>
-                                <button type="button" class="qty-stepper__btn" data-dir="1">+</button>
+                                <button type="button" class="qty-stepper__btn" data-dir="1" aria-label="One more">+</button>
                             </div>
                         </div>
+                        <button type="submit" class="btn red-button product-detail__atc-btn">Add to cart</button>
                         <?php if ($product['stock_qty'] <= 5): ?>
-                            <p class="product-detail__stock">Only <?php echo $product['stock_qty']; ?> left in stock</p>
+                            <p class="product-detail__stock">Only <?php echo $product['stock_qty']; ?> left</p>
                         <?php endif; ?>
-                        <button type="submit" class="btn red-button product-detail__atc-btn">Add to Cart</button>
                     </form>
                 <?php else: ?>
-                    <p class="sold-out">Sold Out</p>
-                    <a href="/pages/shop/?category=<?php echo urlencode($product['category']); ?>"
-                       class="btn filter-btn" style="margin-top:12px">See Similar Pieces</a>
+                    <div class="product-detail__soldout">
+                        <p><strong>Sold out.</strong> This one's found a home. Annie can make something similar as a commission.</p>
+                        <div class="product-detail__soldout-actions">
+                            <a href="/pages/contact.php" class="btn red-button">Ask about a commission</a>
+                            <a href="/pages/shop/?category=<?php echo urlencode($product['category']); ?>" class="btn">More <?php echo sanitize(strtolower($product['category'])); ?></a>
+                        </div>
+                    </div>
                 <?php endif; ?>
 
-                <a href="/pages/shop/" class="product-detail__back">← Back to Shop</a>
+                <?php
+                // Facts from the terms page. A piece with its own shipping signal
+                // (e.g. "Made to Order") skips the generic in-stock timeline.
+                $has_ship_signal = (bool) array_filter($signals, fn($sig) => str_contains($sig, 'Ship') || str_contains($sig, 'Order'));
+                ?>
+                <ul class="product-detail__facts">
+                    <li>Shipping is included in the price (U.S. only).</li>
+                    <?php if (!$has_ship_signal): ?><li>In-stock pieces ship within 5–10 business days.</li><?php endif; ?>
+                    <li>Made by hand, so color and texture vary a little from the photos.</li>
+                    <li><a href="/pages/terms.php#returns">Returns and full terms</a></li>
+                </ul>
+
+                <?php if ($product_cats): ?>
+                <p class="product-detail__category">Filed under
+                    <?php foreach ($product_cats as $i => $cat): ?><?php echo $i ? ', ' : ' '; ?><a href="/pages/shop/?category=<?php echo urlencode($cat); ?>"><?php echo sanitize($cat); ?></a><?php endforeach; ?>
+                </p>
+                <?php endif; ?>
             </div>
 
         </div>

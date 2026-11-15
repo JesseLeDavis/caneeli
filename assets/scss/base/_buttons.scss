@@ -1,28 +1,52 @@
 @use 'variables' as *;
 
+// Solid pill buttons with a colored offset shadow, no outline.
+// Fill and shadow are always different brand colors:
+//   .red-button    rust,  blue shadow     (primary)
+//   .blue-button   blue,  mustard shadow  (secondary)
+//   .yellow-button mustard, rust shadow   (alternate)
+//   .btn alone     blue,  mustard shadow  (same as .blue-button)
+//   .btn--light    paper, mustard shadow  (on rust or dark grounds)
 .btn {
-  color: $neutral;
-  white-space: nowrap;
+  --btn-shadow: #{$mustard};
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
   padding: $button-padding;
-  border-radius: 30px;
-  transition: ease-in-out 300ms;
+  border: none;
+  border-radius: $radius-pill;
+  background: $blue-400;
+  color: $dark;
+  font-family: $font-body;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 var(--btn-shadow);
+  transition: background-color 160ms ease, color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
 
   &:hover {
-    transform: scale(1.05);
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0 var(--btn-shadow);
   }
 }
 
-.red-button {
-  background-color: $rust;
-  filter: drop-shadow($blue-200 4px 4px);
+.red-button    { --btn-shadow: #{$blue-400}; background: $rust;     color: #fff;
+                 &:hover { background: $rust-dk; color: #fff; } }
+.blue-button   { --btn-shadow: #{$mustard};  background: $blue-400; color: $dark; }
+.yellow-button { --btn-shadow: #{$rust};     background: $mustard;  color: $dark; }
+
+.btn--light {
+  --btn-shadow: #{$mustard};
+  background: $neutral;
+  color: $dark;
 }
 
-.blue-button {
-  background-color: $blue-400;
-  filter: drop-shadow($dark 4px 4px);
-}
-
-.yellow-button {
-  background-color: $mustard;
-  filter: drop-shadow($rust 4px 4px);
+@media (prefers-reduced-motion: reduce) {
+  .btn, .btn:hover { transition: none; transform: none; }
 }

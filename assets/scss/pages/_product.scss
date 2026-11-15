@@ -14,7 +14,8 @@
   }
 
   &__image {
-    border-radius: 24px;
+    border-radius: $radius;
+    @include color-shadow($blue-400, 6px);
     overflow: hidden;
     aspect-ratio: 4 / 5;
 
@@ -28,7 +29,9 @@
     &--gallery {
       overflow: visible;
       aspect-ratio: unset;
+      border: none;
       border-radius: 0;
+      box-shadow: none !important;
     }
   }
 
@@ -42,64 +45,37 @@
   &__info {
     display: flex;
     flex-direction: column;
-    gap: 0;
-    padding-top: 8px;
+    padding-top: 4px;
 
     @media (min-width: 768px) {
       position: sticky;
       top: 32px;
     }
-  }
 
-  &__category {
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.14em;
-    color: $rust;
-    margin-bottom: 10px;
+    .large_title {
+      font-size: 40px;
+      line-height: 1;
 
-    // A piece can sit in several categories; each one links to its shop filter.
-    a {
-      color: inherit;
-      text-decoration: none;
-      border-bottom: 1px solid transparent;
-
-      &:hover { border-bottom-color: $rust; }
+      @media (min-width: 1100px) { font-size: 56px; }
     }
   }
 
-  &__category-sep {
-    margin: 0 4px;
-    opacity: 0.45;
-  }
-
   &__price {
-    font-family: $font-heading;
-    font-size: 32px;
-    font-weight: 800;
+    margin: 14px 0 24px;
+    font-size: 26px;
+    font-weight: 700;
     color: $dark;
-    margin-top: 12px;
-    margin-bottom: 20px;
-  }
-
-  // Rust rule separating price from description
-  &__divider {
-    width: 40px;
-    height: 3px;
-    background: $rust;
-    border-radius: 2px;
-    margin-bottom: 20px;
+    font-variant-numeric: tabular-nums;
   }
 
   &__description {
-    font-size: 16px;
-    line-height: 1.75;
-    color: color.adjust($dark, $lightness: 10%);
-    margin-bottom: 28px;
+    max-width: 52ch;
+    font-size: $fs-base;
+    line-height: 1.7;
+    margin-bottom: 24px;
   }
 
-  // Craft signal pills — handmade, lead time, materials
+  // Craft signals: small ink-outlined tags
   &__craft-signals {
     display: flex;
     flex-wrap: wrap;
@@ -110,85 +86,109 @@
   &__signal {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 6px 14px;
-    border-radius: 30px;
-    background: color.adjust($neutral, $lightness: -5%);
-    font-family: $font-body;
-    font-size: 12px;
+    padding: 5px 12px;
+    border: $hairline;
+    border-radius: $radius-pill;
+    font-size: 14px;
     font-weight: 600;
     color: $dark;
 
-    &--shipping {
-      border-left: 2px solid $rust;
-      padding-left: 12px;
-    }
-
-    &--material {
-      border-left: 2px solid $blue-400;
-      padding-left: 12px;
-    }
-
-    &--premium {
-      border-left: 2px solid $mustard;
-      padding-left: 12px;
-    }
-  }
-
-  &__qty {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-    margin-bottom: 16px;
-
-    label {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.10em;
-      color: color.adjust($dark, $lightness: 20%);
-    }
   }
 
   form {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 16px;
   }
 
-  // Low stock warning
+  &__qty {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    label {
+      font-size: 15px;
+      font-weight: 700;
+      color: $dark;
+    }
+  }
+
   &__stock {
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 700;
-    color: $rust;
-    letter-spacing: 0.02em;
+    color: $rust-dk;
   }
 
-  // Add to cart button — full width, prominent
   &__atc-btn {
     width: 100%;
-    padding: 16px 28px;
-    font-size: 16px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-align: center;
-    justify-content: center;
+    min-height: 56px;
+    font-size: 18px;
   }
 
-  &__back {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    font-weight: 600;
-    color: color.adjust($dark, $lightness: 30%);
-    margin-top: 28px;
-    padding-top: 20px;
-    border-top: 1px solid color.adjust($neutral, $lightness: -10%);
-    transition: color 200ms ease-in-out;
+  &__soldout {
+    padding: 20px 22px;
+    border-radius: $radius;
+    background: $paper-2;
 
-    &:hover { color: $rust; }
+    p { font-size: $fs-base; line-height: 1.55; }
+  }
+
+  &__soldout-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  // Shipping / care facts
+  &__facts {
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: $hairline;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    li {
+      position: relative;
+      padding-left: 22px;
+      font-size: 15px;
+      line-height: 1.5;
+      color: $muted;
+
+      &::before {
+        content: '';
+        position: absolute;
+        left: 2px;
+        top: 0.72em;
+        width: 8px;
+        height: 1.5px;
+        background: $rust;
+      }
+    }
+
+    a {
+      color: $dark;
+      font-weight: 600;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+  }
+
+  &__category {
+    margin-top: 20px;
+    font-size: 14px;
+    color: $muted;
+
+    a {
+      color: $dark;
+      font-weight: 600;
+      text-decoration: underline;
+      text-decoration-color: rgba($dark, 0.3);
+      text-underline-offset: 3px;
+
+      &:hover { text-decoration-color: $dark; }
+    }
   }
 }
 
@@ -199,7 +199,8 @@
   gap: 14px;
 
   &__main {
-    border-radius: 24px;
+    border-radius: $radius;
+    @include color-shadow($blue-400, 6px);
     overflow: hidden;
     aspect-ratio: 4 / 5;
     background: color.adjust($neutral, $lightness: -5%);
@@ -223,10 +224,10 @@
   &__thumb {
     width: 68px;
     height: 68px;
-    border-radius: 12px;
+    border-radius: 10px;
     overflow: hidden;
     cursor: pointer;
-    border: 2.5px solid transparent;
+    border: none;
     outline: 2px solid transparent;
     outline-offset: 2px;
     flex-shrink: 0;
@@ -250,8 +251,8 @@
     }
 
     &--active {
-      border-color: $rust;
-      outline-color: rgba($rust, 0.25);
+      border-color: transparent;
+      box-shadow: 3px 3px 0 $mustard;
       img { filter: saturate(1) brightness(1); }
     }
   }
