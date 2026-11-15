@@ -2,6 +2,18 @@
 // Load .env
 $env = parse_ini_file(__DIR__ . '/../.env');
 
+// Test environment (dev/serve-test.sh): .env.test overrides .env so the
+// site runs against the sample database with email and live Stripe off.
+// Only the process environment can switch this on, never a request.
+define('APP_ENV', getenv('CANEELI_ENV') === 'test' ? 'test' : 'live');
+if (APP_ENV === 'test') {
+    $testEnv = __DIR__ . '/../.env.test';
+    if (!is_file($testEnv)) {
+        exit("Test mode needs .env.test. Run: php dev/setup-test.php\n");
+    }
+    $env = array_merge($env ?: [], parse_ini_file($testEnv));
+}
+
 // Site Configuration
 define('SITE_NAME', 'Caneeli');
 define('SITE_URL', $env['SITE_URL'] ?? 'http://localhost:8000');

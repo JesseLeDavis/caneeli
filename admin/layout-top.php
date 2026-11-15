@@ -84,6 +84,9 @@ $adminTabHrefs = ['dashboard' => '/admin/dashboard.php', 'orders' => '/admin/ord
     <link rel="stylesheet" href="<?php echo function_exists('asset') ? asset('admin/admin.css') : '/admin/admin.css'; ?>">
 </head>
 <body class="admin-app">
+<?php if (defined('APP_ENV') && APP_ENV === 'test'): ?>
+    <div style="position:fixed;left:12px;bottom:84px;left:auto;right:12px;z-index:9999;padding:6px 12px;border:2px solid #2D2D2D;border-radius:999px;background:#D4C14B;color:#2D2D2D;font:700 13px/1.2 Urbanist,system-ui,sans-serif;box-shadow:3px 3px 0 #2D2D2D;pointer-events:none">Test site: sample data</div>
+<?php endif; ?>
 
 <a class="skip-link" href="#admin-main">Skip to content</a>
 

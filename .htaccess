@@ -37,6 +37,7 @@ RewriteRule ^vendor/ - [F,L]
 # Source sketches and the dependency manifest ship with the Git deploy but
 # aren't part of the site.
 RewriteRule ^design/ - [F,L]
+RewriteRule ^dev/ - [F,L]
 RewriteRule ^composer\.json$ - [F,L]
 
 # Deployment notes carry the live DB name and user — never serve them.

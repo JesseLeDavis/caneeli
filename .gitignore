@@ -23,3 +23,4 @@ assets/uploads/*
 
 # Archives / backups — never commit zips of the project
 *.zip
+.env.test
