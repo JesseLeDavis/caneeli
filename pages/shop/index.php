@@ -40,9 +40,13 @@ $page        = min($page, $total_pages);
 $offset      = ($page - 1) * $per_page;
 
 // Fetch products
+// Sold-out pieces go after everything still for sale, using the same test as
+// the "Sold Out" card badge below (status or no stock). Within each group,
 // sort_order is what the admin drags; created_at breaks ties, which keeps
 // brand-new products (sort_order 0) surfacing newest-first until positioned.
-$stmt = $pdo->prepare("SELECT * FROM products $where ORDER BY sort_order ASC, created_at DESC LIMIT ? OFFSET ?");
+$stmt = $pdo->prepare("SELECT * FROM products $where
+    ORDER BY (status = 'sold_out' OR stock_qty <= 0) ASC, sort_order ASC, created_at DESC
+    LIMIT ? OFFSET ?");
 $stmt->execute(array_merge($params, [$per_page, $offset]));
 $products = $stmt->fetchAll();
 
