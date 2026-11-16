@@ -1,14 +1,13 @@
 @use 'variables' as *;
 
-// Solid pill buttons with a colored offset shadow, no outline.
-// Fill and shadow are always different brand colors:
-//   .red-button    rust,  blue shadow     (primary)
-//   .blue-button   blue,  mustard shadow  (secondary)
-//   .yellow-button mustard, rust shadow   (alternate)
-//   .btn alone     blue,  mustard shadow  (same as .blue-button)
-//   .btn--light    paper, mustard shadow  (on rust or dark grounds)
+// Solid pill buttons with an offset shadow, no outline. Each shadow is a
+// deeper shade of its own fill, so it reads as depth, not a second color.
+//   .red-button / .yellow-button  mustard, dark mustard shadow  (main action)
+//   .btn alone / .blue-button     light blue, blue shadow       (second action)
+//   .btn--light                   mustard, dark rust shadow     (on rust grounds)
+// (.red-button keeps its name so existing markup still means "main action".)
 .btn {
-  --btn-shadow: #{$mustard};
+  --btn-shadow: #{$blue-400};
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -17,10 +16,10 @@
   padding: $button-padding;
   border: none;
   border-radius: $radius-pill;
-  background: $blue-400;
+  background: $blue-200;
   color: $dark;
   font-family: $font-body;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -34,17 +33,32 @@
     transform: translate(-1px, -1px);
     box-shadow: 4px 4px 0 var(--btn-shadow);
   }
+
+  &:active {
+    transform: translate(1px, 1px);
+    box-shadow: 2px 2px 0 var(--btn-shadow);
+  }
+
+  // Ink ring reads on every fill and on rust grounds
+  &:focus-visible { outline: 3px solid $dark; outline-offset: 3px; }
 }
 
-.red-button    { --btn-shadow: #{$blue-400}; background: $rust;     color: #fff;
-                 &:hover { background: $rust-dk; color: #fff; } }
-.blue-button   { --btn-shadow: #{$mustard};  background: $blue-400; color: $dark; }
-.yellow-button { --btn-shadow: #{$rust};     background: $mustard;  color: $dark; }
+.red-button,
+.yellow-button { --btn-shadow: #{$mustard-dk}; background: $mustard; color: $dark;
+                 &:hover { background: #D9CC6E; } }
+.blue-button   { --btn-shadow: #{$blue-400}; background: $blue-200; color: $dark; }
 
 .btn--light {
-  --btn-shadow: #{$mustard};
-  background: $neutral;
+  --btn-shadow: #{$rust-dk};
+  background: $mustard;
   color: $dark;
+}
+
+// The light-blue button would vanish on light-blue grounds; paper there.
+.pane--blue,
+.product-detail__soldout,
+.contact-form {
+  .btn:not(.red-button):not(.yellow-button) { background: $neutral; }
 }
 
 @media (prefers-reduced-motion: reduce) {

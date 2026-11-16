@@ -87,7 +87,12 @@ array_map('unlink', glob("$imgDir/*.svg"));
 
 function photo(string $slug, int $n, string $kind, string $form, string $palette, int $seed): string {
     global $imgDir;
-    $svg = $kind === 'glass' ? glass_svg($form, $seed, $palette) : ceramic_svg($form, $seed, $palette);
+    if ($kind === 'lamp') {
+        [$glaze, $lava] = array_pad(explode(':', $palette), 2, '#E8743B');
+        $svg = lamp_svg($form, $seed, $glaze, $lava);
+    } else {
+        $svg = $kind === 'glass' ? glass_svg($form, $seed, $palette) : ceramic_svg($form, $seed, $palette);
+    }
     file_put_contents("$imgDir/$slug-$n.svg", $svg);
     return "/assets/uploads/sample/$slug-$n.svg";
 }
@@ -95,20 +100,20 @@ function photo(string $slug, int $n, string $kind, string $form, string $palette
 // ── 4. Products ────────────────────────────────────────────────────────
 // [name, description, price, stock, status, featured, categories, signals, kind, form, palette/glaze, photos]
 $catalog = [
-    ['Koi Lamp', "A glass cube lamp with an orange koi circling the front panel, set on a maple base. Plugs in with an inline switch and takes a standard E12 bulb.", 145, 3, 'active', 1, ['Lighting', 'Stained Glass'], ['Ready to Ship', 'Solid Wood'], 'glass', 'lamp', 'sunset', 3],
-    ['Pond Lamp', "Teal and sky-blue glass around a little goldfish. The light comes through soft and watery, like sun on a pond.", 155, 2, 'active', 1, ['Lighting', 'Stained Glass'], ['Ready to Ship', 'Solid Wood'], 'glass', 'lamp', 'pond', 2],
+    ['Fish Lava Lamp', "A stoneware lava lamp in a rust glaze with orange wax. The base and cap are thrown and glazed by hand around a glass bottle. Takes a standard 25W appliance bulb.", 185, 3, 'active', 1, ['Lighting', 'Ceramics'], ['Ready to Ship'], 'lamp', 'lavalamp', 'rust:#F08A3C', 3],
+    ['Tidepool Lava Lamp', "Celadon base and cap with blue wax that drifts like something in a rock pool.", 185, 2, 'active', 1, ['Lighting', 'Ceramics'], ['Ready to Ship'], 'lamp', 'lavalamp', 'celadon:#5E8FD6', 2],
+    ['Butter Lava Lamp', "Pale yellow glaze with mustard wax. Warm and a little sleepy, in the best way.", 175, 4, 'active', 1, ['Lighting', 'Ceramics'], ['Ships in 2–3 Weeks'], 'lamp', 'lavalamp', 'butter:#D9A92E', 2],
+    ['Night Swim Lava Lamp', "Deep ink glaze with teal wax. The darkest of the set.", 185, 0, 'sold_out', 0, ['Lighting', 'Ceramics'], ['Made to Order'], 'lamp', 'lavalamp', 'ink:#3FA3A0', 1],
+    ['Speckled Table Lamp', "A thrown stoneware base in speckled oatmeal under a linen shade. Inline switch, E26 socket.", 140, 3, 'active', 1, ['Lighting', 'Ceramics'], ['Ready to Ship'], 'lamp', 'tablelamp', 'oatmeal', 2],
+    ['Celadon Table Lamp', "Soft green celadon base with a linen shade. Inline switch, E26 socket.", 150, 2, 'active', 0, ['Lighting', 'Ceramics'], ['Ships in 2–3 Weeks'], 'lamp', 'tablelamp', 'celadon', 1],
+    ['Koi Lamp', "A glass cube lamp with an orange koi circling the front panel, set on a maple base. Plugs in with an inline switch and takes a standard E12 bulb.", 145, 3, 'active', 0, ['Lighting', 'Stained Glass'], ['Ready to Ship', 'Solid Wood'], 'glass', 'lamp', 'sunset', 3],
     ['Marigold Suncatcher', "An 8-inch round of amber and marigold glass. Hang it in a south window and it throws warm color across the room by late afternoon.", 68, 6, 'active', 1, ['Stained Glass', 'Wall Decor'], ['Ships in 3–5 Days'], 'glass', 'suncatcher', 'sunset', 2],
-    ['Tidepool Suncatcher', "Cool blues and seafoam glass, soldered and finished with a black patina and a brass chain.", 68, 4, 'active', 0, ['Stained Glass', 'Wall Decor'], ['Ships in 3–5 Days'], 'glass', 'suncatcher', 'pond', 1],
     ['Meadow Window Panel', "A 12 × 18 inch panel in greens and buttercup yellow, framed in zinc with hanging hooks. Made to hang in front of a window, not to be installed in one.", 285, 1, 'active', 1, ['Stained Glass', 'Wall Decor'], ['Limited Edition', 'Ships in 3–5 Days'], 'glass', 'panel', 'meadow', 2],
     ['Berry Patch Panel', "Plum, rose and rust glass in a loose patchwork. One of a kind: the next one will be different.", 260, 0, 'sold_out', 0, ['Stained Glass', 'Wall Decor'], ['Limited Edition'], 'glass', 'panel', 'berry', 1],
     ['Frost Night Light', "Clear textured glass that scatters the light into a soft glow. A small warm bulb is included.", 42, 9, 'active', 0, ['Lighting', 'Stained Glass'], ['Ready to Ship'], 'glass', 'nightlight', 'clear', 1],
-    ['Ember Night Light', "Orange and gold glass for a campfire glow in a hallway or kid's room. Bulb included.", 42, 0, 'sold_out', 0, ['Lighting', 'Stained Glass'], ['Ready to Ship'], 'glass', 'nightlight', 'sunset', 1],
-    ['Lagoon Night Light', "Blues and teals with a few clear pieces so it doesn't get too dark. Bulb included.", 44, 5, 'active', 0, ['Lighting'], ['Ready to Ship'], 'glass', 'nightlight', 'pond', 1],
-    ['Oatmeal Bud Vase', "A small wheel-thrown vase in a speckled oatmeal glaze. Holds water. About 6 inches tall.", 38, 7, 'active', 1, ['Ceramics'], ['Ready to Ship'], 'ceramic', 'vase', 'oatmeal', 2],
-    ['Celadon Vase', "Taller vase in a soft green celadon that pools darker where it's thickest. About 10 inches tall.", 72, 2, 'active', 0, ['Ceramics'], ['Ships in 3–5 Days'], 'ceramic', 'vase', 'celadon', 2],
+    ['Oatmeal Bud Vase', "A small wheel-thrown vase in a speckled oatmeal glaze. Holds water. About 6 inches tall.", 38, 7, 'active', 0, ['Ceramics'], ['Ready to Ship'], 'ceramic', 'vase', 'oatmeal', 2],
     ['Rust Drip Mug', "A 12 oz mug with a rust glaze that breaks to dark brown at the rim. Dishwasher and microwave safe.", 34, 12, 'active', 0, ['Ceramics'], ['Ready to Ship'], 'ceramic', 'mug', 'rust', 2],
     ['Inkwell Mug', "Deep blue-black glaze over speckled stoneware. 12 oz. Dishwasher and microwave safe.", 34, 3, 'active', 0, ['Ceramics'], ['Ready to Ship'], 'ceramic', 'mug', 'ink', 1],
-    ['Butter Mug', "Pale yellow glaze, a little drippy at the foot. 12 oz.", 34, 0, 'sold_out', 0, ['Ceramics'], [], 'ceramic', 'mug', 'butter', 1],
     ['Trinket Dish', "A shallow dish for rings and keys, about 5 inches across.", 24, 15, 'active', 0, ['Ceramics', 'Other'], ['Ready to Ship'], 'ceramic', 'dish', 'celadon', 1],
     ['Little Planter', "Small planter with a drainage hole and a matching saucer. Fits a 4 inch nursery pot.", 46, 4, 'active', 0, ['Ceramics', 'Other'], ['Ready to Ship'], 'ceramic', 'planter', 'oatmeal', 1],
     ['Sunrise Lamp (custom size)', "Draft listing for a larger lamp. Not visible in the shop until it's marked active.", 240, 1, 'draft', 0, ['Lighting', 'Stained Glass'], ['Made to Order'], 'glass', 'lamp', 'berry', 1],
@@ -122,6 +127,28 @@ $insImage = $pdo->prepare("INSERT INTO product_images (product_id, image_path, s
 $insCat   = $pdo->prepare("INSERT INTO product_categories (product_id, category) VALUES (?, ?)");
 
 $products = [];
+// Annie's real catalog, if dev/pull-live-catalog.php has been run: same names,
+// prices, stock, text and photos as the live shop. Otherwise, drawn samples.
+$liveFile = __DIR__ . '/live-catalog.json';
+if (is_file($liveFile)) {
+    $live = json_decode(file_get_contents($liveFile), true) ?: [];
+    // A few unpublished pieces so the admin's Draft/Archived tabs have something
+    $live[] = ['name' => 'Salmon Lava Lamp (next batch)', 'description' => 'Draft listing for the next batch of salmon lava lamps. Not visible in the shop until it\'s marked active.', 'price' => 500, 'stock' => 2, 'status' => 'draft', 'featured' => false, 'categories' => ['Lighting', 'Ceramics'], 'signals' => ['Made to Order'], 'images' => $live[array_search('Salmon Lava Lamp', array_column($live, 'name'))]['images'] ?? []];
+    $catalog = [];
+    foreach ($live as $i => $p) {
+        $created = date('Y-m-d H:i:s', strtotime('-' . (150 - $i * 6) . ' days'));
+        $insProduct->execute([
+            $p['name'], $p['description'], $p['signals'] ? json_encode($p['signals']) : null, $p['price'], $p['stock'],
+            $p['categories'][0], $p['images'][0] ?? null, in_array($p['status'], ['active', 'sold_out'], true) ? 1 : 0,
+            $p['status'], $p['featured'] ? 1 : 0, $i + 1, $created, $created,
+        ]);
+        $id = (int) $pdo->lastInsertId();
+        foreach ($p['images'] as $n => $img) $insImage->execute([$id, $img, $n]);
+        foreach ($p['categories'] as $c) $insCat->execute([$id, $c]);
+        $products[$id] = ['name' => $p['name'], 'price' => $p['price'], 'status' => $p['status']];
+    }
+    echo 'Added ' . count($products) . " products from the live shop (dev/live-catalog.json)\n";
+}
 foreach ($catalog as $i => [$name, $desc, $price, $stock, $status, $featured, $cats, $signals, $kind, $form, $pal, $photoCount]) {
     $slug = trim(preg_replace('/[^a-z0-9]+/', '-', strtolower($name)), '-');
     $paths = [];
@@ -138,7 +165,7 @@ foreach ($catalog as $i => [$name, $desc, $price, $stock, $status, $featured, $c
     foreach ($cats as $c) $insCat->execute([$id, $c]);
     $products[$id] = ['name' => $name, 'price' => $price, 'status' => $status];
 }
-echo 'Added ' . count($products) . " products with sample photos\n";
+if ($catalog) echo 'Added ' . count($products) . " products with sample photos\n";
 
 // ── 5. Customers & orders ──────────────────────────────────────────────
 // Fictional people at example.com, so no email can reach a real inbox.

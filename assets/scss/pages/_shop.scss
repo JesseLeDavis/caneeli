@@ -42,7 +42,7 @@
   margin-bottom: 40px;
 
   @media (min-width: 960px) {
-    grid-template-columns: 1fr 300px;
+    grid-template-columns: 1fr auto;
     align-items: end;
   }
 }
@@ -74,96 +74,28 @@
   }
 }
 
-// Price slider
-.price-slider {
-  padding-top: 16px;
+// Price chips: same pills as the categories, a size down
+.filter-bar--price {
+  gap: 8px;
+  padding-top: 8px;
 
-  @media (min-width: 960px) { padding-top: 0; }
-
-  &__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 6px;
-  }
-
-  &__title {
-    font-size: 15px;
-    font-weight: 700;
-    color: $dark;
-  }
-
-  &__bubbles {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-variant-numeric: tabular-nums;
-  }
-
-  &__dash { color: $muted; }
-
-  &__wrap {
-    position: relative;
-    height: 36px;
-    display: flex;
-    align-items: center;
-  }
-
-  &__track {
-    position: absolute;
-    width: 100%;
-    height: 4px;
-    background: color.adjust($neutral, $lightness: -14%);
-    border-radius: 4px;
-  }
-
-  &__fill {
-    position: absolute;
-    height: 4px;
-    background: $dark;
-    border-radius: 4px;
-  }
-
-  input[type="range"] {
-    position: absolute;
-    width: 100%;
-    appearance: none;
-    background: transparent;
-    pointer-events: none;
-    height: 4px;
-
-    &::-webkit-slider-thumb {
-      appearance: none;
-      pointer-events: all;
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      background: $neutral;
-      border: $line;
-      cursor: grab;
-    }
-
-    &::-moz-range-thumb {
-      pointer-events: all;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: $neutral;
-      border: $line;
-      cursor: grab;
-    }
-
-    &:focus-visible::-webkit-slider-thumb { outline: 3px solid $blue-400; outline-offset: 2px; }
-
-    &::-webkit-slider-runnable-track { background: transparent; }
-    &::-moz-range-track              { background: transparent; }
+  @media (min-width: 960px) {
+    justify-content: flex-end;
+    padding-top: 0;
   }
 }
 
-.price-bubble {
+.filter-bar__label {
+  margin-right: 4px;
   font-size: 15px;
   font-weight: 700;
   color: $dark;
+}
+
+.filter-chip--small {
+  min-height: 36px;
+  padding: 0 14px;
+  font-size: 14px;
 }
 
 // Empty state
@@ -190,47 +122,37 @@
   }
 }
 
-// Product grid
+// Product grid: 2 up on phones, 3 on tablets, 4 on desktop.
 .product-grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 36px 28px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 14px;
   padding-bottom: 64px;
 
-  @media (min-width: 560px)  { grid-template-columns: repeat(2, 1fr); gap: 32px 20px; }
-  @media (min-width: 900px)  { grid-template-columns: repeat(3, 1fr); gap: 40px 28px; }
-  @media (min-width: 1200px) { grid-template-columns: repeat(4, 1fr); }
+  // Gallery scale: two across on phones and tablets, three on desktop
+  @media (min-width: 600px)  { gap: 28px 24px; }
+  @media (min-width: 960px)  { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 44px 36px; }
 }
 
 // ── Product card ──────────────────────────────────────────────────────
-// Photo with a hairline edge and a plain caption underneath, like a gallery
-// label. Shared by the shop grid and the home page carousel.
+// Full-bleed photo with name and price over a dark gradient, and one
+// colored hard shadow per surface (blue on paper, mustard on rust, muted
+// paper when sold). No outline. Shared by the shop grid, the home carousel,
+// "More from the studio" and the empty cart (includes/product_card.php).
 .product-card {
   --pane: #{$blue-400};
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  color: $dark;
+  --off: 4px;
+  position: relative;
+  display: block;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border-radius: $radius;
+  background: $paper-2;
+  color: #fff;
+  box-shadow: var(--off) var(--off) 0 var(--pane);
+  transition: transform 220ms ease, box-shadow 220ms ease;
 
-  // Shadows cycle through the brand colors across the grid
-  &:nth-child(3n+2) { --pane: #{$mustard}; }
-  &:nth-child(3n+3) { --pane: #{$rust}; }
-
-  &__media {
-    position: relative;
-    display: block;
-    aspect-ratio: 4 / 5;
-    overflow: hidden;
-    border-radius: $radius;
-    background: $paper-2;
-    box-shadow: 5px 5px 0 var(--pane);
-    transition: transform 200ms ease, box-shadow 200ms ease;
-  }
-
-  &:hover &__media {
-    transform: translate(-2px, -2px);
-    box-shadow: 7px 7px 0 var(--pane);
-  }
+  @media (min-width: 600px) { --off: 6px; }
 
   &__bg {
     position: absolute;
@@ -241,63 +163,136 @@
     transition: transform 600ms cubic-bezier(.2,.7,.2,1);
   }
 
-  &:hover &__bg { transform: scale(1.03); }
-
-  &:focus-visible { outline: none; }
-  &:focus-visible &__media { outline: 3px solid $blue-400; outline-offset: 3px; }
-
   &__placeholder { background: $paper-2; }
 
-  &__caption {
+  // Bottom gradient: dark enough under the text for white to pass AA on
+  // busy green and grey photos, clear at the top so the piece reads.
+  &__overlay {
+    position: absolute;
+    inset: 0;
     display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 12px;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: flex-start;
+    gap: 2px;
+    padding: 12px;
+    background: linear-gradient(to top,
+      rgba($dark, 0.9) 0%,
+      rgba($dark, 0.74) 24%,
+      rgba($dark, 0.3) 42%,
+      rgba($dark, 0) 58%);
+
+    @media (min-width: 600px) { padding: 18px; gap: 4px; }
   }
 
   &__name {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
     font-family: $font-body;
-    font-size: 17px;
+    font-size: 14px;
     font-weight: 600;
-    line-height: 1.3;
-  }
+    line-height: 1.25;
+    letter-spacing: 0;
+    color: #fff;
+    text-wrap: balance;
+    text-shadow: 0 1px 2px rgba($dark, 0.5);
 
-  &:hover &__name { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+    @media (min-width: 600px)  { font-size: 18px; }
+    @media (min-width: 960px)  { font-size: 20px; }
+  }
 
   &__price {
-    flex-shrink: 0;
-    font-size: 16px;
-    color: $muted;
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(#fff, 0.92);
     font-variant-numeric: tabular-nums;
+    text-shadow: 0 1px 2px rgba($dark, 0.5);
+
+    @media (min-width: 600px) { font-size: 16px; }
   }
 
+  // Description and "View piece" pill: only on screens that can hover.
+  &__description, &__cta { display: none; }
+
+  @media (hover: hover) and (min-width: 600px) {
+    &__description {
+      display: block;
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+      font-size: 14px;
+      line-height: 1.4;
+      color: rgba(#fff, 0.88);
+      transition: max-height 300ms ease, opacity 300ms ease;
+    }
+
+    &__cta {
+      display: inline-flex;
+      align-items: center;
+      max-height: 0;
+      margin-top: 0;
+      padding: 0 16px;
+      overflow: hidden;
+      border-radius: $radius-pill;
+      background: $neutral;
+      color: $dark;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: max-height 300ms ease, margin-top 300ms ease, opacity 300ms ease, transform 300ms ease;
+    }
+
+    &:hover, &:focus-visible {
+      transform: translate(-2px, -2px);
+      box-shadow: calc(var(--off) + 2px) calc(var(--off) + 2px) 0 var(--pane);
+
+      .product-card__bg { transform: scale(1.04); }
+      .product-card__overlay {
+        background: linear-gradient(to top,
+          rgba($dark, 0.92) 0%, rgba($dark, 0.8) 34%, rgba($dark, 0.4) 56%, rgba($dark, 0) 74%);
+      }
+      .product-card__description { max-height: 3em; opacity: 1; }
+      .product-card__cta { max-height: 32px; height: 32px; margin-top: 10px; opacity: 1; transform: none; }
+    }
+  }
+
+  &:focus-visible { outline: 3px solid $blue-400; outline-offset: 4px; }
+
+  // Sold: quieter photo and shadow, a mustard "Sold" pill top-left
   &--sold-out {
     --pane: #{$paper-2};
 
-    .product-card__bg { filter: grayscale(0.6); opacity: 0.8; }
-    .product-card__name, .product-card__price { color: $muted; }
+    .product-card__bg { filter: grayscale(0.55) brightness(0.92); }
+    .product-card__price { color: rgba(#fff, 0.8); }
   }
 
   &__sold-out {
     position: absolute;
-    top: 12px;
-    left: 12px;
+    top: 10px;
+    left: 10px;
     z-index: 1;
-    padding: 5px 10px;
+    padding: 5px 11px;
     border-radius: $radius-pill;
-    background: $neutral;
+    background: $mustard;
     color: $dark;
     font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.08em;
+    line-height: 1.2;
     text-transform: uppercase;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .product-card__bg, .product-card__media { transition: none; }
-  .product-card:hover .product-card__bg,
-  .product-card:hover .product-card__media { transform: none; }
+  .product-card, .product-card__bg,
+  .product-card__description, .product-card__cta { transition: none; }
+  .product-card:hover, .product-card:focus-visible,
+  .product-card:hover .product-card__bg { transform: none !important; }
 }
 
 // Pagination
@@ -315,19 +310,23 @@
     min-width: 44px;
     height: 44px;
     padding: 0 8px;
-    border: 1.5px solid transparent;
     border-radius: $radius-pill;
     font-size: 16px;
     font-weight: 600;
     color: $dark;
-    transition: background 150ms, border-color 150ms;
+    transition: background 150ms;
   }
 
-  a:hover { border-color: $dark; }
+  a:hover { background: $paper-2; }
 
   .pagination__current {
-    border-color: $dark;
-    background: $dark;
-    color: $neutral;
+    background: $rust-dk;
+    color: #fff;
   }
 }
+
+// Shadow colors rotate through the brand palette across any card grid on
+// paper (shop, "More from the studio", empty cart). Sold pieces stay quiet.
+.product-grid > .product-card:nth-child(3n+2) { --pane: #{$mustard}; }
+.product-grid > .product-card:nth-child(3n+3) { --pane: #{$rust}; }
+.product-grid > .product-card.product-card--sold-out { --pane: #{$paper-2}; }

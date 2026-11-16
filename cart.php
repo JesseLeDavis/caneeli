@@ -1,4 +1,8 @@
 <?php
+// header.php prints the page head before the cart actions below run, and
+// those actions redirect. Buffer output so the redirect always works, rather
+// than relying on the server's output_buffering setting.
+ob_start();
 $pageTitle = "Cart";
 $noindex = true; // private or transactional: keep out of search results
 include __DIR__ . '/includes/header.php';
@@ -29,6 +33,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $new_qty = $_SESSION['cart'][$product_id] + $qty;
             $_SESSION['cart'][$product_id] = min($new_qty, $product['stock_qty']);
             track_cart_event($product_id, 'add');
+            // One-time confirmation at the top of the cart page.
+            $_SESSION['cart_added'] = $product['name'];
         }
         header('Location: /cart.php');
         exit;
@@ -149,11 +155,18 @@ $cart_flash = $_SESSION['cart_flash'] ?? ($cart_changed
     ? 'Something in your cart sold out or has less stock left, so your cart was updated.'
     : null);
 unset($_SESSION['cart_flash']);
+
+$cart_added = $_SESSION['cart_added'] ?? null;
+unset($_SESSION['cart_added']);
 ?>
 
 <section class="hero cart-page">
     <div class="container">
         <h1 class="large_title">Your cart</h1>
+
+        <?php if ($cart_added && !empty($cart_items)): ?>
+            <p class="cart__discount-flash cart__discount-flash--success cart__added" role="status">Added <?php echo sanitize($cart_added); ?> to your cart.</p>
+        <?php endif; ?>
 
         <?php if ($cart_flash): ?>
             <p class="cart__discount-flash cart__discount-flash--error"><?php echo htmlspecialchars($cart_flash); ?></p>
@@ -165,6 +178,21 @@ unset($_SESSION['cart_flash']);
                 <p class="cart-empty__text">Pieces you add will wait here while you look around.</p>
                 <a href="/pages/shop/" class="btn red-button">Browse the shop</a>
             </div>
+            <?php
+            // A few pieces to start with: in stock, featured first.
+            require_once __DIR__ . '/includes/product_card.php';
+            $suggest = getDB()->query("SELECT * FROM products
+                WHERE active = 1 AND status = 'active' AND stock_qty > 0
+                ORDER BY featured DESC, sort_order ASC, created_at DESC LIMIT 3")->fetchAll();
+            ?>
+            <?php if ($suggest): ?>
+            <section class="cart-suggest" aria-labelledby="cart-suggest-title">
+                <h2 class="cart-suggest__title" id="cart-suggest-title">A few to start with</h2>
+                <div class="product-grid product-grid--three">
+                    <?php foreach ($suggest as $s) render_product_card($s); ?>
+                </div>
+            </section>
+            <?php endif; ?>
         <?php else: ?>
             <div class="cart">
                 <div class="cart__items">
@@ -202,7 +230,8 @@ unset($_SESSION['cart_flash']);
                             <input type="hidden" name="action" value="remove">
                             <input type="hidden" name="product_id" value="<?php echo $item['id']; ?>">
                             <button type="submit" class="cart__remove"
-                                    onclick="return confirm('Remove <?php echo addslashes(sanitize($item['name'])); ?> from your cart?')">✕</button>
+                                    aria-label="Remove <?php echo sanitize($item['name']); ?>"
+                                    onclick="return confirm('Remove <?php echo addslashes(sanitize($item['name'])); ?> from your cart?')"><span aria-hidden="true">✕</span></button>
                         </form>
                     </div>
                     <?php endforeach; ?>
@@ -240,15 +269,20 @@ unset($_SESSION['cart_flash']);
                             <span class="cart__subtotal-price"><?php echo formatPrice($total_after_discount); ?></span>
                         </div>
                     <?php else: ?>
-                        <form method="POST" class="cart__discount-form">
-                            <input type="hidden" name="action" value="apply_discount">
-                            <input type="text" name="discount_code" placeholder="Discount code" maxlength="40" autocomplete="off">
-                            <button type="submit" class="cart__discount-apply">Apply</button>
-                        </form>
+                        <?php // Tucked away unless it was just used, so it doesn't send people off hunting for a code. ?>
+                        <details class="cart__discount"<?php echo ($discount_flash && $discount_flash['type'] === 'error') ? ' open' : ''; ?>>
+                            <summary class="cart__discount-toggle">Have a code?</summary>
+                            <form method="POST" class="cart__discount-form">
+                                <input type="hidden" name="action" value="apply_discount">
+                                <label for="discount-code" class="visually-hidden">Discount code</label>
+                                <input type="text" name="discount_code" id="discount-code" placeholder="Discount code" maxlength="40" autocomplete="off">
+                                <button type="submit" class="cart__discount-apply">Apply</button>
+                            </form>
+                        </details>
                     <?php endif; ?>
 
                     <a href="/checkout.php" class="btn red-button">Check out</a>
-                    <p class="cart__stripe-note">Payment is handled securely by Stripe. Shipping within the U.S. is included.</p>
+                    <p class="cart__stripe-note">Payment is handled securely by Stripe. Shipping within the U.S. is included. Returns are for production defects only (<a href="/pages/terms.php#returns">see terms</a>).</p>
                     <a href="/pages/shop/" class="cart__continue">Keep shopping</a>
                 </div>
             </div>

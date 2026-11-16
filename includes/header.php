@@ -52,7 +52,17 @@ if (session_status() === PHP_SESSION_NONE) {
 <?php endif; ?>
     <header>
         <div class="container header_container">
-            <a href="<?php echo SITE_URL; ?>" class="logo"><img src="<?php echo SITE_URL; ?>/assets/images/logoni.svg" alt="Caneeli Designs"></a>
+            <a href="<?php echo SITE_URL; ?>" class="logo"><span class="logo__mark"><img src="<?php echo SITE_URL; ?>/assets/images/pelican-rust.svg" alt="" width="82" height="72"></span><img src="<?php echo SITE_URL; ?>/assets/images/logoni.svg" alt="Caneeli Designs" width="350" height="81"></a>
+
+            <?php
+            $cartCount = !empty($_SESSION['cart']) ? (int) array_sum($_SESSION['cart']) : 0;
+            $cartLabel = 'Cart, ' . $cartCount . ' item' . ($cartCount === 1 ? '' : 's');
+            ?>
+            <?php /* Phone only: the cart stays one tap away next to the menu button. */ ?>
+            <a class="header-cart" href="<?php echo SITE_URL; ?>/cart.php" aria-label="<?php echo $cartLabel; ?>">
+                <svg class="header-cart__icon" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path d="M3 4h2.2l2.1 10.2a1.5 1.5 0 0 0 1.5 1.2h8.4a1.5 1.5 0 0 0 1.5-1.1L20.5 8H6.3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.5" cy="19.5" r="1.5" fill="currentColor"/><circle cx="17" cy="19.5" r="1.5" fill="currentColor"/></svg>
+                <?php if ($cartCount): ?><span class="header-cart__count" aria-hidden="true"><?php echo $cartCount; ?></span><?php endif; ?>
+            </a>
 
             <button class="menu-toggle" aria-label="Menu" aria-expanded="false">
                 <span></span>
@@ -61,13 +71,12 @@ if (session_status() === PHP_SESSION_NONE) {
             </button>
 
             <nav class="nav">
-                <a href="<?php echo SITE_URL; ?>" class="nav-logo"><img src="<?php echo SITE_URL; ?>/assets/images/logoni.svg" alt="Caneeli Designs"></a>
+                <a href="<?php echo SITE_URL; ?>" class="nav-logo"><img src="<?php echo SITE_URL; ?>/assets/images/logowi.svg" alt="Caneeli Designs" width="197" height="108"></a>
                 <ul>
                     <li><a class="nav_title <?php echo isActivePage('/pages/shop'); ?>" href="<?php echo SITE_URL; ?>/pages/shop/">Shop</a></li>
                     <li><a class="nav_title <?php echo isActivePage('/pages/about'); ?>" href="<?php echo SITE_URL; ?>/pages/about.php">About</a></li>
                     <li><a class="nav_title <?php echo isActivePage('/pages/contact'); ?>" href="<?php echo SITE_URL; ?>/pages/contact.php">Contact</a></li>
-                    <?php $cartCount = !empty($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0; ?>
-                    <li><a class="nav_title nav_cart <?php echo isActivePage('/cart'); ?>" href="<?php echo SITE_URL; ?>/cart.php"<?php echo $cartCount ? ' aria-label="Cart, ' . $cartCount . ' item' . ($cartCount === 1 ? '' : 's') . '"' : ''; ?>>Cart<?php if ($cartCount): ?> <span class="nav_cart__count" aria-hidden="true"><?php echo $cartCount; ?></span><?php endif; ?></a></li>
+                    <li><a class="nav_title nav_cart <?php echo isActivePage('/cart'); ?>" href="<?php echo SITE_URL; ?>/cart.php"<?php echo $cartCount ? ' aria-label="' . $cartLabel . '"' : ''; ?>>Cart<?php if ($cartCount): ?> <span class="nav_cart__count" aria-hidden="true"><?php echo $cartCount; ?></span><?php endif; ?></a></li>
                 </ul>
             </nav>
         </div>

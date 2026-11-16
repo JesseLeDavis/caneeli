@@ -2,33 +2,54 @@
 
 // Header
 header {
-    padding: 1rem 0;
+    padding: 4px 0;
     background: $neutral;
 
     .container {
         padding: 20px;
         display: flex;
-        justify-content: center;
+        // Logo left on phones so the cart and menu buttons fit beside it
+        justify-content: flex-start;
         align-items: center;
         position: relative;
     }
 }
 
+// Pelican beside the wordmark, as on the brand sheet
 .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: $rust;
+
+    &__mark {
+        display: block;
+        width: 36px; // 82:72 mark, ≈32px tall
+
+        svg { display: block; width: 100%; height: auto; }
+    }
+
     img {
-        height: 40px;
+        display: block;
+        height: 28px;
         width: auto;
+    }
+
+    @media (min-width: 380px) {
+        &__mark { width: 40px; }
+        img { height: 30px; }
     }
 }
 
+// Menu overlay: the stacked white lockup (pelican over the wordmark)
 .nav-logo {
     display: block;
-    padding: 20px;
+    padding: 28px 20px 0;
 
     img {
-        height: 40px;
+        display: block;
+        height: 72px;
         width: auto;
-        filter: brightness(0) invert(1);
     }
 }
 
@@ -49,6 +70,42 @@ header {
         height: 2px;
         background: $rust;
         transition: all 0.3s;
+    }
+}
+
+// Phone cart link, beside the menu button (hidden on desktop, where the
+// nav's own Cart link shows)
+.header-cart {
+    position: absolute;
+    right: 64px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: $radius-pill;
+    color: $rust;
+
+    &__icon { display: block; }
+
+    // Count sits on the icon's top-right corner
+    &__count {
+        position: absolute;
+        top: 2px;
+        right: -2px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 5px;
+        border-radius: $radius-pill;
+        background: $mustard;
+        color: $dark;
+        font-family: $font-body;
+        font-size: 12px;
+        font-weight: 800;
+        line-height: 1;
     }
 }
 
@@ -161,15 +218,19 @@ body.menu-open {
         &.active::after { background: $rust; height: 3px; }
     }
 
-    .logo img {
-        height: 52px;
+    .logo {
+        gap: 14px;
+
+        &__mark { width: 48px; } // ≈42px tall
+        img { height: 40px; }
     }
 
     .nav-logo {
         display: none;
     }
 
-    .menu-toggle {
+    .menu-toggle,
+    .header-cart {
         display: none;
     }
 
@@ -205,10 +266,22 @@ body.menu-open {
     height: 24px;
     padding: 0 7px;
     border-radius: $radius-pill;
-    background: $dark;
-    color: $neutral;
+    background: $mustard;
+    color: $dark;
     font-family: $font-body;
     font-size: 13px;
     font-weight: 800;
     line-height: 1;
 }
+
+// Menu-open: the cart badge stays readable on rust
+body.menu-open .nav_cart__count { background: $neutral; color: $dark; }
+
+.menu-toggle { min-width: 44px; min-height: 44px; align-items: center; }
+
+@media (prefers-reduced-motion: reduce) {
+    .nav, .menu-toggle span, .nav a, .nav_title::after { transition: none !important; }
+}
+
+// The pelican is an <img>; keep it sized by its wrapper, not by .logo img.
+.logo .logo__mark img { width: 100%; height: auto; }

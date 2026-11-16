@@ -39,7 +39,7 @@
     width: 100%;
     aspect-ratio: 4 / 5;
     background: color.adjust($neutral, $lightness: -5%);
-    border-radius: 24px;
+    border-radius: $radius;
   }
 
   &__info {
@@ -68,11 +68,14 @@
     font-variant-numeric: tabular-nums;
   }
 
+  // Free-text description: paragraphs from blank lines, line breaks kept
   &__description {
     max-width: 52ch;
+    margin-bottom: 28px;
     font-size: $fs-base;
-    line-height: 1.7;
-    margin-bottom: 24px;
+    line-height: 1.65;
+
+    p + p { margin-top: 1em; }
   }
 
   // Craft signals: small ink-outlined tags
@@ -122,13 +125,14 @@
   &__atc-btn {
     width: 100%;
     min-height: 56px;
-    font-size: 18px;
+    font-size: 16px;
   }
 
   &__soldout {
-    padding: 20px 22px;
+    padding: 22px 24px 24px;
     border-radius: $radius;
-    background: $paper-2;
+    background: $blue-200;
+    @include color-shadow($blue-400, 8px);
 
     p { font-size: $fs-base; line-height: 1.55; }
   }
@@ -224,7 +228,7 @@
   &__thumb {
     width: 68px;
     height: 68px;
-    border-radius: 10px;
+    border-radius: $radius;
     overflow: hidden;
     cursor: pointer;
     border: none;
@@ -261,7 +265,7 @@
 .sold-out {
   display: inline-block;
   padding: 10px 20px;
-  border-radius: 30px;
+  border-radius: $radius-pill;
   background: color.adjust($dark, $lightness: 50%);
   color: white;
   font-weight: 700;
@@ -283,8 +287,126 @@
     color: color.adjust($dark, $lightness: 30%);
     transition: color 200ms ease-in-out;
 
-    &:hover { color: $rust; }
+    &:hover { color: $rust-dk; }
   }
 
   span:not(:last-child) { opacity: 0.5; }
+}
+
+// Phone sticky add-to-cart bar (shown by JS once the main button scrolls away)
+.atc-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  background: $neutral;
+  border-top: $hairline;
+  animation: atc-bar-in 200ms ease-out;
+
+  &[hidden] { display: none; }
+
+  @media (min-width: 768px) { display: none !important; }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &__name {
+    overflow: hidden;
+    font-size: 14px;
+    font-weight: 600;
+    color: $muted;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__price {
+    font-size: 18px;
+    font-weight: 700;
+    color: $dark;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__btn { flex-shrink: 0; }
+}
+
+@keyframes atc-bar-in {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .atc-bar { animation: none; }
+}
+
+// "Sold" pill over the photo's top-left corner
+.product-detail__image { position: relative; }
+.product-detail__sold-pill {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 2;
+  padding: 6px 13px;
+  border-radius: $radius-pill;
+  background: $mustard;
+  color: $dark;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+// "More from the studio" strip + commission pane under the product
+.product-more {
+  padding: 0 0 88px;
+
+  @media (min-width: 768px) { padding-bottom: 120px; }
+
+  &__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px 24px;
+    padding-top: 40px;
+    margin-bottom: 24px;
+    border-top: $hairline;
+
+    @media (min-width: 768px) { padding-top: 56px; margin-bottom: 32px; }
+  }
+
+  &__title {
+    font-size: $fs-xl;
+    line-height: 1.05;
+
+    @media (min-width: 768px) { font-size: 40px; }
+  }
+
+  &__all {
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+
+    &:hover { color: $rust-dk; }
+  }
+
+  .product-grid { padding-bottom: 56px; }
+
+  @media (min-width: 720px) and (max-width: 1199px) {
+    // Four cards in a 3-col grid would leave one dangling
+    .product-grid > :nth-child(4) { display: none; }
+  }
+
+  &__pane { max-width: none; }
 }

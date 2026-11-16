@@ -33,7 +33,7 @@
     font-weight: 700;
     color: $dark;
     background: $mustard;
-    border-radius: 30px;
+    border-radius: $radius-pill;
     padding: 6px 16px;
     margin-bottom: 22px;
   }
@@ -47,9 +47,9 @@
   }
 
   &__card {
-    background: white;
-    border: 2px solid $dark;
-    border-radius: 18px;
+    background: $paper-2;
+    border-radius: $radius;
+    @include color-shadow($mustard, 8px);
     padding: 28px;
     filter: none;
     margin-bottom: 30px;
@@ -89,7 +89,7 @@
     padding: 18px;
     background: rgba($rust, 0.05);
     border: 1px solid rgba($rust, 0.25);
-    border-radius: 12px;
+    border-radius: $radius;
     margin-bottom: 22px;
     font-size: 14px;
     line-height: 1.6;
@@ -107,7 +107,7 @@
     // left "full terms" looking like plain copy. Customers have to be able to
     // see it's clickable before they agree to a non-refundable deposit.
     a {
-      color: $rust;
+      color: $rust-dk;
       font-weight: 700;
       text-decoration: underline;
       text-underline-offset: 2px;
@@ -138,14 +138,14 @@
     font-size: 13px;
     color: color.adjust($dark, $lightness: 32%);
 
-    a { color: $rust; }
+    a { color: $rust-dk; }
   }
 
   // Shown instead of the pay form once the deposit has been paid.
   &__state {
-    background: white;
-    border: 2px solid $dark;
-    border-radius: 18px;
+    background: $paper-2;
+    border-radius: $radius;
+    @include color-shadow($mustard, 8px);
     padding: 32px 28px;
     text-align: center;
     filter: none;

@@ -14,7 +14,7 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 12px;
-  padding: 24px 0 120px;
+  padding: 24px 0 56px;
 
   &__heading {
     font-family: $font-heading;
@@ -130,7 +130,7 @@
     padding: 28px;
     border-radius: $radius;
     background: $paper-2;
-    @include color-shadow($mustard, 5px);
+    @include color-shadow($mustard, 8px);
 
     @media (min-width: 900px) { position: sticky; top: 32px; }
 
@@ -162,6 +162,36 @@
     color: $dark;
   }
 
+  // "Have a code?" disclosure around the discount form
+  &__discount {
+    &[open] .cart__discount-form { margin-top: 12px; }
+  }
+
+  &__discount-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 32px;
+    font-size: 15px;
+    font-weight: 600;
+    color: $dark;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+    cursor: pointer;
+    list-style: none;
+
+    &::-webkit-details-marker { display: none; }
+
+    &::after {
+      content: '+';
+      font-weight: 700;
+      text-decoration: none;
+    }
+  }
+
+  &__discount[open] &__discount-toggle::after { content: '−'; }
+
   &__discount-form {
     display: flex;
     gap: 8px;
@@ -172,7 +202,7 @@
     min-width: 0;
     min-height: 44px;
     padding: 0 16px;
-    border: $line;
+    border: 1px solid rgba($dark, 0.16);
     border-radius: $radius-pill;
     background: $neutral;
     font-family: $font-body;
@@ -184,19 +214,21 @@
 
   &__discount-form input:focus { outline: 3px solid $blue-400; outline-offset: 1px; }
 
+  // Small mustard pill (mustard button → rust shadow), no outline
   &__discount-apply {
     min-height: 44px;
     padding: 0 18px;
-    border: $line;
     border-radius: $radius-pill;
-    font-size: 13px;
+    background: $mustard;
+    box-shadow: 3px 3px 0 $rust;
+    font-size: 14px;
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: $dark;
-    transition: background 150ms, color 150ms;
+    transition: transform 150ms, box-shadow 150ms;
 
-    &:hover { background: $dark; color: $neutral; }
+    &:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 $rust; }
   }
 
   &__discount-row {
@@ -233,7 +265,17 @@
     font-size: 14px;
     line-height: 1.5;
     color: $muted;
+
+    a {
+      color: $dark;
+      font-weight: 600;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
   }
+
+  // "Added <name> to your cart" confirmation above the cart
+  &__added { width: fit-content; max-width: 100%; margin-bottom: 20px; }
 
   &__continue {
     align-self: flex-start;
@@ -243,4 +285,40 @@
     text-underline-offset: 3px;
     text-decoration-thickness: 1px;
   }
+}
+
+// Empty cart: three pieces to start with
+.cart-suggest {
+  padding: 40px 0 24px;
+  border-top: $hairline;
+
+  &__title {
+    margin-bottom: 24px;
+    font-size: $fs-lg;
+    line-height: 1.1;
+
+    @media (min-width: 768px) { font-size: $fs-xl; }
+  }
+}
+
+// Three cards: 2 + 1 on phones would dangle, so phones scroll sideways
+.product-grid--three {
+  @media (max-width: 599px) {
+    grid-auto-flow: column;
+    grid-template-columns: none;
+    grid-auto-columns: 62%;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    margin: 0 -20px;
+    padding: 0 20px 64px;
+    scroll-padding: 0 20px;
+
+    > * { scroll-snap-align: start; }
+  }
+
+  @media (min-width: 600px) and (max-width: 899px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  @media (min-width: 1200px) { grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: 960px; }
 }

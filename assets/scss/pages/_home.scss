@@ -8,43 +8,46 @@
 
 // Homepage hero — full-viewport centred layout
 .home-hero {
-  min-height: 100vh;
   display: flex;
   align-items: center;
 
+  // Desktop fills the first screen; tablets and phones size to content.
+  @media (min-width: 1100px) { min-height: min(calc(100vh - 92px), 900px); }
+
   .container {
-    padding-top: 80px;
-    padding-bottom: 80px;
+    padding-top: 56px;
+    padding-bottom: 72px;
 
     // The fish sits on top when stacked and its drawing has its own headroom.
-    @media (max-width: 959px) { padding-top: 16px; }
+    @media (max-width: 767px) { padding-top: 4px; padding-bottom: 56px; }
   }
 
   .large_title {
-    font-size: 52px;
+    font-size: clamp(40px, 11vw, 52px);
     line-height: 1;
     max-width: 12ch;
 
-    @media (min-width: 768px)  { font-size: 80px; }
-    @media (min-width: 1100px) { font-size: 96px; }
+    @media (min-width: 768px)  { font-size: clamp(48px, 6.6vw, 64px); }
+    // Desktop: three set lines (see .home-hero__br)
+    @media (min-width: 1100px) { font-size: clamp(54px, 5vw, 76px); max-width: none; }
   }
+
+  &__br { display: none; @media (min-width: 1100px) { display: inline; } }
 
   .button-container {
     display: flex;
-    flex-direction: column;
-    align-items: flex-start; // prevent buttons from stretching full width
-    gap: 16px;
-    margin-top: 32px;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px 18px;
+    margin-top: 24px;
 
-    @media (min-width: 480px) {
-      flex-direction: row;
-      align-items: center;
-      gap: 20px;
-    }
+    @media (min-width: 768px) { margin-top: 32px; }
   }
 
   .home-hero__lede {
-    margin-top: 24px;
+    margin-top: 16px;
+
+    @media (min-width: 768px) { margin-top: 24px; }
     max-width: 30ch;
     font-size: $fs-md;
     line-height: 1.45;
@@ -87,123 +90,66 @@
   }
 }
 
-// Spotlight carousel
-.spotlight {
-  &__stage {
-    --stage-h:  400px;
-    --centre-w: calc(var(--stage-h) * 0.72);
-    --side-w:   calc(var(--centre-w) * 0.65);
-    --gap:      28px;
+// Hot off the shelf: swipeable row of cards
+.shelf-row {
+  position: relative;
 
-    position: relative;
-    height: var(--stage-h);
-    overflow: visible;
-    isolation: isolate;
+  &__track {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 72%;
+    gap: 18px;
+    margin: 0 -20px;           // run to the screen edge on phones…
+    padding: 4px 20px 18px;    // …while the first card lines up with the text
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding: 0 20px;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    list-style: none;
 
-    @media (min-width: 600px) {
-      --stage-h: 520px;
-      max-width: 940px;
-      margin: 0 auto;
-    }
+    &::-webkit-scrollbar { display: none; }
 
-    // All cards share one size; scale() handles the size difference, and
-    // --_t drives the transform in every state so hover can't fight it.
-    .product-card {
-      position: absolute;
-      left: 50%;
-      top: 0;
-      width:  var(--centre-w);
-      height: var(--stage-h);
-
-      --_t: translateX(-50%) scale(0.85);
-      transform: var(--_t);
-      opacity: 0;
-      pointer-events: none;
-      transition: transform 500ms cubic-bezier(.2,.8,.2,1), opacity 350ms ease, filter 350ms ease;
-
-      .product-card__media { flex: 1; min-height: 0; aspect-ratio: auto; }
-
-      // On rust, shadows alternate mustard and light blue
-      --pane: #{$mustard};
-      &:nth-child(even) { --pane: #{$blue-200}; }
-      .product-card__name  { color: $neutral; }
-      .product-card__price { color: rgba($neutral, 0.85); }
-
-      &.is-active {
-        --_t: translateX(-50%) scale(1);
-        opacity: 1;
-        pointer-events: all;
-        z-index: 2;
-      }
-
-      &.is-prev {
-        --_t: translateX(calc(-1 * var(--centre-w) - var(--gap) - var(--side-w) / 2)) scale(0.65);
-        opacity: 1;
-        filter: brightness(0.82) saturate(0.85);
-        pointer-events: all;
-        z-index: 1;
-
-        @media (max-width: 599px) { opacity: 0; pointer-events: none; }
-      }
-
-      &.is-next {
-        --_t: translateX(calc(var(--gap) + var(--side-w) / 2)) scale(0.65);
-        opacity: 1;
-        filter: brightness(0.82) saturate(0.85);
-        pointer-events: all;
-        z-index: 1;
-
-        @media (max-width: 599px) { opacity: 0; pointer-events: none; }
-      }
-
-      &.is-prev .product-card__caption,
-      &.is-next .product-card__caption { visibility: hidden; }
-    }
+    @media (min-width: 600px)  { grid-auto-columns: calc((100% - 18px * 2) / 2.4); }
+    @media (min-width: 900px)  { grid-auto-columns: calc((100% - 24px * 3) / 3.3); gap: 24px; }
+    @media (min-width: 1200px) { grid-auto-columns: calc((100% - 28px * 3) / 4); gap: 28px; margin: 0; padding: 4px 0 18px; scroll-padding: 0; }
   }
 
-  &__controls {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 20px;
-    margin-top: 28px;
-  }
+  &__item { scroll-snap-align: start; min-width: 0; }
+
+  // Cards sit on rust here: mustard shadow, and the card fills its column
+  // Cards sit on rust, so their shadows rotate through the colors that
+  // show up against it: mustard, light blue, paper.
+  .product-card { --pane: #{$mustard}; height: 100%; }
+  .shelf-row__item:nth-child(3n+2) .product-card { --pane: #{$blue-200}; }
+  .shelf-row__item:nth-child(3n+3) .product-card { --pane: #{$neutral}; }
 
   &__arrow {
+    position: absolute;
+    top: calc(50% - 32px);
+    z-index: 2;
+    display: none;
     width: 48px;
     height: 48px;
     border-radius: 50%;
-    border: 1.5px solid $neutral;
-    background: transparent;
-    color: $neutral;
+    background: $neutral;
+    color: $dark;
     font-size: 28px;
     line-height: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     padding-bottom: 3px;
-    transition: background 160ms, color 160ms;
+    box-shadow: 3px 3px 0 $mustard;
+    transition: opacity 160ms, transform 160ms;
 
-    &:hover { background: $neutral; color: $rust; }
+    &:hover { transform: translate(-1px, -1px); }
+    &:disabled { opacity: 0; pointer-events: none; }
+
+    &--prev { left: -24px; }
+    &--next { right: -24px; }
+
+    @media (hover: hover) and (min-width: 900px) { display: inline-flex; align-items: center; justify-content: center; }
   }
 
-  &__dots {
-    display: flex;
-    gap: 4px;
-    align-items: center;
-  }
-
-  // 24px hit area around a 10px dot
-  &__dot {
-    width: 24px;
-    height: 24px;
-    padding: 0;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba($neutral, 0.45) 4px, transparent 5px);
-    cursor: pointer;
-
-    &.is-active { background: radial-gradient(circle, $neutral 6px, transparent 7px); }
-  }
+  &--static .shelf-row__arrow { display: none; }
 }
 
 // Studio + commission panes
@@ -230,8 +176,8 @@
 
   @media (min-width: 768px) { padding: 52px 48px; }
 
-  &--mustard { @include color-shadow($rust, 6px); }
-  &--blue    { @include color-shadow($blue-400, 6px); }
+  &--mustard { @include color-shadow($rust, 8px); }
+  &--blue    { @include color-shadow($blue-400, 8px); }
 
   position: relative;
 
@@ -248,7 +194,7 @@
     svg { display: block; width: 100%; height: auto; }
   }
 
-  &--mustard { background: $mustard; .pane__mark { color: $neutral; } .btn { --btn-shadow: #{$rust}; } }
+  &--mustard { background: $mustard; .pane__mark { color: $neutral; } }
   &--blue    { background: $blue-200; .pane__mark { color: $blue-400; } }
 
   &__title { padding-right: 88px; }
@@ -273,18 +219,20 @@
 .home-hero .container {
   width: 100%; // .home-hero is flex; otherwise the art stretches this past a phone screen
 
-  // Phones/tablets: stacked, with the fish above the headline (see .hero-fish order).
-  @media (max-width: 959px) {
+  // Phones: stacked, with the fish above the headline (see .hero-fish order).
+  @media (max-width: 767px) {
     display: flex;
     flex-direction: column;
   }
 
-  @media (min-width: 960px) {
+  @media (min-width: 768px) {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1.15fr 0.85fr;
     align-items: center;
-    gap: 20px;
+    gap: 32px;
   }
+
+  @media (min-width: 1100px) { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
 }
 
 .hero-fish {
@@ -293,18 +241,21 @@
   aspect-ratio: 848 / 1220; // the export's size, so nothing jumps while it loads
   object-fit: contain;
 
-  // Stacked: sized by height so the headline still fits on screen below it.
-  @media (max-width: 959px) {
+  // Stacked: sized by height so the headline and both buttons still fit on
+  // a phone's first screen.
+  @media (max-width: 767px) {
     order: -1;
-    height: min(38vh, 340px);
+    height: min(24vh, 210px);
     width: auto;
-    margin: 0 auto 28px;
+    margin: 0 auto 16px;
   }
 
-  @media (min-width: 960px) {
-    width: min(100%, 520px);
+  @media (min-width: 768px) {
+    align-self: center;
+    width: min(100%, 480px);
     height: auto;
-    max-height: 85vh;
+    max-height: 78vh;
     margin: 0 auto;
   }
 }
+

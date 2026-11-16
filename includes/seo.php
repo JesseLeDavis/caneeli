@@ -17,7 +17,7 @@
  */
 
 const SEO_BRAND               = 'Caneeli Designs';
-const SEO_DEFAULT_DESCRIPTION = 'Playful, functional stained glass and ceramic pieces, handmade by Annie in her Oregon studio. Shop one-of-a-kind pieces or commission your own.';
+const SEO_DEFAULT_DESCRIPTION = 'Stained glass lamps on hardwood bases, hand-sculpted ceramic lighting and the salmon series, made by Annie in her Oregon studio. Shop one-of-a-kind pieces or commission your own.';
 const SEO_DEFAULT_IMAGE       = '/assets/images/og-default.jpg'; // 1200×630
 
 /** Absolute URL for a site path ("/x") or an already-absolute URL. */

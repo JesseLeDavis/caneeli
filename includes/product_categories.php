@@ -13,10 +13,10 @@
  */
 
 const PRODUCT_CATEGORIES = [
-    'Ceramics',
     'Lighting',
-    'Wall Decor',
+    'Ceramics',
     'Stained Glass',
+    'Wall Decor',
     'Other',
 ];
 

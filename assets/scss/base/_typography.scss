@@ -27,3 +27,13 @@ h1, h2, h3 { text-wrap: balance; }
     outline: 3px solid $blue-400;
     outline-offset: 3px;
 }
+
+// On rust grounds the blue ring disappears; use paper instead.
+.hot-shelf, .about-cta, body.menu-open .nav {
+    :focus-visible, .product-card:focus-visible { outline-color: $neutral; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+}

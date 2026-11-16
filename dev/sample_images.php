@@ -168,3 +168,53 @@ function ceramic_svg(string $form, int $seed, string $glazeName): string {
     }
     return $svg . '</svg>';
 }
+
+/** Ceramic lamps: a lava lamp (glazed base and cap around a glass bottle of
+ *  wax) or a table lamp (thrown base under a linen shade). */
+function lamp_svg(string $form, int $seed, string $glazeName, string $lava = '#E8743B'): string {
+    $r = new Rand($seed);
+    [$base, $mid, $dark] = GLAZE[$glazeName];
+    $svg = scene_open($r, $r->pick(['#E7DCC8', '#DCD3C2', '#E9E4DA']), $r->pick(['#A0612E', '#8A5428', '#B5733C']));
+    $svg .= "<defs><linearGradient id=\"g\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"0\"><stop offset=\"0\" stop-color=\"$mid\"/><stop offset=\".42\" stop-color=\"$base\"/><stop offset=\"1\" stop-color=\"$dark\"/></linearGradient>"
+          . "<linearGradient id=\"liquid\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"0\"><stop offset=\"0\" stop-color=\"#FFF6D8\" stop-opacity=\".55\"/><stop offset=\".5\" stop-color=\"#FFFBEA\" stop-opacity=\".8\"/><stop offset=\"1\" stop-color=\"#F2E3B8\" stop-opacity=\".55\"/></linearGradient></defs>";
+    $svg .= '<ellipse cx="600" cy="1098" rx="230" ry="30" fill="url(#shadow)"/>';
+
+    $speckle = function (string $clip, array $box) use ($r): string {
+        $out = "<g clip-path=\"url(#$clip)\">";
+        for ($i = 0; $i < 90; $i++) {
+            $out .= '<circle cx="' . round($r->range($box[0], $box[2])) . '" cy="' . round($r->range($box[1], $box[3])) . '" r="' . round($r->range(1.5, 3.5), 1) . '" fill="#3A2A1E" opacity=".3"/>';
+        }
+        return $out . '<rect width="1200" height="1500" fill="url(#light)"/></g>';
+    };
+
+    if ($form === 'lavalamp') {
+        // Bottle with liquid and wax blobs
+        $bottle = 'M520 420 L470 840 L730 840 L680 420 Z';
+        $svg .= "<path d=\"$bottle\" fill=\"url(#liquid)\" stroke=\"#9A8F7A\" stroke-width=\"3\"/>";
+        $svg .= "<clipPath id=\"b\"><path d=\"$bottle\"/></clipPath><g clip-path=\"url(#b)\">";
+        $svg .= "<ellipse cx=\"600\" cy=\"835\" rx=\"140\" ry=\"40\" fill=\"$lava\"/>";
+        for ($i = 0; $i < 4; $i++) {
+            $cx = round($r->range(540, 660)); $cy = round($r->range(470, 760)); $rx = round($r->range(26, 46)); $ry = round($rx * $r->range(1.1, 1.6));
+            $svg .= "<ellipse cx=\"$cx\" cy=\"$cy\" rx=\"$rx\" ry=\"$ry\" fill=\"$lava\"/>";
+        }
+        $svg .= '<rect x="470" y="420" width="70" height="420" fill="#fff" opacity=".18"/></g>';
+        // Glazed cap and sculpted base
+        $cap  = 'M515 430 Q520 360 600 350 Q680 360 685 430 Z';
+        $base = 'M470 835 L730 835 Q800 960 790 1060 Q785 1088 760 1090 L440 1090 Q415 1088 410 1060 Q400 960 470 835 Z';
+        $svg .= "<clipPath id=\"c\"><path d=\"$cap\"/><path d=\"$base\"/></clipPath>";
+        $svg .= "<path d=\"$cap\" fill=\"url(#g)\"/><path d=\"$base\" fill=\"url(#g)\"/>";
+        $svg .= "<path d=\"M440 960 Q600 990 760 960\" stroke=\"$dark\" stroke-width=\"6\" fill=\"none\" opacity=\".45\"/>";
+        $svg .= $speckle('c', [400, 340, 800, 1090]);
+        // Warm glow on the wall
+        $svg .= "<ellipse cx=\"600\" cy=\"600\" rx=\"330\" ry=\"380\" fill=\"$lava\" opacity=\".08\"/>";
+    } else { // tablelamp
+        $base = 'M560 720 Q470 760 450 880 Q440 1000 520 1075 Q545 1090 600 1090 Q655 1090 680 1075 Q760 1000 750 880 Q730 760 640 720 Z';
+        $svg .= "<clipPath id=\"c\"><path d=\"$base\"/></clipPath><path d=\"$base\" fill=\"url(#g)\"/>";
+        $svg .= $speckle('c', [440, 700, 760, 1090]);
+        $svg .= '<rect x="590" y="560" width="20" height="165" fill="#B8A98C"/>';
+        $svg .= '<path d="M430 590 L480 360 L720 360 L770 590 Z" fill="#EFE6D3" stroke="#D9CCB0" stroke-width="4"/>';
+        $svg .= '<path d="M480 360 L720 360 L770 590 L430 590 Z" fill="url(#light)"/>';
+        $svg .= '<ellipse cx="600" cy="600" rx="200" ry="30" fill="#FFF3C9" opacity=".55"/>';
+    }
+    return $svg . '</svg>';
+}

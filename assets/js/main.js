@@ -1,77 +1,32 @@
 document.addEventListener('DOMContentLoaded', function() {
 
-    // Spotlight carousel
+    // Hot off the shelf: a swipeable row. Arrows scroll by one card and
+    // switch off at either end; no autoplay.
     (function() {
-        const stage = document.querySelector('.spotlight__stage');
-        if (!stage) return;
+        const row = document.querySelector('[data-shelf]');
+        if (!row) return;
+        const track = row.querySelector('[data-shelf-track]');
+        const prev  = row.querySelector('[data-shelf-prev]');
+        const next  = row.querySelector('[data-shelf-next]');
 
-        const cards = Array.from(stage.querySelectorAll('.product-card'));
-        const dots  = Array.from(document.querySelectorAll('.spotlight__dot'));
-        const total = cards.length;
-        if (total < 2) {
-            // Single card: just make it active, no controls needed
-            if (total === 1) cards[0].classList.add('is-active');
-            return;
+        function step() {
+            const item = track.querySelector('.shelf-row__item');
+            if (!item) return track.clientWidth;
+            const gap = parseFloat(getComputedStyle(track).columnGap) || 0;
+            return item.getBoundingClientRect().width + gap;
         }
-
-        let current = 0;
-        let timer;
-
         function update() {
-            const prev = (current - 1 + total) % total;
-            const next = (current + 1) % total;
-
-            cards.forEach(function(card, i) {
-                card.classList.remove('is-active', 'is-prev', 'is-next');
-                if      (i === current) card.classList.add('is-active');
-                else if (i === prev)    card.classList.add('is-prev');
-                else if (i === next)    card.classList.add('is-next');
-            });
-
-            dots.forEach(function(dot, i) {
-                dot.classList.toggle('is-active', i === current);
-            });
+            const max = track.scrollWidth - track.clientWidth - 2;
+            prev.disabled = track.scrollLeft <= 2;
+            next.disabled = track.scrollLeft >= max;
+            row.classList.toggle('shelf-row--static', max <= 0);
         }
-
-        function goTo(index) {
-            current = ((index % total) + total) % total;
-            update();
-            restart();
-        }
-
-        function advance() {
-            current = (current + 1) % total;
-            update();
-        }
-
-        function restart() {
-            clearInterval(timer);
-            timer = setInterval(advance, 4000);
-        }
-
-        document.querySelector('.spotlight__arrow--prev')
-            ?.addEventListener('click', function() { goTo(current - 1); });
-        document.querySelector('.spotlight__arrow--next')
-            ?.addEventListener('click', function() { goTo(current + 1); });
-
-        dots.forEach(function(dot, i) {
-            dot.addEventListener('click', function() { goTo(i); });
-        });
-
-        // Pause autoplay on hover
-        stage.addEventListener('mouseenter', function() { clearInterval(timer); });
-        stage.addEventListener('mouseleave', restart);
-
-
-        // Init without transition so cards snap to position instantly
-        cards.forEach(function(c) { c.style.transition = 'none'; });
+        const smooth = matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+        prev.addEventListener('click', function() { track.scrollBy({ left: -step(), behavior: smooth }); });
+        next.addEventListener('click', function() { track.scrollBy({ left: step(), behavior: smooth }); });
+        track.addEventListener('scroll', update, { passive: true });
+        window.addEventListener('resize', update);
         update();
-        requestAnimationFrame(function() {
-            requestAnimationFrame(function() {
-                cards.forEach(function(c) { c.style.transition = ''; });
-                restart();
-            });
-        });
     })();
     // Homepage hero video: hold on the first frame for reduced-motion visitors.
     (function() {
@@ -127,3 +82,37 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+// New series countdown in the home hero. The page renders
+// the starting numbers server-side; this keeps them ticking and flips it to
+// "out now" at the release time.
+(function () {
+    var nodes = document.querySelectorAll('[data-drop-release]');
+    if (!nodes.length) return;
+    var release = parseInt(nodes[0].getAttribute('data-drop-release'), 10);
+    var section = document.getElementById('new-series');
+    var pad = function (n) { return (n < 10 ? '0' : '') + n; };
+    var timer;
+
+    function tick() {
+        var left = Math.max(0, Math.floor((release - Date.now()) / 1000));
+        var d = Math.floor(left / 86400), h = Math.floor(left % 86400 / 3600),
+            m = Math.floor(left % 3600 / 60), s = left % 60;
+        if (section) {
+            var set = function (k, v) { var el = section.querySelector('[data-drop-' + k + ']'); if (el) el.textContent = pad(v); };
+            set('d', d); set('h', h); set('m', m); set('s', s);
+        }
+        if (left === 0) {
+            clearInterval(timer);
+            // Reload once so the bar and section show their "out now" state.
+            if (!sessionStorage.getItem('dropReloaded')) {
+                try { sessionStorage.setItem('dropReloaded', '1'); } catch (e) {}
+                location.reload();
+            }
+        }
+    }
+    if (section && section.classList.contains('is-live')) return;
+    tick();
+    timer = setInterval(tick, 1000);
+})();
+

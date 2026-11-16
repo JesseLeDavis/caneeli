@@ -10,18 +10,51 @@
   a { color: $neutral; transition: color 150ms; }
   a:hover { color: $mustard; }
 
+  // Logo and tagline centered across the top; link columns below.
+  // Phone: Shop and Studio side by side, socials in a row underneath.
+  // Tablet and up: Shop, Studio and Follow along as three columns.
   &__inner {
     display: grid;
-    gap: 40px;
-    padding-top: 64px;
-    padding-bottom: 48px;
+    grid-template-columns: 1fr 1fr;
+    gap: 36px 24px;
+    padding-top: 48px;
+    padding-bottom: 36px;
 
-    @media (min-width: 640px)  { grid-template-columns: 1fr 1fr; }
-    @media (min-width: 1000px) { grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px; }
+    @media (min-width: 640px)  { grid-template-columns: repeat(3, 1fr); gap: 40px 32px; padding-top: 64px; padding-bottom: 48px; }
+    @media (min-width: 1000px) { gap: 48px; }
   }
 
-  &__brand p { max-width: 30ch; margin-top: 18px; line-height: 1.55; }
-  &__logo img { width: 150px; height: auto; display: block; }
+  &__brand {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding-bottom: 32px;
+    border-bottom: 1px solid rgba($neutral, 0.14);
+
+    @media (min-width: 640px) { padding-bottom: 40px; }
+  }
+
+  &__col#{&}__col--social {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 24px;
+
+    .site-footer__heading { width: 100%; margin-bottom: 0; }
+
+    @media (min-width: 640px) {
+      grid-column: auto;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+    }
+  }
+
+  &__brand p { max-width: 36ch; margin-top: 16px; line-height: 1.55; }
+  &__logo img { width: 140px; height: auto; display: block; }
 
   &__col {
     display: flex;
@@ -65,5 +98,11 @@
     gap: 20px;
 
     a { color: rgba($neutral, 0.75); }
+  }
+
+  // Comfortable tap targets for the stacked phone links
+  @media (max-width: 639px) {
+    &__col a { padding: 4px 0; }
+    &__base { flex-direction: column; gap: 10px; padding-bottom: 32px; }
   }
 }

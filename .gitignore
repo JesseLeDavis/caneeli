@@ -24,3 +24,6 @@ assets/uploads/*
 # Archives / backups — never commit zips of the project
 *.zip
 .env.test
+
+# Local copy of the live catalog for the test site (dev/pull-live-catalog.php)
+dev/live-catalog.json

@@ -3,28 +3,45 @@ require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../includes/functions.php';
 include __DIR__ . '/../../includes/db.php';
 require_once __DIR__ . '/../../includes/product_categories.php';
+require_once __DIR__ . '/../../includes/product_card.php';
 
 $categories = PRODUCT_CATEGORIES;
 $pdo        = getDB();
 
-// Get actual price range from DB for slider bounds
+// Actual price range from the DB, used to clamp min_price/max_price.
 $bounds     = $pdo->query("SELECT MIN(price) as min_p, MAX(price) as max_p FROM products WHERE active = 1")->fetch();
-// Snapped to the slider's $5 step, so its ends land exactly on the bounds and
-// the priciest piece can't fall just outside the range (e.g. $285 vs $284).
+// Rounded outward to whole $5, so the priciest piece can't fall just outside
+// the range (e.g. $285 vs $284).
 $bound_min  = (int) (floor(($bounds['min_p'] ?? 0) / 5) * 5);
 $bound_max  = (int) (ceil(($bounds['max_p'] ?? 1000) / 5) * 5);
+
+// Price chips. Each sets the same min_price/max_price GET params the query
+// below already understands (null = no limit on that side).
+$price_presets = [
+    ''        => ['label' => 'Any price',   'min' => null, 'max' => null],
+    'under100'=> ['label' => 'Under $100',  'min' => null, 'max' => 99],
+    '100-300' => ['label' => '$100–$300',   'min' => 100,  'max' => 300],
+    '300plus' => ['label' => '$300+',       'min' => 300,  'max' => null],
+];
+$raw_min = isset($_GET['min_price']) && $_GET['min_price'] !== '' ? intval($_GET['min_price']) : null;
+$raw_max = isset($_GET['max_price']) && $_GET['max_price'] !== '' ? intval($_GET['max_price']) : null;
+$active_price = null; // null = a custom range from an old slider link
+foreach ($price_presets as $key => $preset) {
+    if ($preset['min'] === $raw_min && $preset['max'] === $raw_max) { $active_price = $key; break; }
+}
 
 // Filter params
 $category  = $_GET['category'] ?? '';
 $min_price = isset($_GET['min_price']) ? intval($_GET['min_price']) : $bound_min;
 $max_price = isset($_GET['max_price']) ? intval($_GET['max_price']) : $bound_max;
 $page      = max(1, intval($_GET['page'] ?? 1));
-$per_page  = 8;
+$per_page  = 12; // fills full rows at 2, 3 and 4 columns
 
 if (!in_array($category, $categories)) $category = '';
-$min_price = max($bound_min, min($min_price, $bound_max));
-$max_price = max($bound_min, min($max_price, $bound_max));
-if ($min_price > $max_price) $min_price = $max_price;
+// Clamp only on the outside: "Under $100" with nothing under $100 should show
+// the empty state, not get pulled up to the cheapest piece.
+$min_price = max($bound_min, $min_price);
+$max_price = min($max_price, $bound_max);
 
 // Build query
 $where  = "WHERE active = 1 AND price >= ? AND price <= ?";
@@ -62,12 +79,21 @@ function shop_url($overrides = []) {
     return '?' . http_build_query(array_merge($p, $overrides));
 }
 
-// Each category is its own indexable page ("Ceramics | Shop"); price-slider
+// Each category is its own indexable page ("Ceramics | Shop"); price
 // filters aren't, so they're left out of the canonical URL.
 $pageTitle       = $category ? "$category | Shop" : 'Shop';
 $pageDescription = $category
-    ? 'Handmade ' . ($category === 'Other' ? 'pieces' : strtolower($category)) . ' by Caneeli Designs. One-of-a-kind stained glass and ceramic work, made by Annie in Oregon.'
-    : 'Shop handmade stained glass, ceramics, lighting and wall decor by Caneeli Designs. Small batches, made by hand in Oregon — no two pieces alike.';
+    ? 'Handmade ' . ($category === 'Other' ? 'pieces' : strtolower($category)) . ' by Caneeli Designs: stained glass lamps, ceramic lighting and the salmon series, made by Annie in Oregon.'
+    : 'Shop stained glass lamps, ceramic lighting and the salmon series by Caneeli Designs. Made by hand by Annie in Oregon, no two pieces alike.';
+// Price chip links: keep the category, reset to page 1.
+function shop_price_url(array $preset): string {
+    global $category;
+    $p = ['page' => 1];
+    if ($category)                $p['category']  = $category;
+    if ($preset['min'] !== null)  $p['min_price'] = $preset['min'];
+    if ($preset['max'] !== null)  $p['max_price'] = $preset['max'];
+    return '?' . http_build_query($p);
+}
 $canon = array_filter(['category' => $category ?: null, 'page' => $page > 1 ? $page : null]);
 $canonicalPath = '/pages/shop/' . ($canon ? '?' . http_build_query($canon) : '');
 include __DIR__ . '/../../includes/header.php';
@@ -96,34 +122,14 @@ include __DIR__ . '/../../includes/header.php';
             <span class="shop-count"><?php echo $total; ?> piece<?php echo $total !== 1 ? 's' : ''; ?></span>
         </nav>
 
-        <!-- Price slider -->
-        <form class="price-slider" id="price-form" method="GET">
-            <?php if ($category): ?>
-                <input type="hidden" name="category" value="<?php echo htmlspecialchars($category); ?>">
-            <?php endif; ?>
-            <input type="hidden" name="page" value="1">
-
-            <div class="price-slider__header">
-                <span class="price-slider__title">Price</span>
-                <div class="price-slider__bubbles">
-                    <span class="price-bubble" id="min-bubble">$<?php echo $min_price; ?></span>
-                    <span class="price-slider__dash">—</span>
-                    <span class="price-bubble" id="max-bubble">$<?php echo $max_price; ?></span>
-                </div>
-            </div>
-
-            <div class="price-slider__wrap">
-                <div class="price-slider__track">
-                    <div class="price-slider__fill" id="slider-fill"></div>
-                </div>
-                <input type="range" name="min_price" id="min-price"
-                       min="<?php echo $bound_min; ?>" max="<?php echo $bound_max; ?>"
-                       value="<?php echo $min_price; ?>" step="5">
-                <input type="range" name="max_price" id="max-price"
-                       min="<?php echo $bound_min; ?>" max="<?php echo $bound_max; ?>"
-                       value="<?php echo $max_price; ?>" step="5">
-            </div>
-        </form>
+        <!-- Price chips -->
+        <nav class="filter-bar filter-bar--price" aria-label="Price">
+            <span class="filter-bar__label" aria-hidden="true">Price</span>
+            <?php foreach ($price_presets as $key => $preset): $on = $active_price === $key; ?>
+                <a href="<?php echo shop_price_url($preset); ?>"
+                   class="filter-chip filter-chip--small <?php echo $on ? 'is-active' : ''; ?>"<?php echo $on ? ' aria-current="true"' : ''; ?>><?php echo $preset['label']; ?></a>
+            <?php endforeach; ?>
+        </nav>
 
         </div><!-- /.shop-filters -->
 
@@ -131,31 +137,12 @@ include __DIR__ . '/../../includes/header.php';
         <?php if (empty($products)): ?>
             <div class="shop-empty">
                 <p class="shop-empty__heading">No pieces match these filters</p>
-                <p class="shop-empty__text">Widen the price range or pick another category to see more pieces.</p>
+                <p class="shop-empty__text">Try another price or category to see more pieces.</p>
                 <a href="/pages/shop/" class="btn">Show all pieces</a>
             </div>
         <?php else: ?>
             <div class="product-grid">
-                <?php foreach ($products as $product): ?>
-                <?php $card_sold_out = ($product['status'] ?? 'active') === 'sold_out' || (int) $product['stock_qty'] <= 0; ?>
-                <a href="/pages/shop/product.php?id=<?php echo $product['id']; ?>" class="product-card <?php echo $card_sold_out ? 'product-card--sold-out' : ''; ?>">
-                    <div class="product-card__media">
-                        <?php if ($product['image_path']): ?>
-                            <img class="product-card__bg" src="<?php echo htmlspecialchars($product['image_path']); ?>"
-                                 alt="" loading="lazy">
-                        <?php else: ?>
-                            <span class="product-card__bg product-card__placeholder"></span>
-                        <?php endif; ?>
-                        <?php if ($card_sold_out): ?>
-                            <span class="product-card__sold-out">Sold out</span>
-                        <?php endif; ?>
-                    </div>
-                    <div class="product-card__caption">
-                        <h3 class="product-card__name"><?php echo sanitize($product['name']); ?></h3>
-                        <span class="product-card__price"><?php echo formatPrice($product['price']); ?></span>
-                    </div>
-                </a>
-                <?php endforeach; ?>
+                <?php foreach ($products as $product) render_product_card($product, 'h2'); ?>
             </div>
 
             <!-- Pagination -->
@@ -180,53 +167,5 @@ include __DIR__ . '/../../includes/header.php';
 
     </div>
 </section>
-
-<script>
-(function () {
-    const minSlider  = document.getElementById('min-price');
-    const maxSlider  = document.getElementById('max-price');
-    const minBubble  = document.getElementById('min-bubble');
-    const maxBubble  = document.getElementById('max-bubble');
-    const fill       = document.getElementById('slider-fill');
-    const form       = document.getElementById('price-form');
-
-    if (!minSlider || !maxSlider) return;
-
-    function update() {
-        const min    = parseInt(minSlider.value);
-        const max    = parseInt(maxSlider.value);
-        const lo     = parseInt(minSlider.min);
-        const hi     = parseInt(minSlider.max);
-        const range  = hi - lo;
-
-        minBubble.textContent = '$' + min;
-        maxBubble.textContent = '$' + max;
-
-        const leftPct  = ((min - lo) / range) * 100;
-        const rightPct = ((hi - max) / range) * 100;
-        fill.style.left  = leftPct + '%';
-        fill.style.right = rightPct + '%';
-    }
-
-    minSlider.addEventListener('input', function () {
-        if (parseInt(minSlider.value) > parseInt(maxSlider.value) - 5) {
-            minSlider.value = parseInt(maxSlider.value) - 5;
-        }
-        update();
-    });
-
-    maxSlider.addEventListener('input', function () {
-        if (parseInt(maxSlider.value) < parseInt(minSlider.value) + 5) {
-            maxSlider.value = parseInt(minSlider.value) + 5;
-        }
-        update();
-    });
-
-    minSlider.addEventListener('change', function () { form.submit(); });
-    maxSlider.addEventListener('change', function () { form.submit(); });
-
-    update();
-})();
-</script>
 
 <?php include __DIR__ . '/../../includes/footer.php'; ?>

@@ -1,4 +1,9 @@
 @use '../base/variables' as *;
+@use 'sass:color';
+
+// Deeper brand blue for focus rings: 3:1 against both the paper field and
+// the light-blue panel.
+$focus-blue: color.adjust($blue-400, $lightness: -16%);
 
 .contact {
   display: grid;
@@ -16,9 +21,11 @@
 
   .content {
     .large_title {
-      font-size: 44px;
+      font-size: 38px;
       line-height: 1;
       max-width: 12ch;
+
+      @media (min-width: 420px) { font-size: 44px; }
 
       @media (min-width: 768px) { font-size: 64px; }
     }
@@ -44,7 +51,7 @@
     padding: 28px;
     border-radius: $radius;
     background: $blue-200;
-    @include color-shadow($blue-400, 6px);
+    @include color-shadow($blue-400, 8px);
 
     @media (min-width: 768px) { padding: 40px; }
 
@@ -58,31 +65,105 @@
     font-size: 15px;
     font-weight: 700;
 
-    input, textarea {
+    input, textarea, select {
       width: 100%;
-      padding: 14px 16px;
-      border: $line;
+      min-height: 50px;
+      padding: 13px 16px;
+      border: 1px solid rgba($dark, 0.16);
       border-radius: $radius;
-      background: #fff;
+      background: $neutral;
       color: $dark;
       font-family: $font-body;
       font-size: 16px;
       font-weight: 500;
+      transition: border-color 150ms, box-shadow 150ms;
 
-      &::placeholder { color: rgba($dark, 0.45); }
-      &:focus { outline: 3px solid $blue-400; outline-offset: 1px; }
+      &::placeholder { color: rgba($dark, 0.55); }
+      &:hover { border-color: rgba($dark, 0.32); }
+      // Clear blue ring
+      &:focus { outline: none; border-color: $focus-blue; box-shadow: 0 0 0 3px $focus-blue; }
+      &:focus-visible { outline: none; }
     }
 
     textarea { min-height: 180px; resize: vertical; }
+
+    select {
+      appearance: none;
+      padding-right: 44px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23282828' stroke-width='2'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 16px center;
+      cursor: pointer;
+    }
+  }
+
+  .contact-field__optional {
+    font-style: normal;
+    font-weight: 500;
+    color: $muted;
+  }
+
+  // "How commissions work": four short numbered steps under the intro
+  .contact-steps {
+    max-width: 42ch;
+    margin-top: 40px;
+    padding-top: 28px;
+    border-top: $hairline;
+
+    &__title {
+      font-size: $fs-lg;
+      line-height: 1.1;
+    }
+
+    &__list {
+      counter-reset: step;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 18px;
+
+      li {
+        counter-increment: step;
+        position: relative;
+        padding-left: 44px;
+        font-size: $fs-base;
+        line-height: 1.5;
+
+        &::before {
+          content: counter(step);
+          position: absolute;
+          left: 0;
+          top: -2px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 30px;
+          height: 30px;
+          border-radius: 50%;
+          background: $mustard;
+          color: $dark;
+          font-family: $font-body;
+          font-weight: 700;
+          font-size: 15px;
+          font-variant-numeric: tabular-nums;
+        }
+      }
+
+      a {
+        font-weight: 600;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+      }
+    }
   }
 }
 
 .contact-status {
   padding: 12px 16px;
-  border: $line;
   border-radius: $radius;
   font-weight: 600;
 
-  &--success { background: #DFF0D8; }
-  &--error   { background: #FBE0D6; }
+  &--success { background: #DCEBD3; color: #2E5A1F; }
+  &--error   { background: #F6DDD2; color: #8A3412; }
 }

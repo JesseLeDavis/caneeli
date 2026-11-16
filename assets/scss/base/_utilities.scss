@@ -11,7 +11,7 @@
   display: inline-flex;
   align-items: center;
   background: #fff;
-  border: $line;
+  border: 1px solid rgba($dark, 0.18);
   border-radius: $radius-pill;
   overflow: hidden;
 
@@ -38,6 +38,8 @@
     &:hover {
       background: $paper-2;
     }
+
+    &:focus-visible { outline-offset: -3px; }
   }
 
   &__input {
@@ -63,7 +65,23 @@
 .hover-grow {
   transition: ease-in-out 300ms;
 
+  @media (prefers-reduced-motion: reduce) { transition: none; &:hover { transform: none; } }
+
   &:hover {
     transform: scale(1.05) translateY(-5px);
   }
+}
+
+// Hidden on screen, still read by screen readers (e.g. a form label whose
+// placeholder already says what to type)
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }
