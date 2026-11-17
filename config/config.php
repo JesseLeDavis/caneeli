@@ -14,6 +14,13 @@ if (APP_ENV === 'test') {
     $env = array_merge($env ?: [], parse_ini_file($testEnv));
 }
 
+// Every date on the site is Pacific time, where Annie is. PHP's default is
+// UTC (and Hostinger's MySQL usually is too), which put order times 8 hours
+// ahead and pushed evening orders onto the next day. includes/db.php sets the
+// database connection to the same zone.
+define('APP_TIMEZONE', $env['APP_TIMEZONE'] ?? 'America/Los_Angeles');
+date_default_timezone_set(APP_TIMEZONE);
+
 // Site Configuration
 define('SITE_NAME', 'Caneeli');
 define('SITE_URL', $env['SITE_URL'] ?? 'http://localhost:8000');
@@ -44,6 +51,7 @@ define('SMTP_SECURE',     $env['SMTP_SECURE']     ?? 'tls'); // 'tls' (587) or '
 define('MAIL_FROM_EMAIL', $env['MAIL_FROM_EMAIL'] ?? ($env['SMTP_USER'] ?? ''));
 define('MAIL_FROM_NAME',  $env['MAIL_FROM_NAME']  ?? SITE_NAME);
 define('OWNER_EMAIL',     $env['OWNER_EMAIL']     ?? ''); // BCC'd on order confirmations
+define('MAIL_TEST_INBOX', $env['MAIL_TEST_INBOX'] ?? ''); // test site only: where every email goes
 
 // Error reporting — display errors only in local dev
 $is_local = in_array($_SERVER['SERVER_NAME'] ?? '', ['localhost', '127.0.0.1']);

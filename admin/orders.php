@@ -5,7 +5,7 @@ require_once __DIR__ . '/../includes/db.php';
 
 $pdo = getDB();
 
-$allowed_statuses = ['all', 'pending', 'paid', 'fulfilled', 'cancelled'];
+$allowed_statuses = ['all', 'paid', 'deposit_paid', 'fulfilled', 'pending', 'cancelled'];
 $filter = $_GET['status'] ?? 'all';
 if (!in_array($filter, $allowed_statuses, true)) {
     $filter = 'all';
@@ -14,7 +14,7 @@ $q = trim($_GET['q'] ?? '');
 
 // Status counts for the tabs.
 $counts_by_status = [
-    'all' => 0, 'pending' => 0, 'paid' => 0, 'fulfilled' => 0, 'cancelled' => 0,
+    'all' => 0, 'pending' => 0, 'paid' => 0, 'deposit_paid' => 0, 'fulfilled' => 0, 'cancelled' => 0,
 ];
 $rows = $pdo->query("SELECT status, COUNT(*) AS c FROM orders GROUP BY status")->fetchAll();
 foreach ($rows as $r) {
@@ -87,65 +87,75 @@ $activeNav = 'orders';
 require __DIR__ . '/layout-top.php';
 ?>
 
-<div class="container">
-    <div class="page-header">
-        <h1>Orders (<?php echo $counts_by_status['all']; ?>)</h1>
-        <?php if ($counts_by_status['all']): ?>
-            <a href="/admin/orders.php?status=<?php echo $filter; ?>&export=1" class="btn btn-primary">Export CSV</a>
-        <?php endif; ?>
+<div class="container ui-page">
+    <div class="ui-head">
+        <div>
+            <h1>Orders</h1>
+            <p class="ui-head__sub"><?php echo $counts_by_status['all']; ?> in total<?php echo $counts_by_status['paid'] ? ', ' . $counts_by_status['paid'] . ' paid and waiting to ship' : ''; ?></p>
+        </div>
+        <div class="ui-head__actions">
+            <form class="ui-search" method="get" role="search">
+                <input type="hidden" name="status" value="<?php echo htmlspecialchars($filter); ?>">
+                <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                <label class="visually-hidden" for="order-search">Search orders</label>
+                <input type="search" id="order-search" name="q" placeholder="Search name or email" value="<?php echo htmlspecialchars($q); ?>">
+            </form>
+            <?php if ($counts_by_status['all']): ?>
+                <a href="/admin/orders.php?status=<?php echo $filter; ?>&export=1" class="btn btn-secondary">Export CSV</a>
+            <?php endif; ?>
+        </div>
     </div>
 
-    <div class="status-tabs">
-        <?php foreach ($allowed_statuses as $s): ?>
-            <a href="/admin/orders.php?status=<?php echo $s; ?>"
-               class="status-tab <?php echo $filter === $s ? 'is-active' : ''; ?>">
-                <?php echo ucfirst($s); ?>
-                <span class="status-tab__count"><?php echo $counts_by_status[$s]; ?></span>
+    <nav class="ui-tabs" aria-label="Filter by status">
+        <?php foreach ($allowed_statuses as $s):
+            if ($s !== 'all' && !$counts_by_status[$s] && $filter !== $s) continue; ?>
+            <a href="/admin/orders.php?status=<?php echo $s; ?><?php echo $q !== '' ? '&q=' . urlencode($q) : ''; ?>"
+               class="ui-tab <?php echo $filter === $s ? 'is-active' : ''; ?>"<?php echo $filter === $s ? ' aria-current="page"' : ''; ?>>
+                <?php echo $s === 'all' ? 'All' : admin_order_status_label($s); ?>
+                <span class="ui-tab__count"><?php echo $counts_by_status[$s]; ?></span>
             </a>
         <?php endforeach; ?>
-    </div>
+    </nav>
 
     <?php if ($q): ?>
-        <p style="margin-top:8px;font-size:13px;color:rgba(45,45,45,0.6)">
-            Showing orders matching "<strong><?php echo htmlspecialchars($q); ?></strong>" —
-            <a href="/admin/orders.php?status=<?php echo htmlspecialchars($filter); ?>">clear</a>
-        </p>
+        <p class="ui-filter-note">Showing orders matching “<strong><?php echo htmlspecialchars($q); ?></strong>”. <a href="/admin/orders.php?status=<?php echo htmlspecialchars($filter); ?>">Clear search</a></p>
     <?php endif; ?>
 
     <?php if (!$orders): ?>
-        <p>No <?php echo $filter === 'all' ? '' : $filter . ' '; ?>orders<?php echo $q ? ' matching that search' : ''; ?>.</p>
+        <div class="ui-card ui-empty">
+            <p><strong>No <?php echo $filter === 'all' ? '' : strtolower(admin_order_status_label($filter)) . ' '; ?>orders<?php echo $q ? ' matching that search' : ''; ?>.</strong></p>
+            <p>New orders show up here as soon as they're paid.</p>
+        </div>
     <?php else: ?>
-    <table class="table--cards">
-        <thead>
-            <tr>
-                <th>Order</th>
-                <th>Date</th>
-                <th>Customer</th>
-                <th>Items</th>
-                <th>Total</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($orders as $o): ?>
-            <tr>
-                <td data-label="Order"><strong>#<?php echo $o['id']; ?></strong></td>
-                <td data-label="Date"><?php echo date('M j, Y g:ia', strtotime($o['created_at'])); ?></td>
-                <td data-label="Customer">
-                    <div style="font-weight:600"><?php echo htmlspecialchars($o['customer_name'] ?: '—'); ?></div>
-                    <div style="font-size:12px;color:rgba(45,45,45,0.55)"><?php echo htmlspecialchars($o['customer_email']); ?></div>
-                </td>
-                <td data-label="Items"><?php echo (int) $o['item_count']; ?></td>
-                <td data-label="Total">$<?php echo number_format((float) $o['total'], 2); ?></td>
-                <td data-label="Status"><span class="badge-status badge-status--<?php echo htmlspecialchars($o['status']); ?>"><?php echo ucfirst($o['status']); ?></span></td>
-                <td class="cell-actions">
-                    <a href="/admin/order-detail.php?id=<?php echo $o['id']; ?>" class="btn btn-secondary btn-sm">View</a>
-                </td>
-            </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
+    <div class="ui-card ui-list">
+        <?php $lastDay = null; foreach ($orders as $o):
+            $day = admin_day_label($o['created_at']);
+            if ($day !== $lastDay): $lastDay = $day; ?>
+                <div class="ui-list__day"><?php echo $day; ?></div>
+            <?php endif;
+            $who = $o['customer_name'] ?: $o['customer_email'] ?: 'Customer'; ?>
+            <a class="ui-row ui-row--order" href="/admin/order-detail.php?id=<?php echo (int) $o['id']; ?>">
+                <?php echo admin_avatar($who); ?>
+                <span class="ui-row__main">
+                    <strong><?php echo htmlspecialchars($who); ?></strong>
+                    <span><?php echo htmlspecialchars($o['customer_email']); ?></span>
+                </span>
+                <span class="ui-row__meta">
+                    <strong><?php echo !empty($o['is_preorder']) ? 'Pre-order' : 'Order'; ?> #<?php echo (int) $o['id']; ?></strong>
+                    <span><?php echo date('g:ia', strtotime($o['created_at'])); ?>, <?php echo (int) $o['item_count']; ?> <?php echo (int) $o['item_count'] === 1 ? 'item' : 'items'; ?></span>
+                </span>
+                <span class="ui-row__status"><?php echo admin_status_badge($o['status']); ?>
+                    <?php if (!empty($o['is_preorder']) && in_array($o['status'], ['paid', 'deposit_paid'], true) && !empty($o['preorder_ship_date'])): ?>
+                        <span class="ui-row__hint">Ships by <?php echo date('M j', strtotime($o['preorder_ship_date'])); ?></span>
+                    <?php endif; ?>
+                </span>
+                <span class="ui-row__amount">$<?php echo number_format((float) $o['total'], 2); ?>
+                    <?php if ((float) ($o['balance_due'] ?? 0) > 0): ?><span class="ui-row__hint">$<?php echo number_format((float) $o['balance_due'], 2); ?> owed</span><?php endif; ?>
+                </span>
+                <?php echo admin_chevron(); ?>
+            </a>
+        <?php endforeach; ?>
+    </div>
     <?php endif; ?>
 </div>
 

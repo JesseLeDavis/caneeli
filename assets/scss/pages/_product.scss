@@ -410,3 +410,48 @@
 
   &__pane { max-width: none; }
 }
+
+// ── Pre-order ──────────────────────────────────────────────────────────
+.product-detail__sold-pill--preorder { background: $blue-200; }
+
+.preorder {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 18px;
+
+  &__note {
+    width: 100%;
+    padding: 20px 22px;
+    border-radius: $radius;
+    background: $blue-200;
+    @include color-shadow($blue-400, 6px);
+
+    p { font-size: $fs-base; line-height: 1.55; }
+  }
+
+  &__title {
+    margin-bottom: 4px;
+    font-family: $font-heading;
+    font-weight: 700;
+    font-size: $fs-md !important;
+  }
+
+  &__terms {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    max-width: 52ch;
+    font-size: 15px;
+    line-height: 1.5;
+    cursor: pointer;
+
+    input {
+      flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+      margin-top: 2px;
+      accent-color: $blue-400;
+    }
+  }
+}

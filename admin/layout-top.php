@@ -3,7 +3,7 @@
  * Shared admin chrome: sidebar (desktop), top bar + drawer (tablet/phone) and
  * a bottom tab bar (phone).
  * Expects $pageTitle (string) to be set before include.
- * Expects $activeNav (string) — one of: 'dashboard', 'products', 'orders', 'custom', 'customers', 'insights', 'discounts', 'signups', 'messages', ''.
+ * Expects $activeNav (string) — one of: 'dashboard', 'products', 'orders', 'custom', 'preorders', 'customers', 'insights', 'discounts', 'signups', 'messages', ''.
  *
  * Pages close with just </body></html>, so nothing here opens a wrapper that
  * needs closing: the sidebar and tab bar are fixed, and body padding makes
@@ -16,6 +16,7 @@ $pageTitle = $pageTitle ?? 'Admin';
 
 // Unread contact-message count for the nav badge. Guarded so a missing table
 // (migration not yet run) never breaks every admin page.
+require_once __DIR__ . '/ui.php';
 $unreadMessages = 0;
 if (function_exists('getDB')) {
     try {
@@ -36,6 +37,7 @@ $adminIcons = [
     'orders'    => '<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>',
     'products'  => '<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>',
     'custom'    => '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
+    'preorders' => '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
     'customers' => '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
     'insights'  => '<path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/>',
     'discounts' => '<path d="M12.59 2.59A2 2 0 0 0 11.17 2H4a2 2 0 0 0-2 2v7.17a2 2 0 0 0 .59 1.42l8.7 8.7a2.43 2.43 0 0 0 3.42 0l6.58-6.58a2.43 2.43 0 0 0 0-3.42Z"/><circle cx="7.5" cy="7.5" r="1.5"/>',
@@ -57,6 +59,7 @@ $adminNavGroups = [
         'dashboard' => ['Dashboard', '/admin/dashboard.php'],
         'orders'    => ['Orders', '/admin/orders.php'],
         'custom'    => ['Custom orders', '/admin/custom-orders.php'],
+        'preorders' => ['Pre-orders', '/admin/preorders.php'],
         'products'  => ['Products', '/admin/products.php'],
         'customers' => ['Customers', '/admin/customers.php'],
     ],

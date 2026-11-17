@@ -46,7 +46,7 @@ if (!empty($order['quote_id'])) {
     }
 }
 
-$items_stmt = $pdo->prepare("SELECT * FROM order_items WHERE order_id = ? ORDER BY id");
+$items_stmt = $pdo->prepare("SELECT i.*, p.image_path FROM order_items i LEFT JOIN products p ON p.id = i.product_id WHERE i.order_id = ? ORDER BY i.id");
 $items_stmt->execute([$id]);
 $items = $items_stmt->fetchAll();
 
@@ -76,27 +76,44 @@ if ($quoteRow) {
     }
 }
 
+// How many orders this customer has placed, for the customer card.
+$customerOrders = 0;
+if (!empty($order['customer_email'])) {
+    $co = $pdo->prepare("SELECT COUNT(*) FROM orders WHERE customer_email = ? AND status <> 'cancelled'");
+    $co->execute([$order['customer_email']]);
+    $customerOrders = (int) $co->fetchColumn();
+}
+$owes      = $order['balance_due'] !== null && (float) $order['balance_due'] > 0;
+$canShip   = $order['status'] !== 'fulfilled' && $order['status'] !== 'cancelled' && !$owes;
+
 $pageTitle = 'Order #' . $order['id'];
 $activeNav = 'orders';
 require __DIR__ . '/layout-top.php';
 ?>
 
-<div class="container">
-    <div class="page-header">
+<div class="container ui-page">
+    <div class="ui-head">
         <div>
-            <a href="/admin/orders.php" style="font-size:13px;color:rgba(45,45,45,0.55)">&larr; All orders</a>
-            <h1 style="margin-top:6px">Order #<?php echo $order['id']; ?></h1>
-            <div style="margin-top:4px;color:rgba(45,45,45,0.55);font-size:14px">
-                Placed <?php echo date('M j, Y g:ia', strtotime($order['created_at'])); ?>
+            <a class="ui-back" href="/admin/orders.php">← Orders</a>
+            <div class="ui-head__title">
+                <h1><?php echo !empty($order['is_preorder']) ? 'Pre-order' : 'Order'; ?> #<?php echo (int) $order['id']; ?></h1>
+                <?php echo admin_status_badge($order['status']); ?>
             </div>
+            <p class="ui-head__sub">
+                Placed <?php echo date('M j, Y', strtotime($order['created_at'])); ?> at <?php echo date('g:ia', strtotime($order['created_at'])); ?>
+                <?php if (!empty($order['is_preorder']) && !empty($order['preorder_ship_date'])): ?>
+                    <span class="ui-head__sep"></span>Promised by <strong><?php echo date('M j', strtotime($order['preorder_ship_date'])); ?></strong>, <a href="/admin/preorders.php">see the batch</a>
+                <?php endif; ?>
+            </p>
         </div>
-        <?php
-        // 'deposit_paid' needs its own label + badge class; the rest map straight
-        // from the status name.
-        $badgeMod   = $order['status'] === 'deposit_paid' ? 'deposit' : $order['status'];
-        $badgeLabel = $order['status'] === 'deposit_paid' ? 'Deposit paid' : ucfirst($order['status']);
-        ?>
-        <span class="badge-status badge-status--<?php echo htmlspecialchars($badgeMod); ?>" style="font-size:14px;padding:6px 16px"><?php echo htmlspecialchars($badgeLabel); ?></span>
+        <div class="ui-head__actions">
+            <?php if ($stripe_dashboard && !$balanceDashboard): ?>
+                <a class="btn btn-secondary" href="<?php echo htmlspecialchars($stripe_dashboard); ?>" target="_blank" rel="noopener">View in Stripe</a>
+            <?php endif; ?>
+            <?php if ($canShip): ?>
+                <a class="btn btn-primary" href="#fulfill" onclick="var d=document.getElementById('fulfill');if(d){d.open=true;}">Mark as shipped</a>
+            <?php endif; ?>
+        </div>
     </div>
 
     <?php if ($balanceError): ?>
@@ -108,37 +125,28 @@ require __DIR__ . '/layout-top.php';
 
     <div class="order-grid">
         <div class="order-card">
-            <h3 class="order-card__title">Items</h3>
+            <h2 class="order-card__title">Items</h2>
             <?php if (!$items): ?>
-                <p style="color:rgba(45,45,45,0.55)">No line items recorded for this order.</p>
+                <p class="ui-muted">No line items recorded for this order.</p>
             <?php else: ?>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Product</th>
-                            <th>Qty</th>
-                            <th>Price</th>
-                            <th>Line</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($items as $it): ?>
-                        <tr>
-                            <td>
-                                <?php if (!empty($it['product_id'])): ?>
-                                    <a href="/admin/edit-product.php?id=<?php echo $it['product_id']; ?>"><?php echo htmlspecialchars($it['product_name']); ?></a>
-                                <?php else: ?>
-                                    <?php echo htmlspecialchars($it['product_name']); ?>
-                                    <span style="font-size:11px;color:rgba(45,45,45,0.45);margin-left:6px">(deleted)</span>
-                                <?php endif; ?>
-                            </td>
-                            <td><?php echo (int) $it['quantity']; ?></td>
-                            <td>$<?php echo number_format((float) $it['price_at_purchase'], 2); ?></td>
-                            <td>$<?php echo number_format(((float) $it['price_at_purchase']) * (int) $it['quantity'], 2); ?></td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+                <ul class="ui-items">
+                    <?php foreach ($items as $it):
+                        $qty = (int) $it['quantity'];
+                        $name = preg_replace('/^(Pre-order|Deposit): /', '', $it['product_name']); ?>
+                    <li class="ui-item">
+                        <span class="ui-item__thumb"><?php if (!empty($it['image_path'])): ?><img src="<?php echo htmlspecialchars($it['image_path']); ?>" alt=""><?php endif; ?></span>
+                        <span class="ui-item__main">
+                            <?php if (!empty($it['product_id'])): ?>
+                                <a href="/admin/edit-product.php?id=<?php echo (int) $it['product_id']; ?>"><?php echo htmlspecialchars($name); ?></a>
+                            <?php else: ?>
+                                <strong><?php echo htmlspecialchars($name); ?></strong>
+                            <?php endif; ?>
+                            <span><?php echo $qty; ?> × $<?php echo number_format((float) $it['price_at_purchase'], 2); ?><?php echo empty($it['product_id']) && empty($order['quote_id']) ? ', product deleted' : ''; ?><?php echo !empty($order['quote_id']) ? ', custom piece' : ''; ?></span>
+                        </span>
+                        <span class="ui-item__amount">$<?php echo number_format((float) $it['price_at_purchase'] * $qty, 2); ?></span>
+                    </li>
+                    <?php endforeach; ?>
+                </ul>
             <?php endif; ?>
 
             <div class="order-totals">
@@ -152,45 +160,57 @@ require __DIR__ . '/layout-top.php';
                     <span style="color:<?php echo '#C25B32'; ?>">&minus;$<?php echo number_format($discount_amount, 2); ?></span>
                 </div>
                 <?php endif; ?>
-                <?php if ($shipping_cost > 0): ?>
                 <div class="order-totals__row">
-                    <span>Shipping / tax</span>
-                    <span>$<?php echo number_format($shipping_cost, 2); ?></span>
+                    <span>Shipping</span>
+                    <span><?php echo $shipping_cost > 0 ? '$' . number_format($shipping_cost, 2) : 'Included'; ?></span>
                 </div>
-                <?php endif; ?>
                 <div class="order-totals__row order-totals__row--grand">
                     <span>Total</span>
                     <span>$<?php echo number_format((float) $order['total'], 2); ?></span>
                 </div>
+                <?php if ($order['balance_due'] !== null && $order['amount_paid'] !== null && (float) $order['amount_paid'] < (float) $order['total'] + 0.001 && ($owes || !empty($order['quote_id']) || !empty($order['is_preorder']))): ?>
+                <div class="order-totals__row order-totals__row--muted">
+                    <span>Paid</span>
+                    <span>$<?php echo number_format((float) $order['amount_paid'], 2); ?></span>
+                </div>
+                <?php if ($owes): ?>
+                <div class="order-totals__row order-totals__row--owed">
+                    <span>Still owed</span>
+                    <span>$<?php echo number_format((float) $order['balance_due'], 2); ?></span>
+                </div>
+                <?php endif; endif; ?>
             </div>
         </div>
 
         <div class="order-side">
             <div class="order-card">
-                <h3 class="order-card__title">Customer</h3>
-                <div class="order-field">
-                    <span class="order-field__label">Name</span>
-                    <span><?php echo htmlspecialchars($order['customer_name'] ?: '—'); ?></span>
+                <h2 class="order-card__title">Customer</h2>
+                <div class="ui-customer">
+                    <?php echo admin_avatar($order['customer_name'] ?: $order['customer_email'] ?: '?', 'ui-avatar--lg'); ?>
+                    <div>
+                        <strong><?php echo htmlspecialchars($order['customer_name'] ?: 'No name'); ?></strong>
+                        <?php if (!empty($order['customer_email'])): ?><a href="mailto:<?php echo htmlspecialchars($order['customer_email']); ?>"><?php echo htmlspecialchars($order['customer_email']); ?></a><?php endif; ?>
+                    </div>
                 </div>
-                <div class="order-field">
-                    <span class="order-field__label">Email</span>
-                    <span><a href="mailto:<?php echo htmlspecialchars($order['customer_email']); ?>"><?php echo htmlspecialchars($order['customer_email']); ?></a></span>
-                </div>
+                <?php if ($customerOrders > 1): ?>
+                    <a class="ui-customer__more" href="/admin/orders.php?q=<?php echo urlencode($order['customer_email']); ?>"><?php echo $customerOrders; ?> orders from this customer</a>
+                <?php elseif ($customerOrders === 1): ?>
+                    <p class="ui-customer__more">First order</p>
+                <?php endif; ?>
+                <?php if (!empty($order['shipping_address'])): ?>
+                    <div class="ui-customer__ship">
+                        <span class="ui-label">Shipping to</span>
+                        <address><?php echo nl2br(htmlspecialchars($order['shipping_address'])); ?></address>
+                    </div>
+                <?php endif; ?>
             </div>
 
-            <?php if (!empty($order['shipping_address'])): ?>
             <div class="order-card">
-                <h3 class="order-card__title">Shipping to</h3>
-                <pre class="order-address"><?php echo htmlspecialchars($order['shipping_address']); ?></pre>
-            </div>
-            <?php endif; ?>
-
-            <div class="order-card">
-                <h3 class="order-card__title">Status</h3>
+                <h2 class="order-card__title">Fulfillment</h2>
                 <?php if ($balanceDue): ?>
                     <div class="error" style="margin-bottom:12px">
                         Not fulfilled — $<?php echo number_format((float) $order['balance_due'], 2); ?>
-                        is still outstanding on this custom order. Collect the balance before it ships.
+                        is still owed on this order. Collect the balance before it ships.
                     </div>
                 <?php elseif ($needsTracking): ?>
                     <div class="error" style="margin-bottom:12px">
@@ -199,15 +219,14 @@ require __DIR__ . '/layout-top.php';
                 <?php endif; ?>
 
                 <?php if ($order['balance_due'] !== null && (float) $order['balance_due'] > 0): ?>
-                    <div style="margin-bottom:12px;padding:12px;background:rgba(194,91,50,0.07);border-left:3px solid #C25B32;border-radius:6px;font-size:13px">
-                        <strong>Custom order.</strong>
-                        $<?php echo number_format((float) $order['amount_paid'], 2); ?> deposit paid ·
-                        <strong style="color:#C25B32">$<?php echo number_format((float) $order['balance_due'], 2); ?> still due</strong>
-                        <div style="margin-top:4px;color:rgba(45,45,45,0.6)">Can't be fulfilled until the balance is collected.</div>
+                    <div class="ui-owed">
+                        <strong><?php echo !empty($order['is_preorder']) ? 'Pre-order.' : 'Custom order.'; ?></strong>
+                        $<?php echo number_format((float) $order['amount_paid'], 2); ?> deposit paid, <strong>$<?php echo number_format((float) $order['balance_due'], 2); ?> still owed</strong>.
+                        <div>It can ship once the balance is paid.</div>
                     </div>
 
                     <details style="margin-bottom:10px">
-                        <summary class="btn btn-mustard" style="width:100%;box-sizing:border-box;text-align:center;cursor:pointer;list-style:none">Request balance</summary>
+                        <summary class="btn btn-primary" style="width:100%;box-sizing:border-box;text-align:center;cursor:pointer;list-style:none">Request balance</summary>
                         <form method="POST" action="/admin/order-balance.php" style="margin-top:12px;padding:14px;background:rgba(194,91,50,0.05);border-radius:10px">
                             <?php echo csrf_field(); ?>
                             <input type="hidden" name="id" value="<?php echo (int) $order['id']; ?>">
@@ -223,6 +242,22 @@ require __DIR__ . '/layout-top.php';
                         </form>
                     </details>
 
+                    <?php if (!empty($order['is_preorder']) && !empty($order['preorder_token'])):
+                        require_once __DIR__ . '/../includes/preorders.php';
+                        $payUrl = preorder_pay_url($order); ?>
+                        <div style="margin:10px 0;font-size:12px;color:rgba(45,45,45,0.6)">
+                            Buyer's pay link<?php echo empty($order['preorder_balance_requested_at']) ? ' (the Pay button appears once you request the balance)' : ''; ?>:
+                            <div style="display:flex;gap:6px;margin-top:4px">
+                                <input type="text" readonly value="<?php echo htmlspecialchars($payUrl); ?>" onclick="this.select()" style="flex:1;min-width:0;margin:0;font-size:12px">
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="navigator.clipboard.writeText(this.previousElementSibling.value);this.textContent='Copied'">Copy</button>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                    <?php if (!empty($order['preorder_balance_requested_at'])): ?>
+                        <div style="font-size:12px;color:rgba(45,45,45,0.6);margin:8px 0">
+                            Balance requested <?php echo date('M j, Y g:ia', strtotime($order['preorder_balance_requested_at'])); ?>
+                        </div>
+                    <?php endif; ?>
                     <?php if ($quoteRow && !empty($quoteRow['balance_email_sent_at'])): ?>
                         <p style="margin:0 0 10px;font-size:12px;color:rgba(45,45,45,0.55)">
                             Balance requested <?php echo date('M j, Y g:ia', strtotime($quoteRow['balance_email_sent_at'])); ?>
@@ -250,20 +285,13 @@ require __DIR__ . '/layout-top.php';
                         <?php echo date('M j, Y', strtotime($order['balance_paid_manually_at'])); ?>.
                     </p>
                 <?php endif; ?>
-                <form method="POST" action="/admin/update-order-status.php">
-                    <?php echo csrf_field(); ?>
-                    <input type="hidden" name="id" value="<?php echo $order['id']; ?>">
-                    <select name="status" style="margin-bottom:12px">
-                        <?php foreach (['pending', 'paid', 'fulfilled', 'cancelled'] as $s): ?>
-                            <option value="<?php echo $s; ?>" <?php echo $order['status'] === $s ? 'selected' : ''; ?>><?php echo ucfirst($s); ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                    <button type="submit" class="btn btn-primary" style="width:100%">Update status</button>
-                </form>
 
                 <?php if ($order['status'] !== 'fulfilled'): ?>
-                    <details style="margin-top:10px" <?php echo $needsTracking ? 'open' : ''; ?>>
-                        <summary class="btn btn-mustard" style="width:100%;box-sizing:border-box;text-align:center;cursor:pointer;list-style:none">Mark as fulfilled</summary>
+                    <?php if ($order['status'] === 'cancelled'): ?>
+                    <p class="ui-muted">This order was cancelled.</p>
+                    <?php elseif (!$owes): ?>
+                    <details id="fulfill" class="ui-ship" <?php echo $needsTracking ? 'open' : ''; ?>>
+                        <summary class="btn btn-primary">Mark as shipped</summary>
                         <form method="POST" action="/admin/update-order-status.php" style="margin-top:12px;padding:14px;background:rgba(194,91,50,0.05);border-radius:10px">
                             <?php echo csrf_field(); ?>
                             <input type="hidden" name="id" value="<?php echo $order['id']; ?>">
@@ -277,12 +305,14 @@ require __DIR__ . '/layout-top.php';
                                     No customer email on file — the order will be fulfilled without a shipping email.
                                 <?php endif; ?>
                             </p>
-                            <button type="submit" class="btn btn-primary" style="width:100%">Fulfill &amp; email customer</button>
+                            <button type="submit" class="btn btn-primary" style="width:100%">Mark shipped and email tracking</button>
                         </form>
                     </details>
+                    <?php endif; ?>
                 <?php elseif (!empty($order['fulfilled_at'])): ?>
                     <div style="margin-top:10px;font-size:13px;color:rgba(45,45,45,0.55)">
-                        Fulfilled <?php echo date('M j, Y g:ia', strtotime($order['fulfilled_at'])); ?>
+                        <span class="ui-done">Shipped <?php echo date('M j, Y', strtotime($order['fulfilled_at'])); ?></span>
+                        <?php if (!empty($order['tracking_number'])): ?><br>Tracking <?php echo htmlspecialchars($order['tracking_number']); ?><?php endif; ?>
                         <?php if (!empty($order['shipping_email_sent_at'])): ?>
                             <br>Shipping email sent <?php echo date('M j, Y g:ia', strtotime($order['shipping_email_sent_at'])); ?>
                         <?php elseif (!empty($order['customer_email'])): ?>
@@ -301,10 +331,23 @@ require __DIR__ . '/layout-top.php';
                         <?php endif; ?>
                     </div>
                 <?php endif; ?>
+                <details class="ui-disclose">
+                    <summary>Change status manually</summary>
+                    <form method="POST" action="/admin/update-order-status.php">
+                        <?php echo csrf_field(); ?>
+                        <input type="hidden" name="id" value="<?php echo $order['id']; ?>">
+                        <select name="status" aria-label="Order status">
+                            <?php foreach (['pending', 'paid', 'fulfilled', 'cancelled'] as $s): ?>
+                                <option value="<?php echo $s; ?>" <?php echo $order['status'] === $s ? 'selected' : ''; ?>><?php echo admin_order_status_label($s); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <button type="submit" class="btn btn-secondary">Update</button>
+                    </form>
+                </details>
             </div>
 
             <div class="order-card" id="notes">
-                <h3 class="order-card__title">Shipment &amp; notes</h3>
+                <h2 class="order-card__title">Notes</h2>
                 <form method="POST" action="/admin/update-order-notes.php">
                     <?php echo csrf_field(); ?>
                     <input type="hidden" name="id" value="<?php echo $order['id']; ?>">
@@ -316,9 +359,9 @@ require __DIR__ . '/layout-top.php';
                 </form>
             </div>
 
-            <?php if ($stripe_dashboard): ?>
+            <?php if ($stripe_dashboard && $balanceDashboard): ?>
             <div class="order-card">
-                <h3 class="order-card__title">Stripe</h3>
+                <h2 class="order-card__title">Payments in Stripe</h2>
                 <?php if ($balanceDashboard): ?>
                     <p style="margin:0 0 10px;font-size:12px;color:rgba(45,45,45,0.55)">
                         A custom order is two separate Stripe charges — Stripe doesn't link them, so both are here.

@@ -31,6 +31,19 @@ function send_mail($toEmail, $toName, $subject, $html, $altText = '', $bcc = nul
         error_log("send_mail: missing/invalid recipient for subject \"$subject\"");
         return false;
     }
+    // Test site: every email goes to one inbox instead of its real recipient
+    // (sample customers are fake, and Annie shouldn't get test order copies).
+    // Set MAIL_TEST_INBOX in .env.test; without it the test site sends nothing.
+    if (defined('APP_ENV') && APP_ENV === 'test') {
+        $inbox = trim((string) (defined('MAIL_TEST_INBOX') ? MAIL_TEST_INBOX : ''));
+        if (!filter_var($inbox, FILTER_VALIDATE_EMAIL)) {
+            error_log("send_mail: test site, no MAIL_TEST_INBOX — skipping \"$subject\" to $toEmail");
+            return false;
+        }
+        $subject = "[TEST for $toEmail] $subject";
+        $toEmail = $inbox;
+        $bcc     = null;
+    }
     if (SMTP_HOST === '' || MAIL_FROM_EMAIL === '') {
         error_log("send_mail: SMTP not configured — skipping email \"$subject\" to $toEmail");
         return false;

@@ -31,6 +31,33 @@ $stmt = $pdo->prepare("SELECT * FROM orders WHERE id = ?");
 $stmt->execute([$id]);
 $order = $stmt->fetch();
 
+// Pre-orders with a deposit: same two actions, without a quote behind them.
+if ($order && !empty($order['is_preorder']) && empty($order['quote_id'])) {
+    require_once __DIR__ . '/../includes/preorders.php';
+    $balance = (float) $order['balance_due'];
+    if ($balance <= 0) { header('Location: /admin/order-detail.php?id=' . $id); exit; }
+
+    if ($action === 'request') {
+        $sent = preorder_request_balance($pdo, $order, trim($_POST['note'] ?? ''));
+        $q = $sent
+            ? 'balance=' . urlencode('Balance request sent to ' . $order['customer_email'])
+            : 'balance_err=' . urlencode("The balance is marked as requested, but the email couldn't be sent. Send the buyer their pay link yourself: " . preorder_pay_url($pdo->query("SELECT * FROM orders WHERE id = $id")->fetch()));
+        header('Location: /admin/order-detail.php?id=' . $id . '&' . $q);
+        exit;
+    }
+    if ($action === 'manual') {
+        $how   = trim($_POST['how'] ?? '');
+        $line  = 'Balance of $' . number_format($balance, 2) . ' marked paid manually on ' . date('M j, Y') . ($how !== '' ? ' (' . $how . ')' : '') . '.';
+        $notes = trim((string) ($order['notes'] ?? ''));
+        $pdo->prepare("UPDATE orders SET amount_paid = total, balance_due = 0, status = 'paid', balance_paid_manually_at = CURRENT_TIMESTAMP, notes = ? WHERE id = ?")
+            ->execute([$notes === '' ? $line : $notes . "\n" . $line, $id]);
+        header('Location: /admin/order-detail.php?id=' . $id . '&balance=' . urlencode('Balance recorded as paid. This order can be shipped now.'));
+        exit;
+    }
+    header('Location: /admin/order-detail.php?id=' . $id);
+    exit;
+}
+
 if (!$order || empty($order['quote_id'])) {
     header('Location: /admin/order-detail.php?id=' . $id);
     exit;

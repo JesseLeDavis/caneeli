@@ -29,7 +29,15 @@ $gallery = $img_stmt->fetchAll();
 
 // Search/link-preview tags (see includes/seo.php).
 require_once __DIR__ . '/../../includes/seo.php';
+require_once __DIR__ . '/../../includes/product_status.php';
 $is_sold_out     = ($product['status'] ?? 'active') === 'sold_out' || $product['stock_qty'] <= 0;
+// Pre-order: made after it's bought, ships by a set date. "Full" once the
+// batch's spots (stock_qty) are taken.
+$is_preorder     = ($product['status'] ?? '') === 'preorder';
+$preorder_open   = product_is_preorderable($product);
+$ship_label      = preorder_ship_label($product['preorder_ship_date'] ?? null, 'F j');
+require_once __DIR__ . '/../../includes/preorders.php';
+$deposit         = $is_preorder ? preorder_deposit_for($product) : null;
 $canonicalPath   = '/pages/shop/product?id=' . (int) $product['id'];
 $pageType        = 'product';
 $pageDescription = trim($product['description'] ?? '') !== ''
@@ -53,7 +61,7 @@ $structuredData = [
         'url'           => seo_url($canonicalPath),
         'priceCurrency' => 'USD',
         'price'         => number_format((float) $product['price'], 2, '.', ''),
-        'availability'  => $is_sold_out ? 'https://schema.org/SoldOut' : 'https://schema.org/InStock',
+        'availability'  => $preorder_open ? 'https://schema.org/PreOrder' : ($is_sold_out ? 'https://schema.org/SoldOut' : 'https://schema.org/InStock'),
         'itemCondition' => 'https://schema.org/NewCondition',
         // Shipping and returns, from pages/terms.php. Search Console flags
         // product listings without these. Keep them in step with the terms
@@ -115,7 +123,8 @@ track_product_view((int) $product['id'], $_SERVER['HTTP_REFERER'] ?? null);
         <div class="product-detail">
 
             <div class="product-detail__image <?php echo count($gallery) > 1 ? 'product-detail__image--gallery' : ''; ?>">
-                <?php if ($is_sold_out): ?><span class="product-detail__sold-pill">Sold</span><?php endif; ?>
+                <?php if ($is_preorder): ?><span class="product-detail__sold-pill product-detail__sold-pill--preorder"><?php echo $preorder_open ? 'Pre-order' : 'Pre-orders full'; ?></span>
+                <?php elseif ($is_sold_out): ?><span class="product-detail__sold-pill">Sold</span><?php endif; ?>
                 <?php if (count($gallery) > 1): ?>
                     <div class="product-gallery">
                         <div class="product-gallery__main">
@@ -194,7 +203,46 @@ track_product_view((int) $product['id'], $_SERVER['HTTP_REFERER'] ?? null);
                 </div>
                 <?php endif; ?>
 
-                <?php if (!$is_sold_out): ?>
+                <?php if ($preorder_open): ?>
+                    <?php $stock = (int) $product['stock_qty']; ?>
+                    <form method="POST" action="/preorder-checkout.php" id="atc-form" class="preorder">
+                        <input type="hidden" name="product_id" value="<?php echo $product['id']; ?>">
+                        <div class="preorder__note">
+                            <p class="preorder__title">Pre-order<?php if ($ship_label): ?>: ships by <?php echo $ship_label; ?><?php endif; ?></p>
+                            <?php if ($deposit): ?>
+                            <p>Annie makes this batch to order. Pay a <strong><?php echo formatPrice($deposit); ?> deposit</strong> now to hold your spot, and the remaining <?php echo formatPrice((float) $product['price'] - $deposit); ?> when yours is ready to ship.<?php
+                            else: ?>
+                            <p>Annie makes this batch to order. You pay now, and she'll email you tracking when yours ships.<?php endif; ?><?php if ($stock <= 5): ?> <strong><?php echo $stock === 1 ? 'One spot left.' : $stock . ' spots left.'; ?></strong><?php endif; ?></p>
+                        </div>
+                        <?php if ($stock <= 1): ?>
+                        <input type="hidden" name="quantity" value="1">
+                        <?php else: ?>
+                        <div class="product-detail__qty">
+                            <label for="qty-input">Quantity</label>
+                            <div class="qty-stepper">
+                                <button type="button" class="qty-stepper__btn" data-dir="-1" aria-label="One fewer">−</button>
+                                <input type="number" name="quantity" value="1" id="qty-input"
+                                       min="1" max="<?php echo min($stock, 3); ?>"
+                                       class="qty-stepper__input" readonly>
+                                <button type="button" class="qty-stepper__btn" data-dir="1" aria-label="One more">+</button>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+                        <label class="preorder__terms">
+                            <input type="checkbox" name="accept_terms" value="1" required>
+                            <span>I understand this is made to order<?php if ($ship_label): ?> and ships by <?php echo $ship_label; ?><?php endif; ?><?php if ($deposit): ?>, and that I'll pay the remaining <?php echo formatPrice((float) $product['price'] - $deposit); ?> per piece before it ships<?php endif; ?>. If the batch runs late, Annie will email me and I can cancel for a full refund.</span>
+                        </label>
+                        <button type="submit" class="btn red-button product-detail__atc-btn"><?php echo $deposit ? 'Pay ' . formatPrice($deposit) . ' deposit' : 'Pre-order now'; ?></button>
+                    </form>
+                <?php elseif ($is_preorder): ?>
+                    <div class="product-detail__soldout">
+                        <p><strong>Pre-orders are full.</strong> Every spot in this batch is taken. Ask Annie about the next one, or about a commission.</p>
+                        <div class="product-detail__soldout-actions">
+                            <a href="/pages/contact.php?about=<?php echo urlencode($product['name']); ?>" class="btn red-button">Ask about the next batch</a>
+                            <a href="/pages/shop/?category=<?php echo urlencode($product['category']); ?>" class="btn">More <?php echo sanitize(strtolower($product['category'])); ?></a>
+                        </div>
+                    </div>
+                <?php elseif (!$is_sold_out): ?>
                     <?php $stock = (int) $product['stock_qty']; ?>
                     <form method="POST" action="/cart.php" id="atc-form">
                         <input type="hidden" name="action" value="add">
@@ -237,7 +285,8 @@ track_product_view((int) $product['id'], $_SERVER['HTTP_REFERER'] ?? null);
                 ?>
                 <ul class="product-detail__facts">
                     <li>Shipping is included in the price (U.S. only).</li>
-                    <?php if (!$has_ship_signal && !$is_sold_out): ?><li>In-stock pieces ship within 5–10 business days.</li><?php endif; ?>
+                    <?php if ($is_preorder && $ship_label): ?><li>Made to order. Ships by <?php echo $ship_label; ?>.</li>
+                    <?php elseif (!$has_ship_signal && !$is_sold_out): ?><li>In-stock pieces ship within 5–10 business days.</li><?php endif; ?>
                     <li>Made by hand, so color and texture vary a little from the photos.</li>
                     <li><a href="/pages/terms.php#returns">Returns and full terms</a></li>
                 </ul>
@@ -296,7 +345,11 @@ $pelican = file_get_contents(__DIR__ . '/../../assets/images/pelican.svg');
         <span class="atc-bar__name"><?php echo sanitize($product['name']); ?></span>
         <span class="atc-bar__price"><?php echo formatPrice($product['price']); ?></span>
     </div>
+    <?php if ($preorder_open): ?>
+    <a href="#atc-form" class="btn red-button atc-bar__btn">Pre-order</a>
+    <?php else: ?>
     <button type="submit" form="atc-form" class="btn red-button atc-bar__btn">Add to cart</button>
+    <?php endif; ?>
 </div>
 <script>
 // Runs after the footer (included below) is in the DOM.

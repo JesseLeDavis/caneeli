@@ -21,24 +21,28 @@ const EMAIL_RUST     = '#C25B32';
 const EMAIL_MUSTARD  = '#D4C14B';
 const EMAIL_BLUE_400 = '#6497D6';
 const EMAIL_BLUE_200 = '#C1E1FA';
+const EMAIL_RUST_DK  = '#A84B27'; // rust text on light grounds
+const EMAIL_PAPER    = '#FFFDF8'; // the card, same as the site's receipt
+const EMAIL_MUTED    = '#625C53';
+const EMAIL_LINE     = '#E8E2D4';
 
 const EMAIL_FONT_HEADING = "'Syne','Trebuchet MS',Helvetica,Arial,sans-serif";
 const EMAIL_FONT_BODY    = "'Urbanist',Helvetica,Arial,sans-serif";
 
 /**
- * Wrap body HTML in the shared branded shell (header + footer).
+ * Wrap body HTML in the shared shell: logo on paper, a white card with a
+ * colored offset shadow (like the site's receipt), and a quiet footer.
  *
  * @param string $title  <title> + preheader
  * @param string $body   inner HTML
- * @param string $accent brand accent used for the card shadow + header rule
- * @param string $shadow color of the offset drop shadow behind the card
+ * @param string $accent kept for older callers; unused
+ * @param string $shadow color of the offset shadow behind the card
  */
 function email_wrap($title, $body, $accent = EMAIL_RUST, $shadow = EMAIL_BLUE_200)
 {
     $site = htmlspecialchars(SITE_NAME);
     $url  = htmlspecialchars(SITE_URL);
     $year = date('Y');
-    $hf   = EMAIL_FONT_HEADING;
     $bf   = EMAIL_FONT_BODY;
 
     return '<!DOCTYPE html>
@@ -47,49 +51,39 @@ function email_wrap($title, $body, $accent = EMAIL_RUST, $shadow = EMAIL_BLUE_20
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="color-scheme" content="light">
 <title>' . htmlspecialchars($title) . '</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Urbanist:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Urbanist:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  @import url("https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Urbanist:wght@400;500;600;700&display=swap");
   body { margin:0; padding:0; }
-  a { color:' . EMAIL_RUST . '; }
+  a { color:' . EMAIL_RUST_DK . '; }
   @media only screen and (max-width:600px) {
-    .email-card { width:100% !important; border-radius:14px !important; }
-    .email-pad  { padding:24px !important; }
-    .email-h1   { font-size:24px !important; }
+    .email-card { width:100% !important; }
+    .email-pad  { padding:26px 20px !important; }
+    .email-h1   { font-size:28px !important; }
+    .email-hide-sm { display:none !important; }
   }
 </style>
 </head>
 <body style="margin:0;padding:0;background:' . EMAIL_NEUTRAL . ';font-family:' . $bf . ';color:' . EMAIL_DARK . ';">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;">' . htmlspecialchars($title) . '</div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:' . EMAIL_NEUTRAL . ';padding:32px 14px;">
-<tr><td align="center">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:' . EMAIL_NEUTRAL . ';">
+<tr><td align="center" style="padding:32px 14px 40px;">
 
-<table role="presentation" class="email-card" width="560" cellpadding="0" cellspacing="0" style="width:560px;max-width:560px;background:#ffffff;border:2px solid ' . EMAIL_DARK . ';border-radius:18px;box-shadow:7px 7px 0 ' . $shadow . ';overflow:hidden;">
+<table role="presentation" class="email-card" width="560" cellpadding="0" cellspacing="0" style="width:560px;max-width:560px;">
   <tr>
-    <td style="background:' . EMAIL_DARK . ';padding:22px 36px 24px;">
-      <a href="' . $url . '" style="font-family:' . $hf . ';color:' . EMAIL_NEUTRAL . ';font-size:24px;font-weight:800;letter-spacing:2px;text-decoration:none;text-transform:uppercase;">' . $site . '</a>
-      <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:12px;">
-        <tr>
-          <td style="height:5px;width:34px;background:' . EMAIL_RUST . ';border-radius:3px;"></td>
-          <td style="width:6px;"></td>
-          <td style="height:5px;width:34px;background:' . EMAIL_MUSTARD . ';border-radius:3px;"></td>
-          <td style="width:6px;"></td>
-          <td style="height:5px;width:34px;background:' . EMAIL_BLUE_400 . ';border-radius:3px;"></td>
-        </tr>
-      </table>
+    <td align="center" style="padding:0 0 26px;">
+      <a href="' . $url . '" style="text-decoration:none;"><img src="' . $url . '/assets/images/email-logo.png" width="223" height="41" alt="' . $site . '" style="display:block;border:0;width:223px;height:auto;font-family:' . EMAIL_FONT_HEADING . ';font-size:22px;font-weight:800;color:' . EMAIL_RUST . ';"></a>
     </td>
   </tr>
-  <tr><td style="height:6px;background:' . $accent . ';"></td></tr>'/* thin accent stripe keyed to the email type */ . '
   <tr>
-    <td class="email-pad" style="padding:36px;">' . $body . '</td>
+    <td class="email-pad" style="padding:36px 36px 32px;background:' . EMAIL_PAPER . ';border-radius:6px;box-shadow:8px 8px 0 ' . $shadow . ';">' . $body . '</td>
   </tr>
   <tr>
-    <td style="padding:24px 36px;background:' . EMAIL_NEUTRAL . ';border-top:2px solid ' . EMAIL_DARK . ';font-family:' . $bf . ';font-size:12px;color:#7a756a;text-align:center;line-height:1.7;">
-      <span style="font-family:' . $hf . ';font-weight:700;color:' . EMAIL_DARK . ';letter-spacing:1px;">' . $site . '</span><br>
-      Stained glass lamps, ceramic lighting &amp; the salmon series<br>
-      <a href="' . $url . '" style="color:' . EMAIL_RUST . ';text-decoration:none;font-weight:600;">' . preg_replace('#^https?://#', '', $url) . '</a><br>
-      <span style="color:#a59f93;">&copy; ' . $year . ' ' . $site . '</span>
+    <td style="padding:30px 20px 0;font-family:' . $bf . ';font-size:12.5px;line-height:1.7;color:' . EMAIL_MUTED . ';text-align:center;">
+      Stained glass lamps, ceramic lighting and salmon in every form,<br class="email-hide-sm"> made by hand by Annie in Oregon.<br>
+      <a href="' . $url . '" style="color:' . EMAIL_RUST_DK . ';text-decoration:none;font-weight:600;">' . preg_replace('#^https?://#', '', $url) . '</a>
+      &nbsp;&middot;&nbsp; &copy; ' . $year . ' ' . $site . '
     </td>
   </tr>
 </table>
@@ -103,8 +97,8 @@ function email_wrap($title, $body, $accent = EMAIL_RUST, $shadow = EMAIL_BLUE_20
 /** Shared heading style (Syne). */
 function email_h1($text)
 {
-    return '<h1 class="email-h1" style="margin:0 0 10px;font-family:' . EMAIL_FONT_HEADING
-        . ';font-size:28px;font-weight:800;line-height:1.15;color:' . EMAIL_DARK . ';">' . $text . '</h1>';
+    return '<h1 class="email-h1" style="margin:0 0 12px;font-family:' . EMAIL_FONT_HEADING
+        . ';font-size:32px;font-weight:800;line-height:1.08;color:' . EMAIL_DARK . ';">' . $text . '</h1>';
 }
 
 /** Shared body paragraph (Urbanist). */
@@ -122,64 +116,106 @@ function email_label($text)
 }
 
 /**
- * Order confirmation / receipt. Accent: rust, shadow: blue-200.
+ * Order confirmation, laid out like the receipt page (success.php): a thank
+ * you, the receipt itself, then what happens next.
  *
  * @param array $order  orders row
- * @param array $items  order_items rows
+ * @param array $items  order_items rows (image_path optional, from products)
  */
 function build_order_confirmation_email(array $order, array $items)
 {
-    $name    = htmlspecialchars($order['customer_name'] ?: 'there');
+    $bf = EMAIL_FONT_BODY;
+    $hf = EMAIL_FONT_HEADING;
+    $first   = trim(explode(' ', (string) ($order['customer_name'] ?? ''))[0]);
     $orderNo = (int) $order['id'];
-    $bf      = EMAIL_FONT_BODY;
-    $hf      = EMAIL_FONT_HEADING;
+    $isPre   = !empty($order['is_preorder']);
+    $balance = (float) ($order['balance_due'] ?? 0);
+    $ship    = $isPre && !empty($order['preorder_ship_date']) ? date('F j', strtotime($order['preorder_ship_date'])) : null;
+    $money   = fn($n) => '$' . number_format((float) $n, 2);
+    $td      = 'font-family:' . $bf . ';font-size:15px;line-height:1.4;color:' . EMAIL_DARK . ';';
+    $muted   = 'font-family:' . $bf . ';font-size:13px;line-height:1.4;color:' . EMAIL_MUTED . ';';
 
-    $rows = '';
+    // Thank you
+    $html = email_h1('Thank you' . ($first !== '' ? ', ' . htmlspecialchars($first) : '') . '.')
+        . email_p($isPre
+            ? 'Your pre-order is in. I&rsquo;m making this batch now' . ($ship ? ', and yours ships by <strong>' . $ship . '</strong>' : '') . '.'
+            : 'Your order is in, and I&rsquo;ll pack it up by hand.', EMAIL_DARK, '16px');
+
+    // Receipt header
+    $html .= '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:22px;border-bottom:2px solid ' . EMAIL_DARK . ';">
+        <tr><td style="padding:0 0 14px;font-family:' . $hf . ';font-size:22px;font-weight:800;color:' . EMAIL_DARK . ';">Receipt</td>
+        <td align="right" style="padding:0 0 14px;' . $td . 'font-weight:700;white-space:nowrap;">' . ($isPre ? 'Pre-order' : 'Order') . ' #' . $orderNo . '</td></tr></table>';
+
+    // Date / status
+    $html .= '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-bottom:1px solid ' . EMAIL_LINE . ';">
+        <tr><td width="50%" style="padding:14px 0;"><div style="' . $muted . '">Date</div><div style="' . $td . 'font-weight:600;">' . date('M j, Y', strtotime($order['created_at'] ?? 'now')) . '</div></td>
+        <td width="50%" style="padding:14px 0;"><div style="' . $muted . '">Status</div><div style="' . $td . 'font-weight:600;">' . ($balance > 0 ? 'Deposit paid' : 'Paid') . '</div></td></tr></table>';
+
+    // Items
     $subtotal = 0;
+    $html .= '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-bottom:1px solid ' . EMAIL_LINE . ';">';
     foreach ($items as $it) {
-        $line = ((float) $it['price_at_purchase']) * (int) $it['quantity'];
+        $qty  = (int) $it['quantity'];
+        $line = (float) $it['price_at_purchase'] * $qty;
         $subtotal += $line;
-        $rows .= '<tr>
-            <td style="padding:12px 0;border-bottom:1px solid #ece6d8;font-family:' . $bf . ';font-size:14px;color:' . EMAIL_DARK . ';">'
-                . htmlspecialchars($it['product_name'])
-                . ' <span style="color:#a59f93;">&times;&nbsp;' . (int) $it['quantity'] . '</span></td>
-            <td style="padding:12px 0;border-bottom:1px solid #ece6d8;font-family:' . $bf . ';font-size:14px;text-align:right;white-space:nowrap;color:' . EMAIL_DARK . ';">$'
-                . number_format($line, 2) . '</td>
+        $name = htmlspecialchars(preg_replace('/^(Pre-order|Deposit): /', '', (string) $it['product_name']));
+        $img  = !empty($it['image_path'])
+            ? '<img src="' . htmlspecialchars(SITE_URL . $it['image_path']) . '" width="52" height="52" alt="" style="display:block;width:52px;height:52px;object-fit:cover;border-radius:4px;border:0;">'
+            : '<div style="width:52px;height:52px;border-radius:4px;background:#EFE8D8;"></div>';
+        $html .= '<tr>
+            <td width="52" style="padding:12px 14px 12px 0;vertical-align:middle;">' . $img . '</td>
+            <td style="padding:12px 0;vertical-align:middle;"><div style="' . $td . 'font-weight:600;">' . $name . '</div>
+                <div style="' . $muted . 'margin-top:2px;">' . ($isPre ? 'Pre-order, ' : '') . $qty . ' &times; ' . $money($it['price_at_purchase']) . '</div></td>
+            <td align="right" style="padding:12px 0 12px 12px;vertical-align:middle;' . $td . 'font-weight:600;white-space:nowrap;">' . $money($line) . '</td>
         </tr>';
     }
+    $html .= '</table>';
 
+    // Totals
+    $row = fn($label, $value, $style = '') => '<tr><td style="padding:4px 0;' . $td . $style . '">' . $label . '</td><td align="right" style="padding:4px 0;' . $td . 'font-weight:600;white-space:nowrap;' . $style . '">' . $value . '</td></tr>';
     $discount = (float) ($order['discount_amount'] ?? 0);
-    $totals = '<tr><td style="padding:8px 0;font-family:' . $bf . ';font-size:14px;color:#7a756a;">Subtotal</td>
-        <td style="padding:8px 0;font-family:' . $bf . ';font-size:14px;text-align:right;color:#7a756a;">$' . number_format($subtotal, 2) . '</td></tr>';
-    if ($discount > 0) {
-        $code = !empty($order['discount_code']) ? ' (' . htmlspecialchars($order['discount_code']) . ')' : '';
-        $totals .= '<tr><td style="padding:8px 0;font-family:' . $bf . ';font-size:14px;color:' . EMAIL_RUST . ';">Discount' . $code . '</td>
-            <td style="padding:8px 0;font-family:' . $bf . ';font-size:14px;text-align:right;color:' . EMAIL_RUST . ';">&minus;$' . number_format($discount, 2) . '</td></tr>';
-    }
-    $totals .= '<tr>
-        <td style="padding:14px 0 0;font-family:' . $hf . ';font-size:18px;font-weight:800;color:' . EMAIL_DARK . ';border-top:2px solid ' . EMAIL_DARK . ';">Total</td>
-        <td style="padding:14px 0 0;font-family:' . $hf . ';font-size:18px;font-weight:800;text-align:right;color:' . EMAIL_DARK . ';border-top:2px solid ' . EMAIL_DARK . ';">$'
-        . number_format((float) $order['total'], 2) . '</td></tr>';
+    $html .= '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:12px 0 0;">'
+        . $row('Subtotal', $money($subtotal))
+        . ($discount > 0 ? $row('Discount' . (!empty($order['discount_code']) ? ' (' . htmlspecialchars($order['discount_code']) . ')' : ''), '&minus;' . $money($discount), 'color:' . EMAIL_RUST_DK . ';') : '')
+        . $row('Shipping', 'Included')
+        . '<tr><td style="padding:12px 0 4px;border-top:2px solid ' . EMAIL_DARK . ';font-family:' . $bf . ';font-size:18px;font-weight:700;color:' . EMAIL_DARK . ';">Total</td>
+            <td align="right" style="padding:12px 0 4px;border-top:2px solid ' . EMAIL_DARK . ';font-family:' . $bf . ';font-size:18px;font-weight:800;color:' . EMAIL_DARK . ';">' . $money($order['total']) . '</td></tr>'
+        . ($balance > 0
+            ? $row('Deposit paid', $money($order['amount_paid']), 'color:' . EMAIL_MUTED . ';')
+              . $row('<strong>Due before it ships</strong>', $money($balance), 'color:' . EMAIL_RUST_DK . ';')
+            : '')
+        . '</table>';
 
-    // Order-number pill
-    $pill = '<span style="display:inline-block;font-family:' . $bf . ';font-size:13px;font-weight:700;color:' . EMAIL_DARK
-        . ';background:' . EMAIL_MUSTARD . ';border-radius:30px;padding:6px 16px;">Order #' . $orderNo . '</span>';
-
-    $shipBlock = '';
+    // Shipping address
     if (!empty($order['shipping_address'])) {
-        $shipBlock = '<div style="margin-top:28px;">' . email_label('Shipping to')
-            . '<p style="margin:0;font-family:' . $bf . ';font-size:14px;line-height:1.6;white-space:pre-line;color:' . EMAIL_DARK . ';">'
-            . htmlspecialchars($order['shipping_address']) . '</p></div>';
+        $html .= '<div style="margin-top:18px;padding-top:16px;border-top:1px solid ' . EMAIL_LINE . ';">
+            <div style="' . $muted . 'font-weight:600;margin-bottom:4px;">Shipping to</div>
+            <div style="' . $td . 'line-height:1.55;">' . nl2br(htmlspecialchars($order['shipping_address'])) . '</div></div>';
     }
 
-    $body = email_h1('Thank you, ' . $name . '!')
-        . email_p('Your order is confirmed. I make each piece by hand, so I&rsquo;ll be in touch with shipping details once yours is on its way.')
-        . '<div style="margin:0 0 24px;">' . $pill . '</div>'
-        . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0">' . $rows . '</table>'
-        . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:6px;">' . $totals . '</table>'
-        . $shipBlock;
+    // What happens next
+    $steps = [
+        ['Confirmation email', 'This is it. Keep it for your records.'],
+        $isPre
+            ? ['Made to order', $balance > 0
+                ? 'When your piece is ready, I&rsquo;ll email you a link to pay the remaining ' . $money($balance) . '.'
+                : 'If anything holds the batch up, I&rsquo;ll tell you right away and you can cancel for a full refund.']
+            : ['Packed by hand', 'In-stock pieces ship within 5&ndash;10 business days.'],
+        ['Tracking', 'You&rsquo;ll get a tracking number by email as soon as it ships.'],
+    ];
+    $html .= '<div style="margin-top:26px;padding-top:22px;border-top:2px solid ' . EMAIL_DARK . ';font-family:' . $hf . ';font-size:17px;font-weight:700;color:' . EMAIL_DARK . ';">What happens next</div>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:10px;">';
+    foreach ($steps as $n => [$t, $d]) {
+        $html .= '<tr><td width="40" style="padding:8px 12px 8px 0;vertical-align:top;">
+                <div style="width:28px;height:28px;line-height:28px;border-radius:14px;background:' . EMAIL_BLUE_200 . ';text-align:center;font-family:' . $bf . ';font-size:13px;font-weight:700;color:' . EMAIL_DARK . ';">' . ($n + 1) . '</div></td>
+            <td style="padding:8px 0;vertical-align:top;"><div style="' . $td . 'font-weight:700;">' . $t . '</div><div style="' . $muted . 'font-size:14px;margin-top:2px;line-height:1.5;">' . $d . '</div></td></tr>';
+    }
+    $html .= '</table>';
 
-    return email_wrap('Your ' . SITE_NAME . ' order #' . $orderNo, $body, EMAIL_RUST, EMAIL_BLUE_400);
+    $html .= '<p style="margin:24px 0 0;' . $muted . 'font-size:14px;line-height:1.6;">Questions about your order? Just reply to this email and mention order #' . $orderNo . '.<br>Thanks for supporting a small studio. It genuinely means a lot.</p>
+        <p style="margin:8px 0 0;font-family:' . $hf . ';font-size:17px;font-weight:700;color:' . EMAIL_RUST_DK . ';">Annie</p>';
+
+    return email_wrap(($isPre ? 'Your ' . SITE_NAME . ' pre-order #' : 'Your ' . SITE_NAME . ' order #') . $orderNo, $html, EMAIL_RUST, EMAIL_BLUE_200);
 }
 
 /**
@@ -257,10 +293,12 @@ function build_shipping_email(array $order)
  */
 function email_button($url, $label, $bg = EMAIL_RUST, $color = '#ffffff')
 {
-    return '<table role="presentation" cellpadding="0" cellspacing="0" style="margin:26px 0;">
-        <tr><td style="background:' . $bg . ';border:2px solid ' . EMAIL_DARK . ';border-radius:30px;box-shadow:4px 4px 0 ' . EMAIL_DARK . ';">
-          <a href="' . htmlspecialchars($url) . '" style="display:inline-block;padding:14px 32px;font-family:' . EMAIL_FONT_BODY
-            . ';font-size:15px;font-weight:700;color:' . $color . ';text-decoration:none;">' . $label . '</a>
+    // Same as the site's main button: mustard pill, a deeper mustard shadow,
+    // dark caps label. ($bg/$color are kept for older callers and ignored.)
+    return '<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px 0;">
+        <tr><td style="background:#D0C25F;border-radius:999px;box-shadow:3px 3px 0 #A99A3A;">
+          <a href="' . htmlspecialchars($url) . '" style="display:inline-block;padding:15px 30px;font-family:' . EMAIL_FONT_BODY
+            . ';font-size:14px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:' . EMAIL_DARK . ';text-decoration:none;">' . $label . '</a>
         </td></tr></table>';
 }
 
@@ -271,26 +309,38 @@ function email_button($url, $label, $bg = EMAIL_RUST, $color = '#ffffff')
 function email_money_rows(array $rows)
 {
     $bf   = EMAIL_FONT_BODY;
-    $hf   = EMAIL_FONT_HEADING;
-    $html = '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 4px;">';
-
+    $html = '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:14px 0 4px;">';
     foreach ($rows as [$label, $amount, $style]) {
         if ($style === 'total') {
             $html .= '<tr>
-                <td style="padding:14px 0 0;font-family:' . $hf . ';font-size:18px;font-weight:800;color:' . EMAIL_DARK . ';border-top:2px solid ' . EMAIL_DARK . ';">' . $label . '</td>
-                <td style="padding:14px 0 0;font-family:' . $hf . ';font-size:18px;font-weight:800;text-align:right;color:' . EMAIL_DARK . ';border-top:2px solid ' . EMAIL_DARK . ';">$' . number_format($amount, 2) . '</td>
+                <td style="padding:12px 0 4px;border-top:2px solid ' . EMAIL_DARK . ';font-family:' . $bf . ';font-size:18px;font-weight:700;color:' . EMAIL_DARK . ';">' . $label . '</td>
+                <td align="right" style="padding:12px 0 4px;border-top:2px solid ' . EMAIL_DARK . ';font-family:' . $bf . ';font-size:18px;font-weight:800;color:' . EMAIL_DARK . ';">$' . number_format($amount, 2) . '</td>
             </tr>';
             continue;
         }
-        $color  = $style === 'accent' ? EMAIL_RUST : '#7a756a';
-        $weight = $style === 'accent' ? '700' : '400';
+        $color  = $style === 'accent' ? EMAIL_RUST_DK : EMAIL_DARK;
+        $weight = $style === 'accent' ? '700' : '500';
         $html .= '<tr>
-            <td style="padding:8px 0;font-family:' . $bf . ';font-size:14px;font-weight:' . $weight . ';color:' . $color . ';">' . $label . '</td>
-            <td style="padding:8px 0;font-family:' . $bf . ';font-size:14px;font-weight:' . $weight . ';text-align:right;color:' . $color . ';">$' . number_format($amount, 2) . '</td>
+            <td style="padding:5px 0;font-family:' . $bf . ';font-size:15px;font-weight:' . $weight . ';color:' . ($style === 'muted' ? EMAIL_MUTED : $color) . ';">' . $label . '</td>
+            <td align="right" style="padding:5px 0;font-family:' . $bf . ';font-size:15px;font-weight:600;color:' . ($style === 'muted' ? EMAIL_MUTED : $color) . ';">$' . number_format($amount, 2) . '</td>
         </tr>';
     }
-
     return $html . '</table>';
+}
+
+/** One piece, receipt style: photo, name and a small line under it. */
+function email_item_row(string $name, string $sub, ?string $imagePath, string $amount = '')
+{
+    $bf  = EMAIL_FONT_BODY;
+    $img = $imagePath
+        ? '<img src="' . htmlspecialchars(SITE_URL . $imagePath) . '" width="52" height="52" alt="" style="display:block;width:52px;height:52px;object-fit:cover;border-radius:4px;border:0;">'
+        : '<div style="width:52px;height:52px;border-radius:4px;background:#EFE8D8;"></div>';
+    return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:2px solid ' . EMAIL_DARK . ';border-bottom:1px solid ' . EMAIL_LINE . ';margin-top:18px;">
+        <tr><td width="52" style="padding:14px 14px 14px 0;vertical-align:middle;">' . $img . '</td>
+        <td style="padding:14px 0;vertical-align:middle;"><div style="font-family:' . $bf . ';font-size:15px;font-weight:600;color:' . EMAIL_DARK . ';">' . htmlspecialchars($name) . '</div>
+            <div style="font-family:' . $bf . ';font-size:13px;color:' . EMAIL_MUTED . ';margin-top:2px;">' . $sub . '</div></td>'
+        . ($amount !== '' ? '<td align="right" style="padding:14px 0 14px 12px;font-family:' . $bf . ';font-size:15px;font-weight:600;color:' . EMAIL_DARK . ';white-space:nowrap;">' . $amount . '</td>' : '')
+        . '</tr></table>';
 }
 
 /**
@@ -426,4 +476,63 @@ function build_balance_receipt_email(array $quote)
         . email_p('Thank you for commissioning something one of a kind &mdash; it means a great deal.', '#7a756a', '13px');
 
     return email_wrap('Payment received &mdash; your ' . SITE_NAME . ' piece ships soon', $body, EMAIL_MUSTARD, EMAIL_BLUE_400);
+}
+
+/**
+ * Tells a pre-order buyer their batch will ship later than promised, and that
+ * they can cancel for a full refund (US mail-order rule). Accent: mustard.
+ */
+function build_preorder_delay_email(array $order, string $productName, string $newDate, string $note = '')
+{
+    $name = htmlspecialchars($order['customer_name'] ?: 'there');
+    $old  = !empty($order['preorder_ship_date']) ? date('F j', strtotime($order['preorder_ship_date'])) : null;
+    $new  = date('F j, Y', strtotime($newDate));
+
+    $body = email_h1('A new ship date for your pre-order')
+        . email_p('Hi ' . $name . ', your ' . htmlspecialchars($productName) . ' (pre-order #' . (int) $order['id'] . ') is taking longer than I planned'
+            . ($old ? '. It was due to ship by ' . $old . ', and' : ', and') . ' it will now ship by <strong>' . $new . '</strong>.')
+        . ($note !== '' ? email_p(nl2br(htmlspecialchars(trim($note)))) : '')
+        . email_p('If you&rsquo;d rather not wait, just reply to this email and I&rsquo;ll cancel your order and refund you in full. Otherwise there&rsquo;s nothing you need to do.')
+        . email_p('Thanks for your patience. -Annie');
+
+    return email_wrap('New ship date for your ' . SITE_NAME . ' pre-order', $body, EMAIL_MUSTARD, EMAIL_RUST);
+}
+
+/**
+ * The batch is ready: pay the balance so the piece can ship.
+ */
+function build_preorder_balance_email(array $order, string $productName, string $payUrl, string $note = '', ?string $imagePath = null)
+{
+    $first   = trim(explode(' ', (string) ($order['customer_name'] ?? ''))[0]);
+    $balance = (float) $order['balance_due'];
+    $body = email_h1('It&rsquo;s ready' . ($first !== '' ? ', ' . htmlspecialchars($first) : '') . '.')
+        . email_p('Your ' . htmlspecialchars($productName) . ' is made and ready to ship. Pay the rest below and it goes out within a few days.', EMAIL_DARK, '16px')
+        . ($note !== '' ? email_p(nl2br(htmlspecialchars(trim($note)))) : '')
+        . email_item_row($productName, 'Pre-order #' . (int) $order['id'], $imagePath)
+        . email_money_rows([
+            ['Total', (float) $order['total'], 'muted'],
+            ['Deposit paid', (float) $order['amount_paid'], 'muted'],
+            ['Left to pay', $balance, 'total'],
+        ])
+        . email_button($payUrl, 'Pay $' . number_format($balance, 2))
+        . '<p style="margin:0;font-family:' . EMAIL_FONT_BODY . ';font-size:13.5px;line-height:1.6;color:' . EMAIL_MUTED . ';">Secure payment through Stripe. Questions? Just reply to this email.</p>'
+        . '<p style="margin:14px 0 0;font-family:' . EMAIL_FONT_HEADING . ';font-size:17px;font-weight:700;color:' . EMAIL_RUST_DK . ';">Annie</p>';
+
+    return email_wrap('Your ' . SITE_NAME . ' pre-order is ready', $body);
+}
+
+/** Balance received; the piece ships next. */
+function build_preorder_balance_receipt_email(array $order, string $productName, float $paid, ?string $imagePath = null)
+{
+    $first = trim(explode(' ', (string) ($order['customer_name'] ?? ''))[0]);
+    $body = email_h1('Paid in full. Thank you' . ($first !== '' ? ', ' . htmlspecialchars($first) : '') . '.')
+        . email_p('Your ' . htmlspecialchars($productName) . ' is paid for. I&rsquo;ll pack it up and email you tracking as soon as it ships.', EMAIL_DARK, '16px')
+        . email_item_row($productName, 'Pre-order #' . (int) $order['id'], $imagePath)
+        . email_money_rows([
+            ['Paid today', $paid, 'muted'],
+            ['Paid in total', (float) $order['total'], 'total'],
+        ])
+        . '<p style="margin:18px 0 0;font-family:' . EMAIL_FONT_HEADING . ';font-size:17px;font-weight:700;color:' . EMAIL_RUST_DK . ';">Annie</p>';
+
+    return email_wrap('Balance received for your ' . SITE_NAME . ' pre-order', $body);
 }

@@ -51,7 +51,10 @@ function fulfill_checkout_session(PDO $pdo, string $sessionId): ?int {
  */
 function fulfillment_save_order(PDO $pdo, $session): ?int {
     if (($session->payment_status ?? '') !== 'paid') return null;
-    if (!empty($session->metadata->type)) return null; // custom quote payment
+    // Custom-quote payments carry their own type and are handled in
+    // webhook.php. Pre-orders are ordinary paid orders with a ship date.
+    $type = $session->metadata->type ?? '';
+    if ($type !== '' && $type !== 'preorder') return null;
 
     $sessionId = $session->id;
     $items = fulfillment_items($session);
@@ -92,6 +95,29 @@ function fulfillment_save_order(PDO $pdo, $session): ?int {
             $discountAmount,
         ]);
         $orderId = (int) $pdo->lastInsertId();
+
+        if ($type === 'preorder') {
+            $accepted = (int) ($session->metadata->terms_accepted_at ?? 0);
+            $pdo->prepare("UPDATE orders SET is_preorder = 1, preorder_ship_date = ?, preorder_terms_accepted_at = ? WHERE id = ?")
+                ->execute([
+                    ($session->metadata->ship_date ?? '') ?: null,
+                    $accepted ? date('Y-m-d H:i:s', $accepted) : null,
+                    $orderId,
+                ]);
+
+            // Deposit pre-order: Stripe charged the deposit; the order is for
+            // the full price, with the rest owed before it ships.
+            $fullPrice = (float) ($session->metadata->full_price ?? 0);
+            if ((float) ($session->metadata->deposit ?? 0) > 0 && $fullPrice > 0) {
+                $qty   = array_sum(array_column($items, 'qty'));
+                $total = $fullPrice * $qty;
+                $paid  = $session->amount_total / 100;
+                $pdo->prepare("UPDATE orders SET status = 'deposit_paid', total = ?, amount_paid = ?, balance_due = ?, preorder_token = ? WHERE id = ?")
+                    ->execute([$total, $paid, max(0, $total - $paid), bin2hex(random_bytes(16)), $orderId]);
+                foreach ($items as &$it) { $it['price'] = $fullPrice; $it['name'] = preg_replace('/^Deposit: /', 'Pre-order: ', $it['name']); }
+                unset($it);
+            }
+        }
 
         $itemStmt  = $pdo->prepare("INSERT INTO order_items (order_id, product_id, product_name, quantity, price_at_purchase) VALUES (?, ?, ?, ?, ?)");
         $lockStmt  = $pdo->prepare("SELECT name, stock_qty FROM products WHERE id = ? FOR UPDATE");
@@ -194,13 +220,13 @@ function fulfillment_send_confirmation(PDO $pdo, int $orderId): void {
         $o = $pdo->prepare("SELECT * FROM orders WHERE id = ?");
         $o->execute([$orderId]);
         $order = $o->fetch();
-        $l = $pdo->prepare("SELECT * FROM order_items WHERE order_id = ? ORDER BY id");
+        $l = $pdo->prepare("SELECT i.*, p.image_path FROM order_items i LEFT JOIN products p ON p.id = i.product_id WHERE i.order_id = ? ORDER BY i.id");
         $l->execute([$orderId]);
 
         $sent = send_mail(
             $order['customer_email'],
             $order['customer_name'] ?? '',
-            'Your ' . SITE_NAME . ' order #' . $order['id'],
+            (!empty($order['is_preorder']) ? 'Your ' . SITE_NAME . ' pre-order #' : 'Your ' . SITE_NAME . ' order #') . $order['id'],
             build_order_confirmation_email($order, $l->fetchAll()),
             '',
             OWNER_EMAIL !== '' ? OWNER_EMAIL : null

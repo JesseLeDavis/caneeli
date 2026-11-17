@@ -273,3 +273,271 @@
     .checkout-status__eyebrow { color: $rust-dk; }
   }
 }
+
+// ── Order receipt (success.php) ────────────────────────────────────────
+.receipt-page {
+  background: $neutral;
+  padding: 48px 0 96px;
+
+  @media (min-width: 960px) { padding: 72px 0 120px; }
+
+  &__grid {
+    display: grid;
+    gap: 36px;
+    max-width: 1080px;
+
+    @media (min-width: 960px) {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 520px);
+      grid-template-areas: "intro receipt" "actions receipt";
+      grid-template-rows: auto 1fr;
+      column-gap: 72px;
+      align-items: start;
+    }
+  }
+
+  &__intro   { @media (min-width: 960px) { grid-area: intro; } }
+  &__actions { @media (min-width: 960px) { grid-area: actions; } }
+  .receipt   { @media (min-width: 960px) { grid-area: receipt; } }
+
+  &__kicker {
+    margin-bottom: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    color: $rust-dk;
+  }
+
+  &__title {
+    font-family: $font-heading;
+    font-weight: 800;
+    font-size: clamp(38px, 9vw, 56px);
+    line-height: 1.02;
+    letter-spacing: -0.01em;
+  }
+
+  &__lede {
+    max-width: 40ch;
+    margin-top: 16px;
+    font-size: $fs-md;
+    line-height: 1.5;
+  }
+
+  &__note {
+    max-width: 44ch;
+    margin-top: 28px;
+    font-size: 15px;
+    line-height: 1.6;
+    color: $muted;
+  }
+
+  &__sign {
+    display: block;
+    margin-top: 4px;
+    font-family: $font-heading;
+    font-weight: 700;
+    font-size: 18px;
+    color: $rust-dk;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px 24px;
+  }
+
+  &__print {
+    font-size: 15px;
+    font-weight: 600;
+    color: $dark;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    text-decoration-thickness: 1.5px;
+
+    &:hover { color: $rust-dk; }
+  }
+}
+
+// What happens next
+.receipt-steps {
+  display: grid;
+  gap: 18px;
+  margin-top: 32px;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+
+  li {
+    position: relative;
+    display: grid;
+    gap: 2px;
+    padding-left: 44px;
+    font-size: 15px;
+    line-height: 1.5;
+    color: color.adjust($dark, $lightness: 12%);
+    counter-increment: step;
+
+    &::before {
+      content: counter(step);
+      position: absolute;
+      left: 0;
+      top: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: $blue-200;
+      color: $dark;
+      font-size: 14px;
+      font-weight: 700;
+    }
+  }
+
+  &__title { font-weight: 700; color: $dark; }
+}
+
+// The receipt itself: a white slip with a colored edge
+.receipt {
+  padding: 28px 24px;
+  border-radius: $radius;
+  background: #FFFDF8;
+  @include color-shadow($blue-200, 8px);
+  font-variant-numeric: tabular-nums;
+
+  @media (min-width: 600px) { padding: 36px 36px 32px; }
+
+  &__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid $dark;
+  }
+
+  &__title {
+    font-family: $font-heading;
+    font-weight: 800;
+    font-size: 24px;
+    line-height: 1;
+
+    @media (min-width: 600px) { font-size: 28px; }
+  }
+
+  &__brand { margin-top: 6px; font-size: 14px; color: $muted; }
+
+  &__number { font-size: 16px; font-weight: 700; white-space: nowrap; padding-top: 4px; }
+
+  &__meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px 20px;
+    padding: 18px 0;
+    border-bottom: $hairline;
+
+    dt { font-size: 13px; color: $muted; }
+    dd { margin: 2px 0 0; font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
+  }
+  &__meta-wide { grid-column: 1 / -1; }
+
+  &__items {
+    margin: 0;
+    padding: 6px 0;
+    list-style: none;
+    border-bottom: $hairline;
+  }
+
+  &__item {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 0;
+
+    & + & { border-top: 1px solid rgba($dark, 0.06); }
+  }
+
+  &__thumb {
+    width: 52px;
+    height: 52px;
+    border-radius: 4px;
+    overflow: hidden;
+    background: $paper-2;
+
+    img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  }
+
+  &__item-main { display: grid; gap: 2px; min-width: 0; }
+  &__item-name { font-size: 15.5px; font-weight: 600; line-height: 1.3; }
+  &__item-sub  { font-size: 13.5px; color: $muted; }
+  &__amount    { font-size: 15.5px; font-weight: 600; white-space: nowrap; }
+
+  &__totals {
+    display: grid;
+    gap: 8px;
+    padding: 18px 0;
+
+    div { display: flex; justify-content: space-between; gap: 16px; font-size: 15px; }
+    dt { color: color.adjust($dark, $lightness: 15%); }
+    dd { margin: 0; font-weight: 600; }
+  }
+
+  &__discount { color: $rust-dk; dt { color: $rust-dk !important; } }
+
+  &__total {
+    margin-top: 6px;
+    padding-top: 14px;
+    border-top: 2px solid $dark;
+    font-size: 19px !important;
+
+    dt { color: $dark !important; font-weight: 700; }
+    dd { font-weight: 800 !important; }
+  }
+
+  &__paid { color: $muted; }
+  &__due  { color: $rust-dk; dt { color: $rust-dk !important; font-weight: 700; } dd { font-weight: 700; } }
+
+  &__ship {
+    padding: 18px 0;
+    border-top: $hairline;
+
+    h3 { margin-bottom: 6px; font-family: $font-body; font-size: 13px; font-weight: 600; color: $muted; }
+    address { font-style: normal; font-size: 15px; line-height: 1.55; }
+  }
+
+  &__foot {
+    padding-top: 16px;
+    border-top: $hairline;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: $muted;
+
+    a { color: $rust-dk; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+  }
+}
+
+// Print: just the receipt
+@media print {
+  header, footer.site-footer, .site-footer, .receipt-page__intro, .receipt-page__actions { display: none !important; }
+  body, .receipt-page { background: #fff !important; padding: 0 !important; }
+  .receipt { box-shadow: none !important; padding: 0; max-width: 560px; }
+}
+
+// Pay-the-balance form (preorder-pay.php)
+.pay-form {
+  margin-top: 28px;
+
+  &__btn { min-height: 54px; padding: 0 34px; font-size: 16px; }
+
+  &__secure {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 14px;
+    font-size: 14px;
+    color: $muted;
+
+    svg { flex-shrink: 0; color: $blue-400; }
+  }
+}

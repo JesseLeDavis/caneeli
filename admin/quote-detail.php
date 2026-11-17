@@ -120,12 +120,16 @@ $activeNav = 'custom';
 require __DIR__ . '/layout-top.php';
 ?>
 
-<div class="container">
-    <p style="margin:0 0 6px"><a href="/admin/custom-orders.php" style="font-size:13px">&larr; All custom orders</a></p>
-
-    <div class="page-header">
-        <h1><?php echo htmlspecialchars($quote['title']); ?></h1>
-        <span class="badge-status badge-status--<?php echo $statusMod; ?>"><?php echo $statusLabel; ?></span>
+<div class="container ui-page">
+    <div class="ui-head">
+        <div>
+            <a class="ui-back" href="/admin/custom-orders.php">← Custom orders</a>
+            <div class="ui-head__title">
+                <h1><?php echo htmlspecialchars($quote['title']); ?></h1>
+                <?php echo admin_status_badge($statusMod, $statusLabel); ?>
+            </div>
+            <p class="ui-head__sub">Quote for <?php echo htmlspecialchars($quote['customer_name']); ?>, created <?php echo date('M j, Y', strtotime($quote['created_at'])); ?></p>
+        </div>
     </div>
 
     <?php foreach ($errors as $e): ?>
@@ -133,27 +137,30 @@ require __DIR__ . '/layout-top.php';
     <?php endforeach; ?>
     <?php if ($flash): ?><p class="success"><?php echo htmlspecialchars($flash); ?></p><?php endif; ?>
 
-    <div class="order-grid" style="display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:22px;align-items:start">
+    <div class="order-grid">
 
         <div class="order-card">
-            <h3 class="order-card__title">Quote</h3>
+            <h2 class="order-card__title">Quote</h2>
 
             <div style="margin-bottom:16px">
-                <div style="font-size:12px;text-transform:uppercase;letter-spacing:1.2px;color:rgba(45,45,45,0.5);margin-bottom:4px">Customer</div>
-                <?php echo htmlspecialchars($quote['customer_name']); ?><br>
-                <a href="mailto:<?php echo htmlspecialchars($quote['customer_email']); ?>"><?php echo htmlspecialchars($quote['customer_email']); ?></a>
+                <div class="ui-label">Customer</div>
+                <div class="ui-customer">
+                    <?php echo admin_avatar($quote['customer_name']); ?>
+                    <div><strong><?php echo htmlspecialchars($quote['customer_name']); ?></strong>
+                    <a href="mailto:<?php echo htmlspecialchars($quote['customer_email']); ?>"><?php echo htmlspecialchars($quote['customer_email']); ?></a></div>
+                </div>
             </div>
 
             <?php if (!empty($quote['lead_time'])): ?>
                 <div style="margin-bottom:16px">
-                    <div style="font-size:12px;text-transform:uppercase;letter-spacing:1.2px;color:rgba(45,45,45,0.5);margin-bottom:4px">Lead time</div>
+                    <div class="ui-label">Lead time</div>
                     <?php echo htmlspecialchars($quote['lead_time']); ?>
                 </div>
             <?php endif; ?>
 
             <?php if (!empty($quote['description'])): ?>
                 <div style="margin-bottom:16px">
-                    <div style="font-size:12px;text-transform:uppercase;letter-spacing:1.2px;color:rgba(45,45,45,0.5);margin-bottom:4px">Description</div>
+                    <div class="ui-label">Description</div>
                     <div style="white-space:pre-line;line-height:1.6"><?php echo htmlspecialchars($quote['description']); ?></div>
                 </div>
             <?php endif; ?>
@@ -180,7 +187,7 @@ require __DIR__ . '/layout-top.php';
 
         <div>
             <div class="order-card" style="margin-bottom:18px">
-                <h3 class="order-card__title">Customer link</h3>
+                <h2 class="order-card__title">Customer link</h2>
                 <p style="margin:0 0 10px;font-size:12px;color:rgba(45,45,45,0.55)">
                     Anyone with this link can pay the deposit — it isn't password protected.
                 </p>
@@ -197,7 +204,7 @@ require __DIR__ . '/layout-top.php';
             </div>
 
             <div class="order-card">
-                <h3 class="order-card__title">Actions</h3>
+                <h2 class="order-card__title">Actions</h2>
 
                 <?php if (in_array($quote['status'], ['draft', 'sent'], true)): ?>
                     <form method="POST" style="margin-bottom:10px">

@@ -78,6 +78,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $status      = $_POST['status'] ?? 'active';
     if (!in_array($status, PRODUCT_STATUSES, true)) $status = 'active';
     $active      = product_active_for_status($status);
+    // Pre-orders need a ship-by date: it's what the buyer agrees to.
+    $ship_date   = trim($_POST['preorder_ship_date'] ?? '');
+    $ship_date   = preg_match('/^\d{4}-\d{2}-\d{2}$/', $ship_date) ? $ship_date : null;
+    // Optional deposit per piece; blank or 0 means pay in full up front.
+    $deposit     = (float) ($_POST['preorder_deposit'] ?? 0);
+    $deposit     = $deposit > 0 ? round($deposit, 2) : null;
+    if ($status === 'preorder' && $deposit !== null && $deposit >= (float) $price) {
+        $error = $error ?: 'The deposit has to be less than the price.';
+    }
+    if ($status === 'preorder' && !$ship_date) {
+        $error = $error ?: 'Pre-orders need a ship-by date.';
+    }
 
     // Craft signals — merge presets + custom, cap at 5, sanitize
     $preset_tags = $_POST['craft_signals_preset'] ?? [];
@@ -115,10 +127,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $featured_path = $uploaded[0] ?? null;
 
             $stmt = $pdo->prepare("
-                INSERT INTO products (name, description, craft_signals, price, stock_qty, category, image_path, active, status)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO products (name, description, craft_signals, price, stock_qty, category, image_path, active, status, preorder_ship_date, preorder_deposit)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
-            $stmt->execute([$name, $description, $craft_signals_json, $price, $stock_qty, $selected_cats[0], $featured_path, $active, $status]);
+            $stmt->execute([$name, $description, $craft_signals_json, $price, $stock_qty, $selected_cats[0], $featured_path, $active, $status, $ship_date, $deposit]);
             $product_id = (int) $pdo->lastInsertId();
 
             save_product_categories($pdo, $product_id, $selected_cats);
@@ -129,111 +141,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $img_stmt->execute([$product_id, $path, $order]);
             }
 
-            $success = 'Product added successfully.';
+            header('Location: /admin/edit-product.php?id=' . $product_id . '&msg=' . urlencode('Product added. ' . (product_status_is_visible($status) ? 'It\'s live in the shop.' : 'It\'s hidden from the shop until you change its status.')));
+            exit;
         }
     }
 }
 ?>
 <?php
-$pageTitle = 'Add Product';
+$v = [
+    'name' => $_POST['name'] ?? '', 'description' => $_POST['description'] ?? '',
+    'price' => $_POST['price'] ?? '', 'stock_qty' => $_POST['stock_qty'] ?? '1',
+    'status' => $_POST['status'] ?? 'draft',
+    'preorder_ship_date' => $_POST['preorder_ship_date'] ?? '', 'preorder_deposit' => $_POST['preorder_deposit'] ?? '',
+];
+$checked_cats    = sanitize_product_categories((array) ($_POST['categories'] ?? []));
+$checked_signals = array_values((array) ($_POST['craft_signals_preset'] ?? []));
+$mode = 'add';
+
+$pageTitle = 'Add product';
 $activeNav = 'products';
 require __DIR__ . '/layout-top.php';
+require __DIR__ . '/product-form.php';
 ?>
-
-<div class="container">
-    <div class="page-header">
-        <h1>Add Product</h1>
-        <a href="/admin/products.php" class="btn btn-secondary">← All products</a>
-    </div>
-
-    <?php if ($error): ?>
-        <p class="error"><?php echo $error; ?></p>
-    <?php endif; ?>
-    <?php if ($success): ?>
-        <p class="success"><?php echo $success; ?></p>
-    <?php endif; ?>
-
-    <div class="form-card">
-        <form method="POST" enctype="multipart/form-data">
-            <?php echo csrf_field(); ?>
-
-            <span class="form-section-label">Core Details</span>
-
-            <label>Name</label>
-            <input type="text" name="name" value="<?php echo htmlspecialchars($_POST['name'] ?? ''); ?>" required>
-
-            <label>Description</label>
-            <textarea name="description"><?php echo htmlspecialchars($_POST['description'] ?? ''); ?></textarea>
-
-            <label>Price ($)</label>
-            <input type="number" name="price" step="0.01" min="0" value="<?php echo htmlspecialchars($_POST['price'] ?? ''); ?>" required>
-
-            <label>Stock Quantity</label>
-            <input type="number" name="stock_qty" min="0" value="<?php echo htmlspecialchars($_POST['stock_qty'] ?? '1'); ?>">
-
-            <label>Categories <span style="font-weight:400;font-size:12px;opacity:.6">(pick one or more — the first becomes the main one)</span></label>
-            <?php $checked_cats = sanitize_product_categories((array) ($_POST['categories'] ?? [])); ?>
-            <div class="category-checks">
-                <?php foreach ($categories as $cat): ?>
-                    <label class="category-check">
-                        <input type="checkbox" name="categories[]" value="<?php echo htmlspecialchars($cat); ?>"
-                               <?php echo in_array($cat, $checked_cats, true) ? 'checked' : ''; ?>>
-                        <span><?php echo htmlspecialchars($cat); ?></span>
-                    </label>
-                <?php endforeach; ?>
-            </div>
-
-            <span class="form-section-label">Photos</span>
-
-            <label>Product Photos <span style="font-weight:400;font-size:12px;opacity:.6">(first photo becomes the featured image)</span></label>
-            <div class="file-upload-area">
-                <input type="file" name="images[]" accept="image/*" multiple>
-            </div>
-
-            <span class="form-section-label">Craft Signals</span>
-
-            <label>Craft Signals <span style="font-weight:400;font-size:12px;opacity:.6">(up to 5 — shown on product page)</span></label>
-            <div class="craft-signals-grid">
-                <?php foreach ($preset_signals as $tag): ?>
-                    <label class="craft-signal-option">
-                        <input type="checkbox"
-                               name="craft_signals_preset[]"
-                               value="<?php echo htmlspecialchars($tag); ?>"
-                               <?php echo in_array($tag, $_POST['craft_signals_preset'] ?? []) ? 'checked' : ''; ?>>
-                        <?php echo htmlspecialchars($tag); ?>
-                    </label>
-                <?php endforeach; ?>
-            </div>
-            <input type="text" name="craft_signal_custom"
-                   placeholder="Custom tag (e.g. Reclaimed Oak)…"
-                   maxlength="40"
-                   value="<?php echo htmlspecialchars($_POST['craft_signal_custom'] ?? ''); ?>"
-                   style="margin-bottom:24px">
-
-            <span class="form-section-label">Status</span>
-
-            <label>Visibility</label>
-            <select name="status">
-                <?php foreach (PRODUCT_STATUSES as $s): ?>
-                    <option value="<?php echo $s; ?>" <?php echo (($_POST['status'] ?? 'active') === $s) ? 'selected' : ''; ?>>
-                        <?php echo product_status_label($s); ?>
-                        <?php
-                            echo match ($s) {
-                                'active'   => ' — visible & for sale',
-                                'sold_out' => ' — visible, cannot be bought',
-                                'draft'    => ' — hidden from shop',
-                                'archived' => ' — hidden, preserved for records',
-                                default    => '',
-                            };
-                        ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-
-            <button type="submit" class="btn btn-primary">Add Product</button>
-        </form>
-    </div>
-</div>
 
 </body>
 </html>

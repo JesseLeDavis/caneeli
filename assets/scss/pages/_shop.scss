@@ -286,6 +286,9 @@
     line-height: 1.2;
     text-transform: uppercase;
   }
+
+  // Pre-order: blue, so it doesn't read as "sold"
+  &__preorder { background: $blue-200; }
 }
 
 @media (prefers-reduced-motion: reduce) {

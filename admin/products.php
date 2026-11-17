@@ -96,7 +96,7 @@ require __DIR__ . '/layout-top.php';
 
     <!-- Status tabs -->
     <div class="status-tabs">
-        <?php foreach (['all', 'active', 'sold_out', 'draft', 'archived'] as $s): ?>
+        <?php foreach (['all', 'active', 'preorder', 'sold_out', 'draft', 'archived'] as $s): ?>
             <?php
                 $query = $_GET;
                 $query['status'] = $s;

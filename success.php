@@ -32,7 +32,8 @@ if ($session_id) {
         $order = $stmt->fetch();
 
         if ($order) {
-            $stmt = $pdo->prepare("SELECT * FROM order_items WHERE order_id = ?");
+            // Photos come from the product, if it still exists.
+            $stmt = $pdo->prepare("SELECT i.*, p.image_path FROM order_items i LEFT JOIN products p ON p.id = i.product_id WHERE i.order_id = ? ORDER BY i.id");
             $stmt->execute([$order['id']]);
             $order_items = $stmt->fetchAll();
         }
@@ -42,73 +43,121 @@ if ($session_id) {
 }
 ?>
 
-<section class="hero">
-    <div class="container">
-        <div class="checkout-status checkout-status--success">
-            <div class="checkout-status__intro">
-                <p class="checkout-status__eyebrow">Order Confirmed</p>
-                <h1 class="large_title">You're all set.</h1>
-                <p class="checkout-status__lede">Order received — you'll get a confirmation email shortly. I'll be in touch once it's on its way.</p>
-                <p class="checkout-status__lede">Thanks for supporting my little shop. It genuinely means a lot.</p>
-                <p class="checkout-status__sign-off">-Annie</p>
+<?php
+$first     = $order ? trim(explode(' ', (string) $order['customer_name'])[0]) : '';
+$isPre     = $order && !empty($order['is_preorder']);
+$shipDate  = $isPre && !empty($order['preorder_ship_date']) ? date('F j', strtotime($order['preorder_ship_date'])) : null;
+$subtotal  = array_sum(array_map(fn($i) => (float) $i['price_at_purchase'] * (int) $i['quantity'], $order_items));
+$discount  = (float) ($order['discount_amount'] ?? 0);
+$balance   = (float) ($order['balance_due'] ?? 0);
+?>
+<section class="receipt-page">
+    <div class="container receipt-page__grid">
+
+        <div class="receipt-page__intro">
+            <p class="receipt-page__kicker"><?php echo $isPre ? 'Pre-order confirmed' : 'Order confirmed'; ?></p>
+            <h1 class="receipt-page__title">Thank you<?php echo $first !== '' ? ', ' . sanitize($first) : ''; ?>.</h1>
+            <p class="receipt-page__lede">
+                <?php if ($isPre): ?>
+                    Your pre-order is in. Annie is making this batch now<?php echo $shipDate ? ', and yours ships by <strong>' . $shipDate . '</strong>' : ''; ?>.
+                <?php else: ?>
+                    Your order is in, and Annie will pack it up by hand.
+                <?php endif; ?>
+            </p>
+
+            <ol class="receipt-steps">
+                <li>
+                    <span class="receipt-steps__title">Confirmation email</span>
+                    <span>A copy of this receipt is on its way<?php echo $order && $order['customer_email'] ? ' to <strong>' . sanitize($order['customer_email']) . '</strong>' : ''; ?>.</span>
+                </li>
+                <?php if ($isPre): ?>
+                <li>
+                    <span class="receipt-steps__title">Made to order</span>
+                    <span><?php echo $balance > 0
+                        ? 'When your piece is ready, you\'ll get an email with a link to pay the remaining ' . formatPrice($balance) . '.'
+                        : 'If anything holds the batch up, you\'ll hear right away and can cancel for a full refund.'; ?></span>
+                </li>
+                <?php else: ?>
+                <li>
+                    <span class="receipt-steps__title">Packed by hand</span>
+                    <span>In-stock pieces ship within 5–10 business days.</span>
+                </li>
+                <?php endif; ?>
+                <li>
+                    <span class="receipt-steps__title">Tracking</span>
+                    <span>You'll get a tracking number by email as soon as it ships.</span>
+                </li>
+            </ol>
+
+            <p class="receipt-page__note">Thanks for supporting a small studio. It genuinely means a lot. <span class="receipt-page__sign">Annie</span></p>
+        </div>
+
+        <?php if ($order): ?>
+        <article class="receipt" aria-labelledby="receipt-title">
+            <div class="receipt__head">
+                <div>
+                    <h2 class="receipt__title" id="receipt-title">Receipt</h2>
+                    <p class="receipt__brand">Caneeli Designs</p>
+                </div>
+                <p class="receipt__number">Order #<?php echo (int) $order['id']; ?></p>
             </div>
 
-            <?php if ($order): ?>
-                <div class="checkout-status__card">
-                    <div class="checkout-status__card-header">
-                        <div>
-                            <p class="checkout-status__label">Order</p>
-                            <p class="checkout-status__order-number">#<?php echo str_pad((string) $order['id'], 5, '0', STR_PAD_LEFT); ?></p>
-                        </div>
-                        <div>
-                            <p class="checkout-status__label">Placed</p>
-                            <p class="checkout-status__order-date"><?php echo date('M j, Y', strtotime($order['created_at'] ?? 'now')); ?></p>
-                        </div>
-                    </div>
+            <dl class="receipt__meta">
+                <div><dt>Date</dt><dd><?php echo date('M j, Y', strtotime($order['created_at'] ?? 'now')); ?></dd></div>
+                <div><dt>Status</dt><dd><?php echo $balance > 0 ? 'Deposit paid' : 'Paid'; ?></dd></div>
+                <?php if (!empty($order['customer_email'])): ?>
+                <div class="receipt__meta-wide"><dt>Email</dt><dd><?php echo sanitize($order['customer_email']); ?></dd></div>
+                <?php endif; ?>
+            </dl>
 
-                    <?php if (!empty($order_items)): ?>
-                        <ul class="checkout-status__items">
-                            <?php foreach ($order_items as $item): ?>
-                                <li class="checkout-status__item">
-                                    <div class="checkout-status__item-name">
-                                        <span><?php echo sanitize($item['product_name']); ?></span>
-                                        <span class="checkout-status__item-qty">× <?php echo (int) $item['quantity']; ?></span>
-                                    </div>
-                                    <span class="checkout-status__item-price">
-                                        <?php echo formatPrice($item['price_at_purchase'] * $item['quantity']); ?>
-                                    </span>
-                                </li>
-                            <?php endforeach; ?>
-                        </ul>
-                    <?php endif; ?>
-
-                    <?php if (!empty($order['discount_amount']) && (float) $order['discount_amount'] > 0): ?>
-                        <div class="checkout-status__discount">
-                            <span>
-                                Discount
-                                <?php if (!empty($order['discount_code'])): ?>
-                                    <small>(<?php echo htmlspecialchars($order['discount_code']); ?>)</small>
-                                <?php endif; ?>
-                            </span>
-                            <span>&minus;<?php echo formatPrice($order['discount_amount']); ?></span>
-                        </div>
-                    <?php endif; ?>
-
-                    <div class="checkout-status__total">
-                        <span>Total</span>
-                        <span><?php echo formatPrice($order['total']); ?></span>
-                    </div>
-
-                    <?php if (!empty($order['shipping_address'])): ?>
-                        <div class="checkout-status__shipping">
-                            <p class="checkout-status__label">Shipping to</p>
-                            <address><?php echo nl2br(sanitize($order['shipping_address'])); ?></address>
-                        </div>
-                    <?php endif; ?>
-                </div>
+            <?php if ($order_items): ?>
+            <ul class="receipt__items">
+                <?php foreach ($order_items as $item):
+                    $qty = (int) $item['quantity'];
+                    $name = preg_replace('/^(Pre-order|Deposit): /', '', $item['product_name']); ?>
+                <li class="receipt__item">
+                    <span class="receipt__thumb">
+                        <?php if (!empty($item['image_path'])): ?><img src="<?php echo htmlspecialchars($item['image_path']); ?>" alt=""><?php endif; ?>
+                    </span>
+                    <span class="receipt__item-main">
+                        <span class="receipt__item-name"><?php echo sanitize($name); ?></span>
+                        <span class="receipt__item-sub"><?php echo $isPre ? 'Pre-order, ' : ''; ?><?php echo $qty; ?> × <?php echo formatPrice($item['price_at_purchase']); ?></span>
+                    </span>
+                    <span class="receipt__amount"><?php echo formatPrice($item['price_at_purchase'] * $qty); ?></span>
+                </li>
+                <?php endforeach; ?>
+            </ul>
             <?php endif; ?>
 
-            <a href="/pages/shop/" class="btn blue-button checkout-status__cta">Keep Browsing</a>
+            <dl class="receipt__totals">
+                <div><dt>Subtotal</dt><dd><?php echo formatPrice($subtotal); ?></dd></div>
+                <?php if ($discount > 0): ?>
+                <div class="receipt__discount"><dt>Discount<?php echo !empty($order['discount_code']) ? ' (' . htmlspecialchars($order['discount_code']) . ')' : ''; ?></dt><dd>−<?php echo formatPrice($discount); ?></dd></div>
+                <?php endif; ?>
+                <div><dt>Shipping</dt><dd>Included</dd></div>
+                <div class="receipt__total"><dt>Total</dt><dd><?php echo formatPrice($order['total']); ?></dd></div>
+                <?php if ($balance > 0): ?>
+                <div class="receipt__paid"><dt>Deposit paid</dt><dd><?php echo formatPrice((float) $order['amount_paid']); ?></dd></div>
+                <div class="receipt__due"><dt>Due before it ships</dt><dd><?php echo formatPrice($balance); ?></dd></div>
+                <?php endif; ?>
+            </dl>
+
+            <?php if (!empty($order['shipping_address'])): ?>
+            <div class="receipt__ship">
+                <h3>Shipping to</h3>
+                <address><?php echo nl2br(sanitize($order['shipping_address'])); ?></address>
+            </div>
+            <?php endif; ?>
+
+            <div class="receipt__foot">
+                Questions about your order? <a href="/pages/contact.php?about=<?php echo urlencode('Order #' . (int) $order['id']); ?>">Get in touch</a> and mention order #<?php echo (int) $order['id']; ?>.
+            </div>
+        </article>
+        <?php endif; ?>
+
+        <div class="receipt-page__actions">
+            <a href="/pages/shop/" class="btn red-button">Keep browsing</a>
+            <?php if ($order): ?><button type="button" class="receipt-page__print" onclick="window.print()">Print receipt</button><?php endif; ?>
         </div>
     </div>
 </section>

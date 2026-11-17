@@ -72,31 +72,70 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <title>Admin Login | Caneeli</title>
-    <link rel="stylesheet" href="/admin/admin.css">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#C25B32">
+    <title>Sign in | Caneeli Admin</title>
+    <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/assets/images/apple-touch-icon.png">
+    <link rel="stylesheet" href="<?php echo function_exists('asset') ? asset('admin/admin.css') : '/admin/admin.css'; ?>">
 </head>
-<body>
-    <div class="login-wrap">
-        <div class="login-logo-wrap">
-            <img src="/assets/images/logoni.svg" alt="Caneeli Designs">
-            <span class="login-admin-badge">Admin</span>
+<body class="login-page">
+    <aside class="login-art" aria-hidden="true">
+        <span class="login-art__mark"></span>
+        <p class="login-art__line">Made by hand in Oregon.</p>
+    </aside>
+
+    <main class="login-main">
+        <div class="login-card">
+            <a href="/" class="login-card__logo">
+                <img src="/assets/images/pelican-rust.svg" alt="" width="46" height="40">
+                <img src="/assets/images/logoni.svg" alt="Caneeli Designs" width="170" height="39">
+            </a>
+
+            <h1 class="login-card__title">Studio admin</h1>
+            <p class="login-card__sub">Sign in to manage orders, products and pre-orders.</p>
+
+            <?php if ($error): ?>
+                <p class="error" role="alert"><?php echo htmlspecialchars($error); ?></p>
+            <?php endif; ?>
+
+            <form method="POST" class="login-form">
+                <?php echo csrf_field(); ?>
+                <label for="login-user">Username</label>
+                <input type="text" id="login-user" name="username" required autofocus autocomplete="username"
+                       autocapitalize="none" spellcheck="false"
+                       value="<?php echo htmlspecialchars($_POST['username'] ?? ''); ?>"
+                       <?php echo $locked ? 'disabled' : ''; ?>>
+
+                <label for="login-pass">Password</label>
+                <div class="login-form__pass">
+                    <input type="password" id="login-pass" name="password" required autocomplete="current-password"
+                           <?php echo $locked ? 'disabled' : ''; ?>>
+                    <button type="button" class="login-form__toggle" aria-controls="login-pass" aria-pressed="false">Show</button>
+                </div>
+
+                <button type="submit" class="btn btn-primary login-form__submit" <?php echo $locked ? 'disabled' : ''; ?>>
+                    <?php echo $locked ? 'Locked for now' : 'Sign in'; ?>
+                </button>
+            </form>
         </div>
-        <?php if ($error): ?>
-            <p class="error"><?php echo htmlspecialchars($error); ?></p>
-        <?php endif; ?>
-        <form method="POST">
-            <?php echo csrf_field(); ?>
-            <label>Username</label>
-            <input type="text" name="username" required autofocus
-                   <?php echo $locked ? 'disabled' : ''; ?>>
-            <label>Password</label>
-            <input type="password" name="password" required
-                   <?php echo $locked ? 'disabled' : ''; ?>>
-            <button type="submit" class="btn btn-primary" style="width:100%"
-                    <?php echo $locked ? 'disabled' : ''; ?>>
-                <?php echo $locked ? 'Locked' : 'Log In'; ?>
-            </button>
-        </form>
-    </div>
+
+        <a class="login-back" href="/">← Back to the shop</a>
+        <?php if (defined('APP_ENV') && APP_ENV === 'test'): ?><p class="login-test">Test site: sign in with admin / password</p><?php endif; ?>
+    </main>
+
+    <script>
+    (function () {
+        var btn = document.querySelector('.login-form__toggle'), input = document.getElementById('login-pass');
+        if (!btn || !input) return;
+        btn.addEventListener('click', function () {
+            var show = input.type === 'password';
+            input.type = show ? 'text' : 'password';
+            btn.textContent = show ? 'Hide' : 'Show';
+            btn.setAttribute('aria-pressed', show ? 'true' : 'false');
+            input.focus();
+        });
+    })();
+    </script>
 </body>
 </html>

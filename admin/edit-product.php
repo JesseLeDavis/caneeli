@@ -87,6 +87,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $status      = $_POST['status'] ?? 'active';
     if (!in_array($status, PRODUCT_STATUSES, true)) $status = 'active';
     $active      = product_active_for_status($status);
+    // Pre-orders need a ship-by date: it's what the buyer agrees to.
+    $ship_date   = trim($_POST['preorder_ship_date'] ?? '');
+    $ship_date   = preg_match('/^\d{4}-\d{2}-\d{2}$/', $ship_date) ? $ship_date : null;
+    // Optional deposit per piece; blank or 0 means pay in full up front.
+    $deposit     = (float) ($_POST['preorder_deposit'] ?? 0);
+    $deposit     = $deposit > 0 ? round($deposit, 2) : null;
+    if ($status === 'preorder' && $deposit !== null && $deposit >= (float) $price) {
+        $error = $error ?: 'The deposit has to be less than the price.';
+    }
+    if ($status === 'preorder' && !$ship_date) {
+        $error = $error ?: 'Pre-orders need a ship-by date.';
+    }
 
     // Craft signals — merge presets + custom, cap at 5, sanitize
     $preset_tags = $_POST['craft_signals_preset'] ?? [];
@@ -123,9 +135,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->prepare("
                 UPDATE products
                 SET name = ?, description = ?, craft_signals = ?, price = ?, stock_qty = ?,
-                    category = ?, active = ?, status = ?
+                    category = ?, active = ?, status = ?, preorder_ship_date = ?, preorder_deposit = ?
                 WHERE id = ?
-            ")->execute([$name, $description, $craft_signals_json, $price, $stock_qty, $selected_cats[0], $active, $status, $id]);
+            ")->execute([$name, $description, $craft_signals_json, $price, $stock_qty, $selected_cats[0], $active, $status, $ship_date, $deposit, $id]);
 
             save_product_categories($pdo, $id, $selected_cats);
 
@@ -175,166 +187,23 @@ if (isset($_GET['msg']))     $success = htmlspecialchars((string) $_GET['msg']);
 $current_signals = json_decode($product['craft_signals'] ?? '[]', true) ?? [];
 ?>
 <?php
-$pageTitle = 'Edit Product';
+// After a failed save, show what was typed rather than the saved values.
+$failed = $_SERVER['REQUEST_METHOD'] === 'POST' && $error;
+$v = $failed ? [
+    'name' => $_POST['name'] ?? '', 'description' => $_POST['description'] ?? '',
+    'price' => $_POST['price'] ?? '', 'stock_qty' => $_POST['stock_qty'] ?? '',
+    'status' => $_POST['status'] ?? $product['status'],
+    'preorder_ship_date' => $_POST['preorder_ship_date'] ?? '', 'preorder_deposit' => $_POST['preorder_deposit'] ?? '',
+] : $product;
+$checked_cats    = $failed ? sanitize_product_categories((array) ($_POST['categories'] ?? [])) : $product_cats;
+$checked_signals = $failed ? array_values((array) ($_POST['craft_signals_preset'] ?? [])) : $current_signals;
+$mode = 'edit';
+
+$pageTitle = 'Edit product';
 $activeNav = 'products';
 require __DIR__ . '/layout-top.php';
+require __DIR__ . '/product-form.php';
 ?>
-
-<div class="container">
-    <div class="page-header">
-        <h1>Edit Product</h1>
-        <a href="/admin/products.php" class="btn btn-secondary">← All products</a>
-    </div>
-
-    <?php if ($error): ?>
-        <p class="error"><?php echo $error; ?></p>
-    <?php endif; ?>
-    <?php if ($success): ?>
-        <p class="success"><?php echo $success; ?></p>
-    <?php endif; ?>
-
-    <!-- Gallery management lives OUTSIDE the main form to avoid nested <form> -->
-    <div class="form-card" style="margin-bottom:16px">
-        <label>Photos
-            <?php if ($gallery && count($gallery) > 1): ?>
-                <span style="font-weight:400;font-size:12px;opacity:.6">— drag to reorder</span>
-            <?php endif; ?>
-        </label>
-        <?php if ($gallery): ?>
-            <div class="gallery-grid" id="gallery-grid" data-product-id="<?php echo $id; ?>">
-                <?php foreach ($gallery as $img): ?>
-                    <?php $is_featured = ($product['image_path'] === $img['image_path']); ?>
-                    <div class="gallery-tile <?php echo $is_featured ? 'gallery-tile--featured' : ''; ?>"
-                         data-image-id="<?php echo $img['id']; ?>">
-                        <div class="gallery-tile__img-wrap">
-                            <img src="<?php echo htmlspecialchars($img['image_path']); ?>" alt="Product photo">
-                        </div>
-                        <?php if ($is_featured): ?>
-                            <span class="gallery-tile__badge">Featured</span>
-                        <?php endif; ?>
-                        <div class="gallery-tile__actions">
-                            <?php if (!$is_featured): ?>
-                                <form method="POST" action="/admin/set-featured-image.php">
-                                    <?php echo csrf_field(); ?>
-                                    <input type="hidden" name="image_id"   value="<?php echo $img['id']; ?>">
-                                    <input type="hidden" name="product_id" value="<?php echo $id; ?>">
-                                    <button type="submit" class="gallery-tile__btn gallery-tile__btn--feature">★ Feature</button>
-                                </form>
-                            <?php endif; ?>
-                            <form method="POST" action="/admin/delete-product-image.php"
-                                  onsubmit="return confirm('Delete this photo?')">
-                                <?php echo csrf_field(); ?>
-                                <input type="hidden" name="image_id"   value="<?php echo $img['id']; ?>">
-                                <input type="hidden" name="product_id" value="<?php echo $id; ?>">
-                                <button type="submit" class="gallery-tile__btn gallery-tile__btn--delete">× Delete</button>
-                            </form>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        <?php else: ?>
-            <p style="font-size:13px;color:#888;margin-bottom:8px">No photos yet.</p>
-        <?php endif; ?>
-    </div>
-
-    <div class="form-card">
-        <form method="POST" enctype="multipart/form-data">
-            <?php echo csrf_field(); ?>
-
-            <span class="form-section-label">Core Details</span>
-
-            <label>Name</label>
-            <input type="text" name="name" value="<?php echo htmlspecialchars($product['name']); ?>" required>
-
-            <label>Description</label>
-            <textarea name="description"><?php echo htmlspecialchars($product['description']); ?></textarea>
-
-            <label>Price ($)</label>
-            <input type="number" name="price" step="0.01" min="0" value="<?php echo htmlspecialchars($product['price']); ?>" required>
-
-            <label>Stock Quantity</label>
-            <input type="number" name="stock_qty" min="0" value="<?php echo htmlspecialchars($product['stock_qty']); ?>">
-
-            <label>Categories <span style="font-weight:400;font-size:12px;opacity:.6">(pick one or more — the first becomes the main one)</span></label>
-            <?php $checked_cats = $_SERVER['REQUEST_METHOD'] === 'POST' && $error
-                ? sanitize_product_categories((array) ($_POST['categories'] ?? []))
-                : $product_cats; ?>
-            <div class="category-checks">
-                <?php foreach ($categories as $cat): ?>
-                    <label class="category-check">
-                        <input type="checkbox" name="categories[]" value="<?php echo htmlspecialchars($cat); ?>"
-                               <?php echo in_array($cat, $checked_cats, true) ? 'checked' : ''; ?>>
-                        <span><?php echo htmlspecialchars($cat); ?></span>
-                    </label>
-                <?php endforeach; ?>
-            </div>
-            <?php if ($retired_cats): ?>
-                <p class="category-retired">
-                    Also filed under <strong><?php echo htmlspecialchars(implode(', ', $retired_cats)); ?></strong>,
-                    which we no longer use. Saving this product will remove that.
-                </p>
-            <?php endif; ?>
-
-            <span class="form-section-label">Photos</span>
-
-            <label>Add more photos <span style="font-weight:400;font-size:12px;opacity:.6">(select multiple at once)</span></label>
-            <div class="file-upload-area">
-                <input type="file" name="new_images[]" accept="image/*" multiple>
-            </div>
-
-            <span class="form-section-label">Craft Signals</span>
-
-            <label>Craft Signals <span style="font-weight:400;font-size:12px;opacity:.6">(up to 5 — shown on product page)</span></label>
-            <div class="craft-signals-grid">
-                <?php foreach ($preset_signals as $tag): ?>
-                    <label class="craft-signal-option">
-                        <input type="checkbox"
-                               name="craft_signals_preset[]"
-                               value="<?php echo htmlspecialchars($tag); ?>"
-                               <?php echo in_array($tag, $current_signals) ? 'checked' : ''; ?>>
-                        <?php echo htmlspecialchars($tag); ?>
-                    </label>
-                <?php endforeach; ?>
-            </div>
-            <?php
-            // Render hidden inputs for any custom (non-preset) tags already saved
-            foreach ($current_signals as $sig):
-                if (!in_array($sig, $preset_signals)):
-            ?>
-                <div class="craft-signal-custom-chip">
-                    <?php echo htmlspecialchars($sig); ?>
-                    <input type="hidden" name="craft_signals_preset[]" value="<?php echo htmlspecialchars($sig); ?>">
-                </div>
-            <?php endif; endforeach; ?>
-            <input type="text" name="craft_signal_custom"
-                   placeholder="Custom tag (e.g. Reclaimed Oak)…"
-                   maxlength="40"
-                   style="margin-bottom:24px">
-
-            <span class="form-section-label">Status</span>
-
-            <label>Visibility</label>
-            <select name="status">
-                <?php foreach (PRODUCT_STATUSES as $s): ?>
-                    <option value="<?php echo $s; ?>" <?php echo (($product['status'] ?? 'active') === $s) ? 'selected' : ''; ?>>
-                        <?php echo product_status_label($s); ?>
-                        <?php
-                            echo match ($s) {
-                                'active'   => ' — visible & for sale',
-                                'sold_out' => ' — visible, cannot be bought',
-                                'draft'    => ' — hidden from shop',
-                                'archived' => ' — hidden, preserved for records',
-                                default    => '',
-                            };
-                        ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-
-            <button type="submit" class="btn btn-primary">Save Changes</button>
-        </form>
-    </div>
-</div>
 
 <?php if ($gallery && count($gallery) > 1): ?>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>

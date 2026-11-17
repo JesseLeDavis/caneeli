@@ -86,9 +86,15 @@ $activeNav = 'custom';
 require __DIR__ . '/layout-top.php';
 ?>
 
-<div class="container">
-    <div class="page-header">
-        <h1>Custom Orders</h1>
+<div class="container ui-page">
+    <div class="ui-head">
+        <div>
+            <h1>Custom orders</h1>
+            <p class="ui-head__sub">Commissions: quote, deposit, then the balance when the piece is finished.</p>
+        </div>
+        <div class="ui-head__actions">
+            <button type="button" class="btn btn-primary" onclick="var d=document.getElementById('new-quote');d.open=true;d.scrollIntoView({behavior:'smooth',block:'start'});d.querySelector('input[name=customer_name]').focus();">New quote</button>
+        </div>
     </div>
 
     <?php foreach ($errors as $e): ?>
@@ -96,9 +102,9 @@ require __DIR__ . '/layout-top.php';
     <?php endforeach; ?>
     <?php if ($flash): ?><p class="success"><?php echo htmlspecialchars($flash); ?></p><?php endif; ?>
 
-    <details class="form-card" style="margin-bottom:24px" <?php echo ($editing || $errors) ? 'open' : ''; ?>>
+    <details class="form-card ui-newquote" id="new-quote" <?php echo ($editing || $errors) ? 'open' : ''; ?>>
         <summary>
-            <?php echo $editing ? 'Edit quote' : '+ New quote'; ?>
+            <?php echo $editing ? 'Edit quote' : 'New quote'; ?>
         </summary>
 
         <form method="POST" style="margin-top:18px">
@@ -170,56 +176,36 @@ require __DIR__ . '/layout-top.php';
     </details>
 
     <?php if (!$quotes): ?>
-        <p>No custom orders yet. Create a quote above to get started.</p>
+        <div class="ui-card ui-empty">
+            <p><strong>No custom orders yet.</strong></p>
+            <p>Create a quote to send a customer a private link where they can pay the deposit.</p>
+        </div>
     <?php else: ?>
-    <table class="table--cards">
-        <thead>
-            <tr>
-                <th>Piece</th>
-                <th>Customer</th>
-                <th>Money</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($quotes as $q): ?>
-                <?php [$label, $mod] = quote_status_meta($q['status']); ?>
-            <tr>
-                <td data-label="Piece">
-                    <a href="/admin/quote-detail.php?id=<?php echo (int) $q['id']; ?>"
-                       style="font-weight:700"><?php echo htmlspecialchars($q['title']); ?></a>
-                    <?php if (!empty($q['lead_time'])): ?>
-                        <div style="font-size:12px;color:rgba(45,45,45,0.55)"><?php echo htmlspecialchars($q['lead_time']); ?></div>
-                    <?php endif; ?>
-                </td>
-                <td data-label="Customer">
-                    <?php echo htmlspecialchars($q['customer_name']); ?>
-                    <div style="font-size:12px;color:rgba(45,45,45,0.55)"><?php echo htmlspecialchars($q['customer_email']); ?></div>
-                </td>
-                <td data-label="Money">
-                    $<?php echo number_format($q['total'], 2); ?>
-                    <div style="font-size:12px;color:rgba(45,45,45,0.55)">
+    <div class="ui-card ui-list">
+        <?php foreach ($quotes as $q):
+            [$label, $mod] = quote_status_meta($q['status']); ?>
+            <a class="ui-row ui-row--quote" href="/admin/quote-detail.php?id=<?php echo (int) $q['id']; ?>">
+                <?php echo admin_avatar($q['customer_name']); ?>
+                <span class="ui-row__main">
+                    <strong><?php echo htmlspecialchars($q['title']); ?></strong>
+                    <span><?php echo htmlspecialchars($q['customer_name']); ?><?php echo !empty($q['lead_time']) ? ', ' . htmlspecialchars($q['lead_time']) : ''; ?></span>
+                </span>
+                <span class="ui-row__status"><?php echo admin_status_badge($mod, $label); ?></span>
+                <span class="ui-row__amount">$<?php echo number_format((float) $q['total'], 2); ?>
+                    <span class="ui-row__hint ui-row__hint--plain">
                         <?php if ($q['status'] === 'draft' || $q['status'] === 'sent'): ?>
-                            $<?php echo number_format($q['deposit_amount'], 2); ?> deposit due
+                            $<?php echo number_format((float) $q['deposit_amount'], 2); ?> deposit due
                         <?php elseif ($q['balance_due'] !== null && (float) $q['balance_due'] > 0): ?>
-                            $<?php echo number_format($q['deposit_amount'], 2); ?> paid ·
-                            <strong style="color:#C25B32">$<?php echo number_format($q['balance_due'], 2); ?> due</strong>
-                        <?php else: ?>
-                            paid in full
+                            <span class="ui-owed-text">$<?php echo number_format((float) $q['balance_due'], 2); ?> owed</span>
+                        <?php elseif ($q['status'] !== 'cancelled'): ?>
+                            Paid in full
                         <?php endif; ?>
-                    </div>
-                </td>
-                <td data-label="Status">
-                    <span class="badge-status badge-status--<?php echo $mod; ?>"><?php echo $label; ?></span>
-                </td>
-                <td data-label="Actions" class="cell-actions">
-                    <a href="/admin/quote-detail.php?id=<?php echo (int) $q['id']; ?>" class="btn btn-secondary btn-sm">Open</a>
-                </td>
-            </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
+                    </span>
+                </span>
+                <?php echo admin_chevron(); ?>
+            </a>
+        <?php endforeach; ?>
+    </div>
     <?php endif; ?>
 </div>
 

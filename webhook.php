@@ -129,6 +129,22 @@ if (($full_session->metadata->type ?? '') === 'custom_balance') {
     exit;
 }
 
+// --- Pre-order balance ------------------------------------------------------
+// Settles an existing pre-order (see includes/preorders.php); the pay page
+// does the same when the buyer lands back on it, whichever comes first.
+if (($full_session->metadata->type ?? '') === 'preorder_balance') {
+    require_once __DIR__ . '/includes/preorders.php';
+    try {
+        preorder_settle_balance($pdo, $full_session);
+    } catch (\Throwable $e) {
+        error_log('webhook: pre-order balance failed: ' . $e->getMessage());
+        http_response_code(500);
+        exit;
+    }
+    http_response_code(200);
+    exit;
+}
+
 // --- Custom-order deposit -----------------------------------------------
 // Must be handled before the cart path below: a deposit session has no `cart`
 // metadata, so it would otherwise fall through and create a junk empty order.

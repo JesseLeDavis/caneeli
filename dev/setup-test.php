@@ -16,6 +16,7 @@ if (PHP_SAPI !== 'cli') { http_response_code(403); exit; }
 require __DIR__ . '/sample_images.php';
 
 $root = dirname(__DIR__);
+date_default_timezone_set('America/Los_Angeles'); // same clock as config.php
 $base = parse_ini_file("$root/.env");
 if (!$base) exit("Couldn't read .env\n");
 
@@ -32,10 +33,11 @@ if (!is_file($envTest)) {
         '',
         '; Admin login for the test site only',
         'ADMIN_USER="admin"',
-        'ADMIN_PASS="caneeli-test"',
+        'ADMIN_PASS="password"',
         '',
-        '; Email is off: replies, order and shipping emails are skipped (and logged).',
-        'SMTP_HOST=""',
+        '; Email: sent through the real mail account in .env, but only ever to',
+        '; MAIL_TEST_INBOX, with "[TEST for <recipient>]" in the subject. Blank sends nothing.',
+        'MAIL_TEST_INBOX=""',
         'OWNER_EMAIL=""',
         '',
         '; Checkout needs Stripe TEST keys (sk_test_ / pk_test_) from',
@@ -63,6 +65,7 @@ $pdo = new PDO("mysql:host={$env['DB_HOST']};charset=utf8mb4", $env['DB_USER'], 
     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
 ]);
+$pdo->exec("SET time_zone = '" . date('P') . "'");
 $pdo->exec("DROP DATABASE IF EXISTS `$target`");
 $pdo->exec("CREATE DATABASE `$target` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
 
@@ -78,6 +81,12 @@ foreach ($tables as $t) {
 }
 $pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
 $pdo->exec("USE `$target`");
+// Migrations on this branch that the local database may not have yet.
+$hasCol = fn($t, $c) => (bool) $pdo->query("SHOW COLUMNS FROM `$t` LIKE '$c'")->fetch();
+if (!$hasCol('products', 'preorder_ship_date')) {
+    $pdo->exec(file_get_contents("$root/database/migrate_preorders.sql"));
+    echo "Applied database/migrate_preorders.sql to the test database\n";
+}
 echo "Created database $target (" . count($tables) . " tables copied from $source)\n";
 
 // ── 3. Sample photos ───────────────────────────────────────────────────
@@ -133,16 +142,19 @@ $liveFile = __DIR__ . '/live-catalog.json';
 if (is_file($liveFile)) {
     $live = json_decode(file_get_contents($liveFile), true) ?: [];
     // A few unpublished pieces so the admin's Draft/Archived tabs have something
-    $live[] = ['name' => 'Salmon Lava Lamp (next batch)', 'description' => 'Draft listing for the next batch of salmon lava lamps. Not visible in the shop until it\'s marked active.', 'price' => 500, 'stock' => 2, 'status' => 'draft', 'featured' => false, 'categories' => ['Lighting', 'Ceramics'], 'signals' => ['Made to Order'], 'images' => $live[array_search('Salmon Lava Lamp', array_column($live, 'name'))]['images'] ?? []];
+    $live[] = ['name' => 'Salmon Lava Lamp (next batch)', 'description' => 'The next batch of salmon lava lamps, made to order. Each one is hand-sculpted stoneware around a glass lava bottle, so no two salmon come out quite the same.', 'price' => 500, 'stock' => 10, 'status' => 'preorder', 'ship_date' => date('Y-m-d', strtotime('+10 weeks')), 'deposit' => 150, 'featured' => false, 'categories' => ['Lighting', 'Ceramics'], 'signals' => ['Made to Order'], 'images' => $live[array_search('Salmon Lava Lamp', array_column($live, 'name'))]['images'] ?? []];
     $catalog = [];
     foreach ($live as $i => $p) {
         $created = date('Y-m-d H:i:s', strtotime('-' . (150 - $i * 6) . ' days'));
         $insProduct->execute([
             $p['name'], $p['description'], $p['signals'] ? json_encode($p['signals']) : null, $p['price'], $p['stock'],
-            $p['categories'][0], $p['images'][0] ?? null, in_array($p['status'], ['active', 'sold_out'], true) ? 1 : 0,
+            $p['categories'][0], $p['images'][0] ?? null, in_array($p['status'], ['active', 'sold_out', 'preorder'], true) ? 1 : 0,
             $p['status'], $p['featured'] ? 1 : 0, $i + 1, $created, $created,
         ]);
         $id = (int) $pdo->lastInsertId();
+        if (!empty($p['ship_date'])) {
+            $pdo->prepare("UPDATE products SET preorder_ship_date = ?, preorder_deposit = ? WHERE id = ?")->execute([$p['ship_date'], $p['deposit'] ?? null, $id]);
+        }
         foreach ($p['images'] as $n => $img) $insImage->execute([$id, $img, $n]);
         foreach ($p['categories'] as $c) $insCat->execute([$id, $c]);
         $products[$id] = ['name' => $p['name'], 'price' => $p['price'], 'status' => $p['status']];
@@ -221,6 +233,27 @@ for ($k = 0; $k < 26; $k++) {
     $orderCount++;
 }
 echo "Added $orderCount orders\n";
+
+// A few people who've already pre-ordered the next lamp batch.
+$pre = $pdo->query("SELECT id, name, price, preorder_ship_date, preorder_deposit FROM products WHERE status = 'preorder' LIMIT 1")->fetch();
+if ($pre) {
+    $preStmt = $pdo->prepare("INSERT INTO orders
+        (stripe_session_id, stripe_payment_intent, customer_name, customer_email, status, total, amount_paid, balance_due, shipping_address,
+         is_preorder, preorder_ship_date, preorder_terms_accepted_at, preorder_token, created_at, confirmation_email_sent_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?)");
+    $dep = (float) ($pre['preorder_deposit'] ?? 0);
+    foreach (array_slice($people, 0, 4) as $i => [$name, $cityLine, $street]) {
+        $created = date('Y-m-d H:i:s', strtotime('-' . (6 - $i) . ' days'));
+        $preStmt->execute([
+            'cs_test_sample_' . bin2hex(random_bytes(10)), 'pi_test_sample_' . bin2hex(random_bytes(8)),
+            $name, $emailOf($name), $dep ? 'deposit_paid' : 'paid', $pre['price'], $dep ?: $pre['price'], $dep ? $pre['price'] - $dep : null,
+            "$name\n$street\n$cityLine\nUS", $pre['preorder_ship_date'], $created, bin2hex(random_bytes(16)), $created, $created,
+        ]);
+        $insItem->execute([(int) $pdo->lastInsertId(), $pre['id'], $pre['name'], 1, $pre['price']]);
+    }
+    $pdo->prepare("UPDATE products SET stock_qty = GREATEST(0, stock_qty - 4) WHERE id = ?")->execute([$pre['id']]);
+    echo "Added 4 pre-orders for {$pre['name']}\n";
+}
 
 // ── 6. Custom quotes (commissions) ─────────────────────────────────────
 $insQuote = $pdo->prepare("INSERT INTO custom_quotes

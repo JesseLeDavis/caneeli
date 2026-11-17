@@ -4,6 +4,7 @@
 // studio" strip on product pages and the empty cart. (The home carousel has
 // its own variant in index.php.)
 require_once __DIR__ . '/functions.php';
+require_once __DIR__ . '/product_status.php';
 
 /** True when a product row can't be bought (status or no stock). */
 function product_is_sold_out(array $product): bool {
@@ -29,13 +30,15 @@ function render_product_card(array $product, string $heading = 'h3'): void {
         <?php else: ?>
             <span class="product-card__bg product-card__placeholder"></span>
         <?php endif; ?>
-        <?php if ($sold): ?>
+        <?php if (($product['status'] ?? '') === 'preorder'): ?>
+            <span class="product-card__sold-out product-card__preorder"><?php echo $sold ? 'Pre-orders full' : 'Pre-order'; ?></span>
+        <?php elseif ($sold): ?>
             <span class="product-card__sold-out">Sold</span>
         <?php endif; ?>
         <div class="product-card__overlay">
             <<?php echo $tag; ?> class="product-card__name"><?php echo sanitize($product['name']); ?></<?php echo $tag; ?>>
             <?php if ($desc !== ''): ?><span class="product-card__description" aria-hidden="true"><?php echo sanitize($desc); ?></span><?php endif; ?>
-            <span class="product-card__price"><?php echo formatPrice($product['price']); ?><?php if ($sold): ?><span class="visually-hidden">, sold out</span><?php endif; ?></span>
+            <span class="product-card__price"><?php echo formatPrice($product['price']); ?><?php if (product_is_preorderable($product)): ?><span class="visually-hidden">, available to pre-order</span><?php elseif ($sold): ?><span class="visually-hidden">, sold out</span><?php endif; ?></span>
             <span class="product-card__cta" aria-hidden="true">View piece</span>
         </div>
     </a>
